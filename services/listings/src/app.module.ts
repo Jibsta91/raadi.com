@@ -20,6 +20,7 @@ import {
 import { LoggerModule } from 'nestjs-pino';
 import type { AppConfig } from './config.js';
 import { Lifecycle } from './lifecycle.js';
+import { InternalListingsController } from './listings/internal.controller.js';
 import { ListingsController } from './listings/listings.controller.js';
 import { ListingsRepository } from './listings/listings.repository.js';
 import { ListingsService, SIGNER } from './listings/listings.service.js';
@@ -53,7 +54,7 @@ export class AppModule {
           skipIf: (ctx) => ctx.getClass() === HealthController,
         }),
       ],
-      controllers: [ListingsController, HealthController],
+      controllers: [ListingsController, InternalListingsController, HealthController],
       providers: [
         { provide: APP_CONFIG, useValue: cfg },
         { provide: PG_POOL, useFactory: () => createPgPool(env, secrets.db_password, 'listings') },

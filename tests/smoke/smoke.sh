@@ -57,6 +57,7 @@ login_as() {
 }
 json() { jq -r "$1" "$BODY" 2>/dev/null; }
 expect_status() { [[ "$status" == "$1" ]] && ok "$2" || fail "$2" "expected HTTP $1, got $status: $(head -c 400 "$BODY")"; }
+q() { curl -sf --max-time 10 --get --data-urlencode "query=$1" http://prometheus:9090/api/v1/query | jq -e "$2"; }
 eventually() { # <description> <seconds> <command...>
   local desc="$1" secs="$2"; shift 2
   local end=$((SECONDS + secs))
@@ -171,8 +172,9 @@ req GET "$PUBLIC/api/v1/search/suggest?q=Lan"
 [[ "$(json '.suggestions | length')" -gt 0 ]] && ok "search-as-you-type suggestions" || fail "suggestions"
 
 section "Listings, media and authorization"
-req GET "$PUBLIC/api/v1/search/listings?pageSize=1&sort=newest"
-seeded="$(json '.items[0].id')"; card="$(json '.items[0].image.card')"
+# Images are optional, so take the newest listing that has one.
+req GET "$PUBLIC/api/v1/search/listings?pageSize=24&sort=newest"
+seeded="$(json '[.items[] | select(.image)][0].id')"; card="$(json '[.items[] | select(.image)][0].image.card')"
 req GET "$PUBLIC/api/v1/listings/$seeded"
 expect_status 200 "public listing detail"
 [[ -n "$(header etag)" ]] && ok "listing has an ETag (optimistic concurrency)" || fail "ETag header"
@@ -237,10 +239,72 @@ eventually "removed listing disappears from search" 90 \
   bash -c "! curl -sf --connect-to ::$GW -G '$PUBLIC/api/v1/search/listings' --data-urlencode 'q=$title' | jq -e '.items[] | select(.id == \"$listing\")'"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
+section "Messaging (conversations, WebSocket, events)"
+: > "$JAR"
+req GET "$PUBLIC/api/v1/messaging/conversations"
+expect_status 401 "anonymous users cannot read conversations"
+ws() { # <origin> — WebSocket handshake through the gateway with the session cookie
+  curl -s -o /dev/null -w '%{http_code}' --max-time 3 --connect-to "::${GW}" -b "$JAR" \
+    -H 'Connection: Upgrade' -H 'Upgrade: websocket' -H 'Sec-WebSocket-Version: 13' \
+    -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' -H "Origin: $1" "$PUBLIC/api/v1/messaging/ws"
+}
+[[ "$(ws "$ORIGIN")" == "401" ]] && ok "anonymous WebSocket upgrades are refused" || fail "anonymous WebSocket"
+
+login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
+req GET "$PUBLIC/api/v1/listings/mine?limit=1"
+kari_listing="$(json '.items[0].id')"
+req GET "$PUBLIC/internal/v1/listings/$kari_listing/contact"
+# The gateway sends the path to the web app (a locale redirect or 404), never to listings.
+[[ "$status" =~ ^(307|404)$ ]] && ! grep -q ownerId "$BODY" \
+  && ok "internal listings API is not reachable through the gateway" || fail "internal API exposed" "HTTP $status"
+
+login_as "ola.nordmann@${RAADI_DOMAIN}" || fail "login as ola"
+hello="Hei! Er denne fortsatt ledig? (smoke $(date +%s%N | tail -c 7))"
+start() { jq -nc --arg l "$1" --arg b "$2" '{listingId: $l, body: $b}'; }
+req POST "$PUBLIC/api/v1/messaging/conversations" -H 'content-type: application/json' \
+  -H 'origin: https://evil.example' --data "$(start "$kari_listing" "$hello")"
+expect_status 403 "cross-site message is rejected (CSRF)"
+req POST "$PUBLIC/api/v1/messaging/conversations" -H 'content-type: application/json' \
+  -H "origin: $ORIGIN" --data "$(start "$kari_listing" "$hello")"
+[[ "$status" =~ ^20[01]$ && "$(json '.conversation.role')" == "buyer" && "$(json '.conversation.counterpart.name')" == "Kari N." ]] \
+  && ok "buyer contacts the seller (HTTP $status)" || fail "start conversation" "HTTP $status $(head -c 300 "$BODY")"
+conversation="$(json '.conversation.id')"
+req POST "$PUBLIC/api/v1/messaging/conversations" -H 'content-type: application/json' \
+  -H "origin: $ORIGIN" --data "$(start "$kari_listing" "En melding til")"
+[[ "$status" == "200" && "$(json '.conversation.id')" == "$conversation" ]] \
+  && ok "one conversation per listing and buyer" || fail "conversation reuse" "HTTP $status"
+req GET "$PUBLIC/api/v1/listings/mine?limit=1"
+req POST "$PUBLIC/api/v1/messaging/conversations" -H 'content-type: application/json' \
+  -H "origin: $ORIGIN" --data "$(start "$(json '.items[0].id')" "Til meg selv")"
+[[ "$status" == "422" && "$(json '.errors[0].code')" == "own_listing" ]] && ok "sellers cannot message themselves" || fail "own listing" "HTTP $status"
+req POST "$PUBLIC/api/v1/messaging/conversations/$conversation/messages" -H 'content-type: application/json' \
+  -H "origin: $ORIGIN" --data '{"body":"   "}'
+expect_status 400 "empty messages are rejected"
+[[ "$(ws "$ORIGIN")" == "101" ]] && ok "WebSocket opens for a signed-in user (via token handler)" || fail "WebSocket upgrade"
+[[ "$(ws "https://evil.example")" == "403" ]] && ok "WebSocket refuses foreign origins" || fail "WebSocket origin check"
+
+login_as "amina.hassan@${RAADI_DOMAIN}" || fail "login as amina"
+req GET "$PUBLIC/api/v1/messaging/conversations/$conversation"
+expect_status 404 "other users cannot read the conversation"
+
+login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
+req GET "$PUBLIC/api/v1/messaging/conversations/$conversation"
+[[ "$status" == "200" && "$(json '.role')" == "seller" ]] && json '.messages[].body' | grep -qF "$hello" \
+  && ok "the seller reads the conversation" || fail "seller view" "HTTP $status"
+req GET "$PUBLIC/api/v1/messaging/unread"
+[[ "$(json '.count')" -ge 2 ]] && ok "unread count for the seller ($(json '.count'))" || fail "unread count"
+req POST "$PUBLIC/api/v1/messaging/conversations/$conversation/read" -H "origin: $ORIGIN"
+expect_status 204 "seller marks the conversation read"
+req GET "$PUBLIC/api/v1/messaging/conversations"
+[[ "$(jq -r --arg c "$conversation" '.items[] | select(.id == $c) | .unread' "$BODY")" == "0" ]] \
+  && ok "inbox shows the conversation as read" || fail "inbox unread after read"
+eventually "message events reach Kafka (outbox -> Debezium)" 120 \
+  q 'sum(kafka_partition_current_offset_ratio{topic="raadi.conversation.events"})' '.data.result[0].value[1] | tonumber > 0'
+req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
+
 section "Operations"
 req GET "$GRAFANA/api/health"
 expect_status 200 "Grafana healthy via gateway"
-q() { curl -sf --max-time 10 --get --data-urlencode "query=$1" http://prometheus:9090/api/v1/query | jq -e "$2"; }
 eventually "all Prometheus scrape targets are up" 90 q 'count(up == 0) or vector(0)' '.data.result[0].value[1] == "0"'
 eventually "identity-bff metrics arrive via OTLP" 90 q 'target_info{service_name="identity-bff"}' '.data.result | length > 0'
 eventually "login counter recorded a success" 90 q 'raadi_auth_login_total{outcome="success"}' '.data.result | length > 0'

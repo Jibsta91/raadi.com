@@ -35,6 +35,7 @@ cat <<BANNER
     Login (Keycloak) ... ${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM:-raadi}/account
     Search listings .... ${PUBLIC_BASE_URL}/en/search
     Sell something ..... ${PUBLIC_BASE_URL}/en/listings/new   (log in as a demo user)
+    Messages ........... ${PUBLIC_BASE_URL}/en/messages
     Status page ........ ${PUBLIC_BASE_URL}/en/status
 
   Operations

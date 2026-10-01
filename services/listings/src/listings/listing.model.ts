@@ -180,11 +180,3 @@ export function toSnapshot(row: ListingRow): ListingSnapshot {
     updatedAt: row.updated_at.toISOString(),
   };
 }
-
-/** Public display name from token claims: "Kari N.", never the e-mail address. */
-export function sellerName(claims: Record<string, unknown>): string {
-  const given = typeof claims.given_name === 'string' ? claims.given_name.trim() : '';
-  const family = typeof claims.family_name === 'string' ? claims.family_name.trim() : '';
-  if (given) return family ? `${given} ${family[0]!.toUpperCase()}.` : given;
-  return 'Raadi-bruker';
-}

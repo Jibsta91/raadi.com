@@ -9,6 +9,9 @@ export const env = {
   get searchUrl() {
     return process.env.SEARCH_URL ?? 'http://search:4000';
   },
+  get messagingUrl() {
+    return process.env.MESSAGING_URL ?? 'http://messaging:4000';
+  },
   get publicBaseUrl() {
     return process.env.PUBLIC_BASE_URL ?? 'http://raadi.localhost';
   },

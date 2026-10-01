@@ -1,0 +1,288 @@
+openapi: 3.1.0
+info:
+  title: Raadi messaging
+  version: 1.0.0
+  description: |
+    Buyer-seller conversations about a listing. Every endpoint needs a bearer token
+    (browsers get one from the gateway's token handler) and only the two participants
+    can see a conversation. Messages are sent over REST; new messages and read receipts
+    are pushed to open WebSockets at `/api/v1/messaging/ws` (push only). Events on the
+    socket are JSON: `{"type":"hello"}`, `{"type":"message","message":Message}` and
+    `{"type":"read","conversationId":…,"byMe":…}`. The socket closes with code 4001 when
+    the access token expires; reconnect to continue.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: http://raadi.localhost
+    description: Local development through the gateway
+tags:
+  - name: messaging
+security: [{ bearer: [] }, { session: [] }]
+paths:
+  /api/v1/messaging/conversations:
+    post:
+      tags: [messaging]
+      operationId: startConversation
+      summary: Contact the seller of a listing
+      description: |
+        Opens the caller's conversation about the listing, or reuses it if one exists
+        (200 instead of 201), and sends the first message.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StartConversation' }
+      responses:
+        '200':
+          description: Message added to the existing conversation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StartedConversation' }
+        '201':
+          description: Conversation opened
+          headers:
+            Location: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StartedConversation' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+    get:
+      tags: [messaging]
+      operationId: inbox
+      summary: The caller's conversations, most recent first
+      parameters:
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 50, default: 20 },
+          }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: A page of conversations
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationPage' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/messaging/conversations/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [messaging]
+      operationId: conversation
+      summary: A conversation with its latest messages (oldest first)
+      parameters:
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 50 },
+          }
+        - name: before
+          in: query
+          description: Only messages sent before this time, to load older history.
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: The conversation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationDetail' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /api/v1/messaging/conversations/{id}/messages:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [messaging]
+      operationId: sendMessage
+      summary: Send a message in a conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendMessage' }
+      responses:
+        '201':
+          description: Sent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+  /api/v1/messaging/conversations/{id}/read:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [messaging]
+      operationId: markRead
+      summary: Mark the conversation read up to now
+      responses:
+        '204': { description: Marked read }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /api/v1/messaging/unread:
+    get:
+      tags: [messaging]
+      operationId: unreadCount
+      summary: Unread messages across the caller's conversations
+      responses:
+        '200':
+          description: Count
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [count]
+                properties:
+                  count: { type: integer, minimum: 0 }
+        '401': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      operationId: liveness
+      security: []
+      responses: { '200': { description: Process is alive } }
+  /readyz:
+    get:
+      operationId: readiness
+      security: []
+      responses:
+        '200': { description: Ready }
+        '503': { description: A dependency is unavailable or the service is draining }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    session: { type: apiKey, in: cookie, name: raadi_sid }
+  responses:
+    Problem:
+      description: RFC 9457 problem details
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    MessageBody:
+      type: string
+      minLength: 1
+      maxLength: 2000
+      description: Plain text; leading and trailing whitespace is trimmed.
+    StartConversation:
+      type: object
+      additionalProperties: false
+      required: [listingId, body]
+      properties:
+        listingId: { type: string, format: uuid }
+        body: { $ref: '#/components/schemas/MessageBody' }
+    SendMessage:
+      type: object
+      additionalProperties: false
+      required: [body]
+      properties:
+        body: { $ref: '#/components/schemas/MessageBody' }
+    Message:
+      type: object
+      additionalProperties: false
+      required: [id, conversationId, fromMe, body, sentAt]
+      properties:
+        id: { type: string, format: uuid }
+        conversationId: { type: string, format: uuid }
+        fromMe: { type: boolean }
+        body: { type: string }
+        sentAt: { type: string, format: date-time }
+    ConversationFields:
+      type: object
+      required: [id, role, listing, counterpart, lastMessage, unread, createdAt, lastMessageAt]
+      properties:
+        id: { type: string, format: uuid }
+        role: { type: string, enum: [buyer, seller], description: The caller's role }
+        listing:
+          type: object
+          additionalProperties: false
+          required: [id, title, image]
+          properties:
+            id: { type: string, format: uuid }
+            title: { type: string }
+            image:
+              oneOf:
+                - type: object
+                  additionalProperties: false
+                  required: [thumb]
+                  properties:
+                    thumb: { type: string, description: Signed imgproxy URL }
+                - type: 'null'
+        counterpart:
+          type: object
+          additionalProperties: false
+          required: [name]
+          properties:
+            name: { type: string, description: Public display name of the other participant }
+        lastMessage:
+          oneOf:
+            - type: object
+              additionalProperties: false
+              required: [body, fromMe, sentAt]
+              properties:
+                body: { type: string }
+                fromMe: { type: boolean }
+                sentAt: { type: string, format: date-time }
+            - type: 'null'
+        unread: { type: integer, minimum: 0 }
+        createdAt: { type: string, format: date-time }
+        lastMessageAt: { type: string, format: date-time }
+    Conversation:
+      allOf: [{ $ref: '#/components/schemas/ConversationFields' }]
+      unevaluatedProperties: false
+    ConversationDetail:
+      allOf:
+        - { $ref: '#/components/schemas/ConversationFields' }
+        - type: object
+          required: [messages, hasMore]
+          properties:
+            messages:
+              type: array
+              items: { $ref: '#/components/schemas/Message' }
+            hasMore: { type: boolean, description: Older messages exist (use `before`) }
+      unevaluatedProperties: false
+    StartedConversation:
+      type: object
+      additionalProperties: false
+      required: [conversation, message]
+      properties:
+        conversation: { $ref: '#/components/schemas/Conversation' }
+        message: { $ref: '#/components/schemas/Message' }
+    ConversationPage:
+      type: object
+      additionalProperties: false
+      required: [total, limit, offset, items]
+      properties:
+        total: { type: integer, minimum: 0 }
+        limit: { type: integer }
+        offset: { type: integer }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Conversation' }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        traceId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path: { type: string }
+              message: { type: string }
+              code: { type: string }

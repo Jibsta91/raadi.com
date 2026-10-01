@@ -50,6 +50,7 @@ topics=(
   "raadi.user.events 3 retention.ms=1209600000"
   "raadi.listing.events 3 retention.ms=1209600000"
   "raadi.media.events 3 retention.ms=1209600000"
+  "raadi.conversation.events 3 retention.ms=1209600000"
   "raadi.dlq 1 retention.ms=2592000000"
   "raadi.connect.configs 1 cleanup.policy=compact"
   "raadi.connect.offsets 5 cleanup.policy=compact"
@@ -70,7 +71,8 @@ acl() { "$BIN/kafka-acls.sh" --bootstrap-server "$BOOTSTRAP" --command-config "$
 acl --allow-principal User:connect --operation All --resource-pattern-type prefixed \
   --topic raadi.connect. --group raadi-connect
 acl --allow-principal User:connect --operation Write --operation Describe \
-  --topic raadi.user.events --topic raadi.listing.events --topic raadi.media.events
+  --topic raadi.user.events --topic raadi.listing.events --topic raadi.media.events \
+  --topic raadi.conversation.events
 acl --allow-principal User:connect --operation Describe --cluster
 # Consumers: read what they subscribe to; dead letters go to raadi.dlq.
 acl --allow-principal User:search --operation Read --operation Describe \

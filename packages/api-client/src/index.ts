@@ -8,9 +8,13 @@ import type {
   paths as ListingsPaths,
 } from './generated/listings';
 import type { components as MediaComponents, paths as MediaPaths } from './generated/media';
+import type {
+  components as MessagingComponents,
+  paths as MessagingPaths,
+} from './generated/messaging';
 import type { components as SearchComponents, paths as SearchPaths } from './generated/search';
 
-export type { IdentityPaths, ListingsPaths, MediaPaths, SearchPaths };
+export type { IdentityPaths, ListingsPaths, MediaPaths, MessagingPaths, SearchPaths };
 
 // Identity
 export type Me = IdentityComponents['schemas']['Me'];
@@ -37,6 +41,13 @@ export type SearchQuery = NonNullable<
 // Media
 export type Media = MediaComponents['schemas']['Media'];
 
+// Messaging
+export type Conversation = MessagingComponents['schemas']['Conversation'];
+export type ConversationDetail = MessagingComponents['schemas']['ConversationDetail'];
+export type ConversationPage = MessagingComponents['schemas']['ConversationPage'];
+export type Message = MessagingComponents['schemas']['Message'];
+export type StartedConversation = MessagingComponents['schemas']['StartedConversation'];
+
 /*
  * Typed clients shared by web and mobile:
  *   - web (server side): baseUrl = the service (internal) or the gateway
@@ -48,3 +59,5 @@ export const createListingsClient = (options: ClientOptions) =>
   createClient<ListingsPaths>(options);
 export const createSearchClient = (options: ClientOptions) => createClient<SearchPaths>(options);
 export const createMediaClient = (options: ClientOptions) => createClient<MediaPaths>(options);
+export const createMessagingClient = (options: ClientOptions) =>
+  createClient<MessagingPaths>(options);

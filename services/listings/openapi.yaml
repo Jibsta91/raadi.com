@@ -15,6 +15,8 @@ servers:
     description: Local development through the gateway
 tags:
   - name: listings
+  - name: internal
+    description: Service-to-service endpoints, not reachable through the gateway
 paths:
   /api/v1/listings:
     post:
@@ -111,6 +113,23 @@ paths:
       responses:
         '204': { description: Removed }
         '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /internal/v1/listings/{id}/contact:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [internal]
+      operationId: listingContact
+      summary: Seller to contact about a listing (internal network only; messaging)
+      description: Not routed by the gateway. Callers forward the user's bearer token.
+      security: [{ bearer: [] }]
+      responses:
+        '200':
+          description: Contact details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListingContact' }
+        '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
   /healthz:
     get:
@@ -254,6 +273,17 @@ components:
           uniqueItems: true
           items: { type: string, format: uuid }
         status: { type: string, enum: [active, sold] }
+    ListingContact:
+      type: object
+      additionalProperties: false
+      required: [listingId, ownerId, sellerName, title, status, imageId]
+      properties:
+        listingId: { type: string, format: uuid }
+        ownerId: { type: string, format: uuid, description: Keycloak subject of the seller }
+        sellerName: { type: string }
+        title: { type: string }
+        status: { type: string, enum: [active, sold] }
+        imageId: { type: [string, 'null'], format: uuid }
     Problem:
       type: object
       required: [type, title, status]

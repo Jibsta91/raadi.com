@@ -32,7 +32,9 @@
     "openfga_key_init",
     "opa_token_listings",
     "listings_db_password",
-    "media_db_password"
+    "media_db_password",
+    "messaging_db_password",
+    "valkey_messaging_password"
   ],
   "fileConsumers": {
     "postgres": {
@@ -41,7 +43,7 @@
     },
     "valkey": {
       "uid": 999,
-      "secrets": ["valkey_password"]
+      "secrets": ["valkey_password", "valkey_messaging_password"]
     },
     "keycloak": {
       "uid": 1000,
@@ -198,6 +200,17 @@
       "openbao": {
         "opensearch_password": "opensearch_search_password",
         "kafka_password": "kafka_search_password"
+      },
+      "shared": ["imgproxy"]
+    },
+    "messaging": {
+      "uid": 65532,
+      "database": "messaging",
+      "migrations": "messaging",
+      "outbox": true,
+      "openbao": {
+        "db_password": "messaging_db_password",
+        "valkey_password": "valkey_messaging_password"
       },
       "shared": ["imgproxy"]
     }

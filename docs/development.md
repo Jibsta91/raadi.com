@@ -28,6 +28,7 @@ services/identity-bff    NestJS: OIDC login, encrypted sessions, token handler, 
 services/listings        NestJS: listings CRUD, OPA marketplace rules, OpenFGA ownership, outbox events
 services/search          NestJS: OpenSearch indexer (Kafka consumer) and search/suggest API
 services/media           NestJS: image uploads (ClamAV, imgproxy re-encode), attachment sync, orphan GC
+services/messaging       NestJS: buyer-seller conversations, WebSocket push (Valkey pub/sub fan-out)
 services/*               further domain services (Phase 3)
 ai/*                     Python AI pillars (Phase 4)
 packages/service-kit     telemetry, logging, OpenBao, JWT guard, errors, resilience, health, shutdown,

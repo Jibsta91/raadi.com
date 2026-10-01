@@ -3,7 +3,6 @@ import { describe, it } from 'node:test';
 import {
   createListingSchema,
   mergedListingSchema,
-  sellerName,
   updateListingSchema,
 } from '../../src/listings/listing.model.js';
 
@@ -66,16 +65,5 @@ describe('listing validation', () => {
     assert.ok(!updateListingSchema.safeParse({ status: 'deleted' }).success);
     const merged = mergedListingSchema.safeParse({ ...valid, imageIds: [], category: 'bil' });
     assert.ok(!merged.success, 'switching category without matching attributes fails');
-  });
-});
-
-describe('seller name', () => {
-  it('uses the given name and family initial, never the e-mail', () => {
-    assert.equal(
-      sellerName({ given_name: 'Kari', family_name: 'nordmann', email: 'k@x' }),
-      'Kari N.',
-    );
-    assert.equal(sellerName({ given_name: 'Amina' }), 'Amina');
-    assert.equal(sellerName({ email: 'k@x' }), 'Raadi-bruker');
   });
 });

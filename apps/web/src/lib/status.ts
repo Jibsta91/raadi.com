@@ -13,6 +13,7 @@ const CHECKS: Array<Omit<ComponentStatus, 'ok' | 'latencyMs'> & { url: string }>
   { name: 'listings', group: 'app', url: 'http://listings:4000/readyz' },
   { name: 'search', group: 'app', url: 'http://search:4000/readyz' },
   { name: 'media', group: 'app', url: 'http://media:4000/readyz' },
+  { name: 'messaging', group: 'app', url: 'http://messaging:4000/readyz' },
   { name: 'Keycloak', group: 'platform', url: 'http://keycloak:9000/health/ready' },
   { name: 'OpenBao', group: 'platform', url: 'http://openbao:8200/v1/sys/health' },
   { name: 'Kafka Connect (Debezium)', group: 'platform', url: 'http://kafka-connect:8083/' },

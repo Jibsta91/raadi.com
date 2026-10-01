@@ -45,13 +45,17 @@ services:
     user: '999:1000'
     security_opt: ['no-new-privileges:true']
     cap_drop: [ALL]
-    # The password is written to a tmpfs config file so it never appears in the
-    # process list or the container's environment.
+    # Passwords are written to a tmpfs config file so they never appear in the
+    # process list or the container's environment. The default user (sessions,
+    # rate limits) is identity-bff's; messaging gets an ACL user that may only
+    # publish and subscribe on messaging:* channels and cannot read any key.
     command:
       - sh
       - -c
       - |
         printf 'requirepass %s\n' "$$(cat /run/secrets/raadi/valkey_password)" > /tmp/valkey.conf
+        printf 'user messaging on >%s resetkeys resetchannels &messaging:* -@all +ping +publish +subscribe +unsubscribe\n' \
+          "$$(cat /run/secrets/raadi/valkey_messaging_password)" >> /tmp/valkey.conf
         exec valkey-server /tmp/valkey.conf --appendonly yes --maxmemory 96mb \
           --maxmemory-policy volatile-lru --protected-mode no
     tmpfs: [/tmp:mode=1777]

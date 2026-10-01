@@ -12,7 +12,9 @@
     "logout": "Ka bax",
     "search": "Raadi",
     "newListing": "Xayeysiis cusub",
-    "myListings": "Xayeysiisyadayda"
+    "myListings": "Xayeysiisyadayda",
+    "messages": "Fariimaha",
+    "unread": "{count, plural, one {# fariin aan la akhrin} other {# fariimood oo aan la akhrin}}"
   },
   "home": {
     "heroTitle": "Raadi. Hel. Iibi.",
@@ -344,6 +346,32 @@
     "status": {
       "active": "Firfircoon",
       "sold": "La iibiyay"
+    }
+  },
+  "messages": {
+    "title": "Fariimaha",
+    "empty": "Weli fariin ma jirto. La xiriir iibiye xayeysiis si aad wada sheekaysi u bilowdo.",
+    "you": "Adiga",
+    "unread": "{count, plural, one {# fariin aan la akhrin} other {# fariimood oo aan la akhrin}}",
+    "thread": "Fariimaha wada sheekaysigan",
+    "older": "Muuji fariimihii hore",
+    "compose": "Qor fariin…",
+    "send": "Dir",
+    "sending": "Waa la dirayaa…",
+    "seen": "La arkay",
+    "roleBuyer": "Waxaad wax ka weydiisay xayeysiiskan",
+    "roleSeller": "Iibsade ayaa wax ka weydiinaya xayeysiiskaaga",
+    "contact": {
+      "title": "La xiriir iibiyaha",
+      "default": "Salaan! Weli ma la iibinayaa?",
+      "send": "Dir fariinta",
+      "login": "Gal si aad ula xiriirto iibiyaha"
+    },
+    "errors": {
+      "own_listing": "Kani waa xayeysiiskaaga.",
+      "listing_unavailable": "Xayeysiiskan hadda lama heli karo.",
+      "rate_limited": "Aad ayaad u degdegaysaa. Wax yar sug oo isku day mar kale.",
+      "generic": "Fariinta lama diri karin. Fadlan isku day mar kale."
     }
   }
 }

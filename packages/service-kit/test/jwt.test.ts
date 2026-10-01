@@ -3,7 +3,7 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { after, before, describe, it } from 'node:test';
 import { exportJWK, generateKeyPair, SignJWT, type CryptoKey } from 'jose';
-import { JwtVerifier } from '../src/jwt.js';
+import { displayName, JwtVerifier } from '../src/jwt.js';
 
 const ISSUER = 'http://auth.raadi.localhost/realms/raadi';
 let server: Server;
@@ -65,5 +65,16 @@ describe('JwtVerifier', () => {
 
   it('rejects an expired token', async () => {
     await assert.rejects(verifier.verify(await sign({}, { exp: '-10m' })));
+  });
+});
+
+describe('displayName', () => {
+  it('uses the given name and family initial, never the e-mail', () => {
+    assert.equal(
+      displayName({ given_name: 'Kari', family_name: 'nordmann', email: 'k@x' }),
+      'Kari N.',
+    );
+    assert.equal(displayName({ given_name: 'Amina' }), 'Amina');
+    assert.equal(displayName({ email: 'k@x' }), 'Raadi-bruker');
   });
 });

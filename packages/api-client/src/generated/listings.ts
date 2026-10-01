@@ -59,6 +59,28 @@ export interface paths {
         patch: operations["updateListing"];
         trace?: never;
     };
+    "/internal/v1/listings/{id}/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Seller to contact about a listing (internal network only; messaging)
+         * @description Not routed by the gateway. Callers forward the user's bearer token.
+         */
+        get: operations["listingContact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -175,6 +197,21 @@ export interface components {
             imageIds?: string[];
             /** @enum {string} */
             status?: "active" | "sold";
+        };
+        ListingContact: {
+            /** Format: uuid */
+            listingId: string;
+            /**
+             * Format: uuid
+             * @description Keycloak subject of the seller
+             */
+            ownerId: string;
+            sellerName: string;
+            title: string;
+            /** @enum {string} */
+            status: "active" | "sold";
+            /** Format: uuid */
+            imageId: string | null;
         };
         Problem: {
             type: string;
@@ -341,6 +378,30 @@ export interface operations {
             404: components["responses"]["Problem"];
             412: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+        };
+    };
+    listingContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contact details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingContact"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
         };
     };
     liveness: {

@@ -6,9 +6,11 @@ import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { ImageGallery } from '@/components/listings/image-gallery';
 import { ListingActions } from '@/components/listings/listing-actions';
+import { ContactSeller } from '@/components/messaging/contact-seller';
 import { Link } from '@/i18n/navigation';
 import { getListing } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
+import { getSession } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +39,8 @@ export default async function ListingPage({
   if (!UUID.test(id)) notFound();
   const listing = await getListing(id);
   if (!listing) notFound();
-  const [t, format] = await Promise.all([getTranslations(), getFormatter()]);
+  const [t, format, session] = await Promise.all([getTranslations(), getFormatter(), getSession()]);
+  const canContact = listing.status === 'active' && !listing.viewer?.isOwner;
 
   const attributeValue = (key: string, value: string | number | boolean) => {
     if (ENUM_ATTRIBUTES.has(key)) return t(`taxonomy.values.${key}.${value}` as never);
@@ -128,6 +131,16 @@ export default async function ListingPage({
             </p>
           </dl>
           <ListingActions listing={listing} />
+          {canContact && session.authenticated ? <ContactSeller listingId={listing.id} /> : null}
+          {canContact && !session.authenticated ? (
+            <a
+              href={`/auth/login?returnTo=${encodeURIComponent(`/${locale}/listings/${listing.id}`)}&locale=${locale}`}
+              className="block rounded-lg border p-4 text-center text-sm font-medium text-primary hover:bg-accent"
+              data-testid="contact-login"
+            >
+              {t('messages.contact.login')}
+            </a>
+          ) : null}
         </aside>
       </div>
     </article>

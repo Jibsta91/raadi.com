@@ -41,14 +41,16 @@ flowchart LR
   U((Browser / app)) -->|80/443| T[Traefik<br/>TLS · rate limits · headers · forward-auth]
   T --> W[web<br/>Next.js]
   T --> B[identity-bff<br/>token handler]
-  T --> LS[listings] & SE[search] & ME[media]
+  T --> LS[listings] & SE[search] & ME[media] & MS[messaging<br/>REST + WebSocket]
   T -->|/img| IP[imgproxy<br/>signed URLs]
   T --> K[Keycloak<br/>OIDC · MFA · passkeys]
   T --> G[Grafana]
   W --> B & SE & LS
   B --> K
-  B --> V[(Valkey<br/>sessions)]
-  B & LS & ME --> P[(PostgreSQL 17<br/>PostGIS · pgvector)]
+  B --> V[(Valkey<br/>sessions · pub/sub)]
+  MS --> V
+  MS -->|seller lookup| LS
+  B & LS & ME & MS --> P[(PostgreSQL 17<br/>PostGIS · pgvector)]
   LS & ME --> FGA[OpenFGA]
   LS --> OPA[OPA]
   ME --> AV[ClamAV] & S3[(SeaweedFS S3)]
@@ -77,6 +79,7 @@ Compose network.
 | Web app (Next.js)                  | 3000                    | http://raadi.localhost                                          |
 | identity-bff (NestJS)              | 4000                    | http://raadi.localhost/auth/\*, /api/v1/identity/\*             |
 | listings · search · media (NestJS) | 4000 each               | /api/v1/listings · /api/v1/search · /api/v1/media               |
+| messaging (NestJS)                 | 4000                    | /api/v1/messaging/\* (REST), /api/v1/messaging/ws (WebSocket)   |
 | imgproxy (listing images)          | 8080                    | http://raadi.localhost/img/… (signed URLs only)                 |
 | Keycloak                           | 8080, 9000              | http://auth.raadi.localhost (admin console: `/admin/`)          |
 | Grafana                            | 3000                    | http://grafana.raadi.localhost (SSO as `admin@raadi.localhost`) |
@@ -131,7 +134,7 @@ workflow, Let's Encrypt, backups and the "zero to live in 15 minutes" guide arri
 
 Phases 1 (foundation) and 2 (listings, search, media, web) are complete. You can browse and search about 500
 demo listings (full text, facets, geo radius), and sign in to create, edit, sell and delete listings with
-virus-scanned images. Listing changes reach search through the outbox, Debezium and Kafka. See the
+virus-scanned images. Listing changes reach search through the outbox, Debezium and Kafka. Phase 3 is under way: buyers and sellers can message each other, with live delivery over WebSockets. See the
 [roadmap](docs/roadmap.md) for later phases.
 
 ## Documentation

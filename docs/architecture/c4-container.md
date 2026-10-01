@@ -54,7 +54,7 @@ C4Container
     Container(listings, "listings", "NestJS", "Listings, taxonomy, OPA rules, OpenFGA ownership")
     Container(search, "search", "NestJS", "Event-fed index; full-text, facets, geo (semantic + saved searches later)")
     Container(media, "media", "NestJS", "Uploads: ClamAV scan, re-encode, EXIF strip, orphan GC")
-    Container(messaging, "messaging", "NestJS", "Buyer-seller chat over WebSockets (P3)")
+    Container(messaging, "messaging", "NestJS", "Buyer-seller conversations; REST to send, WebSocket push")
     Container(notifications, "notifications", "NestJS", "E-mail, Expo push, in-app (P3)")
     Container(payments, "payments", "NestJS", "Promoted listings, pluggable providers (P3)")
     Container(trust, "reviews-trust", "NestJS", "Ratings, BankID-ready verification (P3)")
@@ -94,6 +94,9 @@ C4Container
   Rel(traefik, listings, "/api/v1/listings")
   Rel(traefik, search, "/api/v1/search")
   Rel(traefik, media, "/api/v1/media, /img")
+  Rel(traefik, messaging, "/api/v1/messaging, WebSocket")
+  Rel(messaging, valkey, "Pub/sub fan-out (ACL user)")
+  Rel(messaging, listings, "Seller lookup (internal API)")
   Rel(traefik, keycloak, "auth.<domain>")
   Rel(traefik, grafana, "grafana.<domain>")
   Rel(web, bff, "Session + token exchange")
@@ -206,7 +209,7 @@ reachable only on the internal Docker network.
 | seaweedfs (S3) / imgproxy              | 2                    | 8333, 9327 / 8080, 8081 (metrics)     | `/img/…` on the main host (signed)                                 |
 | openfga / opa                          | 2                    | 8080, 2112 (metrics) / 8181           | —                                                                  |
 | clamav                                 | 2                    | 3310                                  | —                                                                  |
-| messaging                              | 3                    | 4030                                  | `/api/v1/messaging`, WebSocket                                     |
+| messaging                              | 3                    | 4000                                  | `/api/v1/messaging/*`, WebSocket `/api/v1/messaging/ws`            |
 | notifications                          | 3                    | 4050                                  | `/api/v1/notifications`                                            |
 | payments                               | 3                    | 4060                                  | `/api/v1/payments`                                                 |
 | reviews-trust                          | 3                    | 4070                                  | `/api/v1/trust`                                                    |

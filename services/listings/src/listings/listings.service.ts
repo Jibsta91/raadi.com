@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { metrics, trace } from '@opentelemetry/api';
 import {
+  displayName,
   FgaClient,
   OpaClient,
   platformRoleTuples,
@@ -21,11 +22,19 @@ import {
   type Listing,
   type ListingRow,
   mergedListingSchema,
-  sellerName,
   toListing,
   type UpdateListing,
 } from './listing.model.js';
 import { ListingsRepository, VersionConflictError } from './listings.repository.js';
+
+export interface ListingContact {
+  listingId: string;
+  ownerId: string;
+  sellerName: string;
+  title: string;
+  status: 'active' | 'sold';
+  imageId: string | null;
+}
 
 export const SIGNER = Symbol('IMGPROXY_SIGNER');
 
@@ -61,6 +70,20 @@ export class ListingsService {
     return { ...toListing(row, this.signer), ...(viewer ? { viewer } : {}) };
   }
 
+  /** Internal: the seller to contact about a listing. Deleted listings are not found. */
+  async contact(id: string): Promise<ListingContact> {
+    const row = await this.repo.findById(id);
+    if (!row || row.status === 'deleted') throw new NotFoundException('Listing not found');
+    return {
+      listingId: row.id,
+      ownerId: row.owner_id,
+      sellerName: row.seller_name,
+      title: row.title,
+      status: row.status,
+      imageId: row.image_ids[0] ?? null,
+    };
+  }
+
   async mine(principal: Principal, limit: number, offset: number) {
     const { rows, total } = await this.repo.listByOwner(principal.sub, limit, offset);
     return { total, limit, offset, items: rows.map((r) => toListing(r, this.signer)) };
@@ -72,7 +95,7 @@ export class ListingsService {
 
     const id = randomUUID();
     const row = await this.repo.create(
-      { ...input, id, ownerId: principal.sub, sellerName: sellerName(principal.claims) },
+      { ...input, id, ownerId: principal.sub, sellerName: displayName(principal.claims) },
       // Written inside the transaction: if OpenFGA is down, the listing is not created.
       () => this.fga.write(ownerTuples(id, principal.sub)),
     );

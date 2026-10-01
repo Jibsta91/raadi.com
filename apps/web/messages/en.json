@@ -12,7 +12,9 @@
     "logout": "Log out",
     "search": "Search",
     "newListing": "New listing",
-    "myListings": "My listings"
+    "myListings": "My listings",
+    "messages": "Messages",
+    "unread": "{count, plural, one {# unread message} other {# unread messages}}"
   },
   "home": {
     "heroTitle": "Find it. Sell it. Raadi.",
@@ -344,6 +346,32 @@
     "status": {
       "active": "Active",
       "sold": "Sold"
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "empty": "No messages yet. Contact a seller from a listing to start a conversation.",
+    "you": "You",
+    "unread": "{count, plural, one {# unread message} other {# unread messages}}",
+    "thread": "Messages in this conversation",
+    "older": "Show older messages",
+    "compose": "Write a message…",
+    "send": "Send",
+    "sending": "Sending…",
+    "seen": "Seen",
+    "roleBuyer": "You asked about this listing",
+    "roleSeller": "A buyer is asking about your listing",
+    "contact": {
+      "title": "Contact the seller",
+      "default": "Hi! Is this still available?",
+      "send": "Send message",
+      "login": "Log in to contact the seller"
+    },
+    "errors": {
+      "own_listing": "This is your own listing.",
+      "listing_unavailable": "This listing is no longer available.",
+      "rate_limited": "You are sending too fast. Wait a moment and try again.",
+      "generic": "The message could not be sent. Please try again."
     }
   }
 }

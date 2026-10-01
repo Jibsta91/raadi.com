@@ -1,12 +1,14 @@
 import { Button } from '@raadi/ui';
-import { Plus, Search } from 'lucide-react';
+import { MessageCircle, Plus, Search } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { unreadCount } from '@/lib/api';
 import { getSession } from '@/lib/session';
 import { LocaleSwitcher } from './locale-switcher';
 
 export async function Header({ locale }: { locale: string }) {
   const [t, session] = await Promise.all([getTranslations('nav'), getSession()]);
+  const unread = session.authenticated ? await unreadCount() : 0;
   const loginHref = `/auth/login?returnTo=${encodeURIComponent(`/${locale}/account`)}&locale=${locale}`;
 
   return (
@@ -35,6 +37,21 @@ export async function Header({ locale }: { locale: string }) {
           </Button>
           {session.authenticated ? (
             <>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/messages" data-testid="nav-messages" className="relative">
+                  <MessageCircle aria-hidden />
+                  <span className="hidden sm:inline">{t('messages')}</span>
+                  {unread > 0 ? (
+                    <span
+                      className="absolute -right-1 -top-1 min-w-5 rounded-full bg-destructive px-1 text-center text-xs font-bold text-white"
+                      data-testid="nav-unread"
+                      aria-label={t('unread', { count: unread })}
+                    >
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  ) : null}
+                </Link>
+              </Button>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/my/listings" data-testid="nav-my-listings">
                   {t('myListings')}

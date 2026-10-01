@@ -12,7 +12,9 @@
     "logout": "Logg ut",
     "search": "Søk",
     "newListing": "Ny annonse",
-    "myListings": "Mine annonser"
+    "myListings": "Mine annonser",
+    "messages": "Meldinger",
+    "unread": "{count, plural, one {# ulest melding} other {# uleste meldinger}}"
   },
   "home": {
     "heroTitle": "Finn det. Selg det. Raadi.",
@@ -344,6 +346,32 @@
     "status": {
       "active": "Aktiv",
       "sold": "Solgt"
+    }
+  },
+  "messages": {
+    "title": "Meldinger",
+    "empty": "Ingen meldinger ennå. Kontakt en selger fra en annonse for å starte en samtale.",
+    "you": "Du",
+    "unread": "{count, plural, one {# ulest melding} other {# uleste meldinger}}",
+    "thread": "Meldinger i denne samtalen",
+    "older": "Vis eldre meldinger",
+    "compose": "Skriv en melding…",
+    "send": "Send",
+    "sending": "Sender…",
+    "seen": "Sett",
+    "roleBuyer": "Du spurte om denne annonsen",
+    "roleSeller": "En kjøper spør om annonsen din",
+    "contact": {
+      "title": "Kontakt selgeren",
+      "default": "Hei! Er denne fortsatt til salgs?",
+      "send": "Send melding",
+      "login": "Logg inn for å kontakte selgeren"
+    },
+    "errors": {
+      "own_listing": "Dette er din egen annonse.",
+      "listing_unavailable": "Denne annonsen er ikke lenger tilgjengelig.",
+      "rate_limited": "Du sender for raskt. Vent litt og prøv igjen.",
+      "generic": "Meldingen kunne ikke sendes. Prøv igjen."
     }
   }
 }

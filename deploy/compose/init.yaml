@@ -154,6 +154,8 @@ services:
       media: { condition: service_healthy }
       media-seed: { condition: service_completed_successfully }
       search: { condition: service_healthy }
+      messaging: { condition: service_healthy }
+      messaging-seed: { condition: service_completed_successfully }
       apicurio: { condition: service_healthy }
       opensearch: { condition: service_healthy }
       imgproxy: { condition: service_healthy }

@@ -69,6 +69,15 @@ export const contracts = {
     signature: z.string().optional(),
   }),
   'no.raadi.media.media.deleted.v1': z.object({ mediaId: uuid }),
+  /** A message in a buyer-seller conversation. Ids only: the text stays in messaging. */
+  'no.raadi.messaging.conversation.message_sent.v1': z.object({
+    conversationId: uuid,
+    messageId: uuid,
+    listingId: uuid,
+    senderId: uuid,
+    recipientId: uuid,
+    sentAt: timestamp,
+  }),
 } as const;
 
 export type EventType = keyof typeof contracts;

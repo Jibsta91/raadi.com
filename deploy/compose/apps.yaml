@@ -218,6 +218,57 @@ services:
       resources:
         limits: { memory: 256M, cpus: '1.0' }
 
+  messaging:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/messaging:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-service/Dockerfile
+      target: runtime
+      args: { SERVICE: messaging }
+    environment: &messaging-env
+      <<: *otel-env
+      OTEL_SERVICE_NAME: messaging
+      PORT: '4000'
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA}
+    volumes: &messaging-secrets
+      - type: volume
+        source: secrets
+        target: /run/secrets/openbao
+        read_only: true
+        volume: { subpath: approle/messaging }
+    depends_on:
+      openbao-bootstrap: { condition: service_completed_successfully }
+      db-init: { condition: service_completed_successfully }
+      valkey: { condition: service_healthy }
+      listings: { condition: service_healthy }
+      otel-collector: { condition: service_started }
+    healthcheck: *node-health
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '1.0' }
+
+  # Demo conversations (SEED_DEMO_DATA=true only); idempotent, runs on every `up`.
+  messaging-seed:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/messaging:${RAADI_VERSION}
+    pull_policy: build
+    restart: 'no'
+    entrypoint: ['/nodejs/bin/node', '--import', './dist/telemetry.js', 'dist/seed.js']
+    environment:
+      <<: *messaging-env
+      OTEL_SERVICE_NAME: messaging-seed
+    volumes: *messaging-secrets
+    depends_on:
+      messaging: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '1.0' }
+
   web:
     <<: *node-service
     image: ${RAADI_IMAGE_PREFIX}/web:${RAADI_VERSION}
@@ -236,6 +287,7 @@ services:
       IDENTITY_BFF_URL: http://identity-bff:4000
       LISTINGS_URL: http://listings:4000
       SEARCH_URL: http://search:4000
+      MESSAGING_URL: http://messaging:4000
     depends_on:
       identity-bff: { condition: service_healthy }
     healthcheck:

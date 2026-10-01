@@ -45,6 +45,23 @@ http:
       middlewares: [security-headers, ratelimit-default, media-body-limit, forward-auth]
       priority: 100
 
+    api-messaging:
+      rule: Host(`{{ $d }}`) && PathPrefix(`/api/v1/messaging/`)
+      entryPoints: [web, websecure]
+      service: messaging
+      middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
+      priority: 100
+
+    # Live delivery (WebSocket, push only). No body buffering or compression on
+    # an upgrade; forward-auth turns the session cookie into a bearer token and
+    # messaging checks the Origin itself.
+    messaging-ws:
+      rule: Host(`{{ $d }}`) && Path(`/api/v1/messaging/ws`)
+      entryPoints: [web, websecure]
+      service: messaging
+      middlewares: [security-headers, ratelimit-auth, forward-auth]
+      priority: 110
+
     # Listing images: signed imgproxy URLs only (anything else is refused upstream).
     images:
       rule: Host(`{{ $d }}`) && PathPrefix(`/img/`)
@@ -55,11 +72,19 @@ http:
 
     keycloak:
       rule: >-
-        Host(`auth.{{ $d }}`) && (PathPrefix(`/realms/`) || PathPrefix(`/resources/`) || PathPrefix(`/js/`)
+        Host(`auth.{{ $d }}`) && (PathPrefix(`/realms/`)
         {{- if ne (env "KEYCLOAK_ADMIN_PUBLIC") "false" }} || PathPrefix(`/admin/`){{ end }})
       entryPoints: [web, websecure]
       service: keycloak
       middlewares: [security-headers, ratelimit-auth]
+
+    # Keycloak's static theme assets (about ten per login page) get the normal
+    # limit; the strict one is for the endpoints that handle credentials.
+    keycloak-static:
+      rule: Host(`auth.{{ $d }}`) && (PathPrefix(`/resources/`) || PathPrefix(`/js/`))
+      entryPoints: [web, websecure]
+      service: keycloak
+      middlewares: [security-headers, ratelimit-default]
 
     grafana:
       rule: Host(`grafana.{{ $d }}`)
@@ -87,6 +112,10 @@ http:
     media:
       loadBalancer:
         servers: [{ url: "http://media:4000" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
+    messaging:
+      loadBalancer:
+        servers: [{ url: "http://messaging:4000" }]
         healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
     imgproxy:
       loadBalancer:
