@@ -38,7 +38,7 @@ receivers:
         mechanism: SCRAM-SHA-512
     scrapers: [brokers, topics, consumers]
     topic_match: ^raadi\.(user|listing|media|conversation)\.events$|^raadi\.dlq$
-    group_match: ^(search|media)-
+    group_match: ^(search-|media-|notifications$)
     collection_interval: 30s
 
 processors:

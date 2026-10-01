@@ -23,7 +23,7 @@ Raadi toolbox — usage: docker compose run --rm toolbox <command> [args]
   test               unit + contract tests
   test-integration   Testcontainers integration tests (uses the Docker socket)
   build              build all packages
-  generate           regenerate the typed API client from OpenAPI
+  generate           regenerate the typed API client (OpenAPI) and event JSON Schemas (zod)
   e2e                Playwright end-to-end tests against the running stack
   security           Trivy (fs + config), Gitleaks, OSV-Scanner
   iac-scan           Checkov + Trivy misconfiguration scan (compose, Dockerfiles, infra/)
@@ -57,7 +57,11 @@ HELP
       pnpm turbo run test:integration "$@"
     ;;
   build) install_deps; pnpm turbo run build "$@" ;;
-  generate) install_deps; pnpm --filter @raadi/api-client generate ;;
+  generate)
+    install_deps
+    pnpm --filter @raadi/api-client generate
+    pnpm --filter @raadi/events generate && pnpm exec prettier --write --log-level warn packages/events/schemas
+    ;;
   e2e) install_deps; pnpm --filter e2e e2e "$@" ;;
   security)
     trivy fs --scanners vuln,secret --severity HIGH,CRITICAL --exit-code 1 --skip-dirs '**/node_modules' --skip-dirs '**/.next' .

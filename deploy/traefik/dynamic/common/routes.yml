@@ -10,6 +10,16 @@ http:
       middlewares: [security-headers, web-csp, ratelimit-default, compress]
       priority: 1
 
+    # Next.js build output: content-hashed, immutable chunks (about 20 per page
+    # view). They get the asset limit so they don't use up the budget of the
+    # rendered pages and RSC requests; a page that loses a chunk never hydrates.
+    web-static:
+      rule: Host(`{{ $d }}`) && PathPrefix(`/_next/static/`)
+      entryPoints: [web, websecure]
+      service: web
+      middlewares: [security-headers, ratelimit-assets, compress]
+      priority: 100
+
     auth-flows:
       rule: Host(`{{ $d }}`) && PathPrefix(`/auth/`) && !Path(`/auth/forward`)
       entryPoints: [web, websecure]
@@ -52,13 +62,21 @@ http:
       middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
       priority: 100
 
+    api-notifications:
+      rule: Host(`{{ $d }}`) && PathPrefix(`/api/v1/notifications`)
+      entryPoints: [web, websecure]
+      service: notifications
+      middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
+      priority: 100
+
     # Live delivery (WebSocket, push only). No body buffering or compression on
     # an upgrade; forward-auth turns the session cookie into a bearer token and
     # messaging checks the Origin itself.
     messaging-ws:
       rule: Host(`{{ $d }}`) && Path(`/api/v1/messaging/ws`)
       entryPoints: [web, websecure]
-      service: messaging
+      # Its own service so long-lived sockets do not skew the API's latency metrics.
+      service: messaging-ws
       middlewares: [security-headers, ratelimit-auth, forward-auth]
       priority: 110
 
@@ -67,7 +85,7 @@ http:
       rule: Host(`{{ $d }}`) && PathPrefix(`/img/`)
       entryPoints: [web, websecure]
       service: imgproxy
-      middlewares: [security-headers, ratelimit-images, strip-img]
+      middlewares: [security-headers, ratelimit-assets, strip-img]
       priority: 100
 
     keycloak:
@@ -116,6 +134,14 @@ http:
     messaging:
       loadBalancer:
         servers: [{ url: "http://messaging:4000" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
+    messaging-ws:
+      loadBalancer:
+        servers: [{ url: "http://messaging:4000" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
+    notifications:
+      loadBalancer:
+        servers: [{ url: "http://notifications:4000" }]
         healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
     imgproxy:
       loadBalancer:

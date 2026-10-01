@@ -31,6 +31,7 @@ x-dev: &dev
     - nm-media:/workspace/services/media/node_modules
     - nm-search:/workspace/services/search/node_modules
     - nm-messaging:/workspace/services/messaging/node_modules
+    - nm-notifications:/workspace/services/notifications/node_modules
     - nm-service-kit:/workspace/packages/service-kit/node_modules
     - nm-ui:/workspace/packages/ui/node_modules
     - nm-api-client:/workspace/packages/api-client/node_modules
@@ -172,6 +173,24 @@ services:
       resources:
         limits: { memory: 640M }
 
+  notifications:
+    <<: *dev
+    command: ['pnpm', '--filter', 'notifications', 'dev']
+    depends_on:
+      dev-packages: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/readyz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      start_period: 90s
+    deploy:
+      resources:
+        limits: { memory: 640M }
+
   web:
     <<: *dev
     command: ['pnpm', '--filter', 'web', 'dev']
@@ -210,6 +229,7 @@ volumes:
   nm-media: {}
   nm-search: {}
   nm-messaging: {}
+  nm-notifications: {}
   nm-service-kit: {}
   nm-ui: {}
   nm-api-client: {}

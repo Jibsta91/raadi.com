@@ -13,15 +13,16 @@ REALM="${KEYCLOAK_REALM:-raadi}"
 BFF_CLIENT_SECRET="$(secret bff_oidc_client_secret)"
 GRAFANA_CLIENT_SECRET="$(secret grafana_oidc_client_secret)"
 REGISTRY_INIT_CLIENT_SECRET="$(secret registry_init_client_secret)"
+NOTIFICATIONS_CLIENT_SECRET="$(secret notifications_kc_client_secret)"
 export PUBLIC_BASE_URL AUTH_BASE_URL GRAFANA_BASE_URL RAADI_DOMAIN REALM BFF_CLIENT_SECRET GRAFANA_CLIENT_SECRET \
-  REGISTRY_INIT_CLIENT_SECRET \
+  REGISTRY_INIT_CLIENT_SECRET NOTIFICATIONS_CLIENT_SECRET \
   SMTP_HOST="${SMTP_HOST:-mailpit}" SMTP_PORT="${SMTP_PORT:-1025}" \
   SMTP_FROM="${SMTP_FROM:-no-reply@${RAADI_DOMAIN}}" \
   DEMO_USER_PASSWORD="${DEMO_USER_PASSWORD:-}"
 
 # envsubst only replaces this explicit list (Keycloak's own ${...} keys stay intact).
 # shellcheck disable=SC2016
-vars='$PUBLIC_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET'
+vars='$PUBLIC_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET'
 realm="$(envsubst "$vars" < /opt/raadi/keycloak/realm-raadi.json)"
 if [[ "${SEED_DEMO_DATA:-false}" != "true" ]]; then
   realm="$(jq 'del(.users)' <<<"$realm")"
@@ -82,3 +83,5 @@ grant_client_role() { # <service-account client> <resource client> <role>
   info "service account $1 has $2/$3"
 }
 grant_client_role registry-init apicurio-registry sr-admin
+# notifications reads e-mail and language at send time, nothing else.
+grant_client_role notifications realm-management view-users

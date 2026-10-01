@@ -218,6 +218,23 @@
       "attributes": {}
     },
     {
+      "clientId": "notifications",
+      "name": "Notifications service (looks up e-mail and language)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${NOTIFICATIONS_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "defaultClientScopes": ["basic", "roles"]
+    },
+    {
       "clientId": "registry-init",
       "name": "Schema registration (init container)",
       "enabled": true,

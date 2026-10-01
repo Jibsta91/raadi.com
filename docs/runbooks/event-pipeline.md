@@ -1,6 +1,7 @@
 # Event pipeline (outbox → Debezium → Kafka → consumers)
 
-**Alerts:** `DeadLettersGrowing`, `ConsumerLagHigh`, `ConsumerGroupEmpty`, `SearchIndexLagHigh`.
+**Alerts:** `DeadLettersGrowing`, `ConsumerLagHigh`, `ConsumerGroupEmpty`, `SearchIndexLagHigh`,
+`EmailQueueBacklog`, `EmailsGivenUp`.
 **Severity:** warning/critical. **Dashboard:** Grafana → Raadi → _Marketplace_.
 
 Background: [ADR-0012](../adr/0012-event-backbone.md). Services write events to their `outbox` table, Debezium
@@ -50,4 +51,15 @@ process them. Events a consumer can never process go to `raadi.dlq`.
      --reset-offsets --to-earliest --execute
    docker compose up -d search
    ```
-6. **Verify:** the Marketplace dashboard shows lag back at 0, and `./raadi smoke` passes (development).
+6. **E-mail backlog** (`EmailQueueBacklog`, `EmailsGivenUp`). The notifications service queues e-mails
+   and sends them in a loop ([ADR-0017](../adr/0017-notifications.md)). The last error is on each row:
+   ```bash
+   docker compose exec postgres psql -U postgres -d notifications -c \
+     "SELECT kind, status, attempts, left(last_error, 80) FROM emails WHERE status <> 'sent' ORDER BY created_at DESC LIMIT 20"
+   docker compose logs --tail=100 notifications
+   ```
+   Typical causes: the mail server refuses or is unreachable (check `SMTP_*`), or Keycloak's users API fails
+   (service account `notifications` needs `realm-management/view-users`; `docker compose run --rm keycloak-init`
+   re-grants it). E-mails that `failed` can be re-queued once the cause is fixed:
+   `UPDATE emails SET status = 'pending', attempts = 0, next_attempt_at = now() WHERE status = 'failed';`
+7. **Verify:** the Marketplace dashboard shows lag back at 0, and `./raadi smoke` passes (development).

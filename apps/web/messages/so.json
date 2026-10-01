@@ -14,7 +14,8 @@
     "newListing": "Xayeysiis cusub",
     "myListings": "Xayeysiisyadayda",
     "messages": "Fariimaha",
-    "unread": "{count, plural, one {# fariin aan la akhrin} other {# fariimood oo aan la akhrin}}"
+    "unread": "{count, plural, one {# fariin aan la akhrin} other {# fariimood oo aan la akhrin}}",
+    "notifications": "Ogeysiisyo"
   },
   "home": {
     "heroTitle": "Raadi. Hel. Iibi.",
@@ -372,6 +373,21 @@
       "listing_unavailable": "Xayeysiiskan hadda lama heli karo.",
       "rate_limited": "Aad ayaad u degdegaysaa. Wax yar sug oo isku day mar kale.",
       "generic": "Fariinta lama diri karin. Fadlan isku day mar kale."
+    }
+  },
+  "notifications": {
+    "title": "Ogeysiisyo",
+    "empty": "Weli ogeysiis ma jiro.",
+    "markAllRead": "Calaamadee dhammaan inay akhrisan yihiin",
+    "kinds": {
+      "listing_removed": "Xayeysiiskaaga \"{title}\" waxaa saaray maamule sababtoo ah wuxuu jebinayaa xeerarka suuqa."
+    },
+    "settings": {
+      "title": "Iimayl",
+      "emailMessages": "Ii soo dir iimayl marka fariin cusub ii timaado",
+      "emailMessagesHint": "Ugu badnaan hal iimayl wada sheekaysi kasta 30-kii daqiiqo. Ogeysiisyada xayeysiisyadaada mar walba waa la soo diraa.",
+      "saved": "Waa la keydiyay",
+      "error": "Lama keydin karin. Fadlan isku day mar kale."
     }
   }
 }

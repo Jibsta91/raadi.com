@@ -4,6 +4,9 @@ import {
   type ConversationPage,
   createListingsClient,
   createMessagingClient,
+  createNotificationsClient,
+  type NotificationList,
+  type NotificationPreferences,
   createSearchClient,
   type Listing,
   type ListingPage,
@@ -111,6 +114,45 @@ export async function unreadCount(): Promise<number> {
     return data?.count ?? 0;
   } catch (error) {
     logger.warn({ err: error }, 'unread count unavailable');
+    return 0;
+  }
+}
+
+/** The signed-in user's notifications and e-mail preferences; null when signed out. */
+export async function notifications(): Promise<{
+  list: NotificationList;
+  preferences: NotificationPreferences;
+} | null> {
+  const token = await accessToken();
+  if (!token) return null;
+  const client = createNotificationsClient({ baseUrl: env.notificationsUrl });
+  const init = {
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(5000),
+    cache: 'no-store' as const,
+  };
+  const [list, preferences] = await Promise.all([
+    client.GET('/api/v1/notifications', { ...init, params: { query: { limit: 50 } } }),
+    client.GET('/api/v1/notifications/preferences', init),
+  ]);
+  if (list.data && preferences.data) return { list: list.data, preferences: preferences.data };
+  throw new ServiceUnavailableError(`notifications returned ${list.response.status}`);
+}
+
+/** Unread notifications for the header bell (0 on any failure). */
+export async function unreadNotifications(): Promise<number> {
+  const token = await accessToken().catch(() => null);
+  if (!token) return 0;
+  try {
+    const client = createNotificationsClient({ baseUrl: env.notificationsUrl });
+    const { data } = await client.GET('/api/v1/notifications/unread', {
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(2000),
+      cache: 'no-store',
+    });
+    return data?.count ?? 0;
+  } catch (error) {
+    logger.warn({ err: error }, 'notification count unavailable');
     return 0;
   }
 }

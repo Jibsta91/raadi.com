@@ -12,9 +12,20 @@ import type {
   components as MessagingComponents,
   paths as MessagingPaths,
 } from './generated/messaging';
+import type {
+  components as NotificationsComponents,
+  paths as NotificationsPaths,
+} from './generated/notifications';
 import type { components as SearchComponents, paths as SearchPaths } from './generated/search';
 
-export type { IdentityPaths, ListingsPaths, MediaPaths, MessagingPaths, SearchPaths };
+export type {
+  IdentityPaths,
+  ListingsPaths,
+  MediaPaths,
+  MessagingPaths,
+  NotificationsPaths,
+  SearchPaths,
+};
 
 // Identity
 export type Me = IdentityComponents['schemas']['Me'];
@@ -48,6 +59,11 @@ export type ConversationPage = MessagingComponents['schemas']['ConversationPage'
 export type Message = MessagingComponents['schemas']['Message'];
 export type StartedConversation = MessagingComponents['schemas']['StartedConversation'];
 
+// Notifications
+export type Notification = NotificationsComponents['schemas']['Notification'];
+export type NotificationList = NotificationsComponents['schemas']['NotificationList'];
+export type NotificationPreferences = NotificationsComponents['schemas']['Preferences'];
+
 /*
  * Typed clients shared by web and mobile:
  *   - web (server side): baseUrl = the service (internal) or the gateway
@@ -61,3 +77,5 @@ export const createSearchClient = (options: ClientOptions) => createClient<Searc
 export const createMediaClient = (options: ClientOptions) => createClient<MediaPaths>(options);
 export const createMessagingClient = (options: ClientOptions) =>
   createClient<MessagingPaths>(options);
+export const createNotificationsClient = (options: ClientOptions) =>
+  createClient<NotificationsPaths>(options);

@@ -49,6 +49,9 @@ flowchart LR
   B --> K
   B --> V[(Valkey<br/>sessions · pub/sub)]
   MS --> V
+  KA --> NO[notifications<br/>e-mail · in-app]
+  NO -->|SMTP| ML[Mailpit / SMTP]
+  NO -->|users API| K
   MS -->|seller lookup| LS
   B & LS & ME & MS --> P[(PostgreSQL 17<br/>PostGIS · pgvector)]
   LS & ME --> FGA[OpenFGA]
@@ -80,6 +83,7 @@ Compose network.
 | identity-bff (NestJS)              | 4000                    | http://raadi.localhost/auth/\*, /api/v1/identity/\*             |
 | listings · search · media (NestJS) | 4000 each               | /api/v1/listings · /api/v1/search · /api/v1/media               |
 | messaging (NestJS)                 | 4000                    | /api/v1/messaging/\* (REST), /api/v1/messaging/ws (WebSocket)   |
+| notifications (NestJS)             | 4000                    | /api/v1/notifications/\* (in-app, preferences); e-mail via SMTP |
 | imgproxy (listing images)          | 8080                    | http://raadi.localhost/img/… (signed URLs only)                 |
 | Keycloak                           | 8080, 9000              | http://auth.raadi.localhost (admin console: `/admin/`)          |
 | Grafana                            | 3000                    | http://grafana.raadi.localhost (SSO as `admin@raadi.localhost`) |
@@ -134,7 +138,7 @@ workflow, Let's Encrypt, backups and the "zero to live in 15 minutes" guide arri
 
 Phases 1 (foundation) and 2 (listings, search, media, web) are complete. You can browse and search about 500
 demo listings (full text, facets, geo radius), and sign in to create, edit, sell and delete listings with
-virus-scanned images. Listing changes reach search through the outbox, Debezium and Kafka. Phase 3 is under way: buyers and sellers can message each other, with live delivery over WebSockets. See the
+virus-scanned images. Listing changes reach search through the outbox, Debezium and Kafka. Phase 3 is under way: buyers and sellers can message each other, with live delivery over WebSockets, and get e-mail and in-app notifications. See the
 [roadmap](docs/roadmap.md) for later phases.
 
 ## Documentation

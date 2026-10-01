@@ -156,6 +156,7 @@ services:
       search: { condition: service_healthy }
       messaging: { condition: service_healthy }
       messaging-seed: { condition: service_completed_successfully }
+      notifications: { condition: service_healthy }
       apicurio: { condition: service_healthy }
       opensearch: { condition: service_healthy }
       imgproxy: { condition: service_healthy }

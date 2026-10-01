@@ -61,7 +61,7 @@ async function events(id: string) {
   const { rows } = await pool.query<{
     event_type: string;
     aggregate_type: string;
-    payload: { data: unknown };
+    payload: { data: Record<string, unknown> };
   }>(
     'SELECT event_type, aggregate_type, payload FROM outbox WHERE aggregate_id = $1 ORDER BY created_at',
     [id],
@@ -105,13 +105,16 @@ describe('ListingsRepository', () => {
     assert.equal(updated.version, 2);
     assert.equal(updated.status, 'sold');
     await assert.rejects(repo.update(created.id, 1, next), VersionConflictError);
-    const deleted = await repo.softDelete(created.id);
+    const deleted = await repo.softDelete(created.id, 'moderation');
     assert.equal(deleted?.status, 'deleted');
-    assert.equal(await repo.softDelete(created.id), null, 'deleting twice is a no-op');
+    assert.equal(await repo.softDelete(created.id, 'owner'), null, 'deleting twice is a no-op');
+    const all = await events(created.id);
     assert.deepEqual(
-      (await events(created.id)).map((e) => e.event_type.split('.').at(-2)),
+      all.map((e) => e.event_type.split('.').at(-2)),
       ['published', 'updated', 'deleted'],
     );
+    assert.equal(all[2]!.payload.data.reason, 'moderation');
+    assert.equal(all[2]!.payload.data.ownerId, created.owner_id);
   });
 
   it('seeding is idempotent', async () => {

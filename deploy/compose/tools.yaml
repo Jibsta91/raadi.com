@@ -17,6 +17,7 @@ x-workspace: &workspace
     - nm-media:/workspace/services/media/node_modules
     - nm-search:/workspace/services/search/node_modules
     - nm-messaging:/workspace/services/messaging/node_modules
+    - nm-notifications:/workspace/services/notifications/node_modules
     - nm-service-kit:/workspace/packages/service-kit/node_modules
     - nm-ui:/workspace/packages/ui/node_modules
     - nm-api-client:/workspace/packages/api-client/node_modules
@@ -66,6 +67,7 @@ volumes:
   nm-media: {}
   nm-search: {}
   nm-messaging: {}
+  nm-notifications: {}
   nm-service-kit: {}
   nm-ui: {}
   nm-api-client: {}

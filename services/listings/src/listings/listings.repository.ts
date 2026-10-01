@@ -144,8 +144,11 @@ export class ListingsRepository {
     });
   }
 
-  /** Soft delete; emits `listing.deleted` so search and media can clean up. */
-  async softDelete(id: string): Promise<ListingRow | null> {
+  /**
+   * Soft delete; emits `listing.deleted` so search and media can clean up and
+   * the owner can be told when a moderator removed it.
+   */
+  async softDelete(id: string, reason: 'owner' | 'moderation'): Promise<ListingRow | null> {
     return withTransaction(this.pool, async (client) => {
       const { rows } = await client.query<ListingRow>(
         `UPDATE listings SET status = 'deleted', version = version + 1, updated_at = now()
@@ -158,6 +161,9 @@ export class ListingsRepository {
         listingId: row.id,
         version: row.version,
         imageIds: row.image_ids,
+        ownerId: row.owner_id,
+        title: row.title,
+        reason,
       });
       return row;
     });

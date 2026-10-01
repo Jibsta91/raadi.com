@@ -302,6 +302,34 @@ eventually "message events reach Kafka (outbox -> Debezium)" 120 \
   q 'sum(kafka_partition_current_offset_ratio{topic="raadi.conversation.events"})' '.data.result[0].value[1] | tonumber > 0'
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
+section "Notifications (e-mail, in-app, preferences)"
+: > "$JAR"
+req GET "$PUBLIC/api/v1/notifications"
+expect_status 401 "anonymous users cannot read notifications"
+mailpit() { curl -sf --max-time 10 --get --data-urlencode "query=$1" 'http://mailpit:8025/api/v1/search' | jq -e "$2"; }
+eventually "new-message e-mail reaches the seller (queued, then sent)" 90 \
+  mailpit "to:$USER_EMAIL subject:\"ny melding\"" '.messages_count > 0'
+id=$(curl -sf --get --data-urlencode "query=to:$USER_EMAIL subject:\"ny melding\"" 'http://mailpit:8025/api/v1/search' | jq -r '.messages[0].ID')
+text=$(curl -sf "http://mailpit:8025/api/v1/message/$id" | jq -r .Text)
+grep -q "/nb/messages/" <<<"$text" && ! grep -qF "$hello" <<<"$text" \
+  && ok "e-mail links to the conversation and contains no message text" || fail "e-mail content"
+
+login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
+removed() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" "$PUBLIC/api/v1/notifications" \
+  | jq -e --arg t "$title" '.items[] | select(.kind == "listing_removed" and .params.title == $t)'; }
+eventually "owner is notified when a moderator removes the listing" 90 removed
+eventually "removal notice is e-mailed to the owner" 90 \
+  mailpit "to:$USER_EMAIL subject:\"annonsen din er fjernet\"" '.messages_count > 0'
+req POST "$PUBLIC/api/v1/notifications/read-all" -H "origin: $ORIGIN"
+req GET "$PUBLIC/api/v1/notifications/unread"
+[[ "$(json '.count')" == "0" ]] && ok "mark all read" || fail "mark all read" "$(cat "$BODY")"
+req PUT "$PUBLIC/api/v1/notifications/preferences" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"emailMessages":"no"}'
+expect_status 400 "invalid preferences are rejected"
+req PUT "$PUBLIC/api/v1/notifications/preferences" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"emailMessages":false}'
+[[ "$status" == "200" && "$(json '.emailMessages')" == "false" ]] && ok "message e-mails can be switched off" || fail "preferences"
+req PUT "$PUBLIC/api/v1/notifications/preferences" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"emailMessages":true}'
+req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
+
 section "Operations"
 req GET "$GRAFANA/api/health"
 expect_status 200 "Grafana healthy via gateway"

@@ -35,6 +35,23 @@ groups:
           summary: Listing changes take more than a minute to become searchable (p95)
           runbook_url: docs/runbooks/event-pipeline.md
 
+  - name: notifications
+    rules:
+      - alert: EmailQueueBacklog
+        expr: max(raadi_notifications_email_queue) > 50
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $value }} e-mails are waiting to be sent'
+          description: The mail server or Keycloak (address lookup) is failing; e-mails are retried with backoff.
+          runbook_url: docs/runbooks/event-pipeline.md
+      - alert: EmailsGivenUp
+        expr: sum(increase(raadi_notifications_emails_total{outcome="failed"}[1h])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: E-mails failed after every retry in the last hour
+          runbook_url: docs/runbooks/event-pipeline.md
+
   - name: marketplace-security
     rules:
       - alert: MalwareUploadsSpike

@@ -29,6 +29,7 @@ services/listings        NestJS: listings CRUD, OPA marketplace rules, OpenFGA o
 services/search          NestJS: OpenSearch indexer (Kafka consumer) and search/suggest API
 services/media           NestJS: image uploads (ClamAV, imgproxy re-encode), attachment sync, orphan GC
 services/messaging       NestJS: buyer-seller conversations, WebSocket push (Valkey pub/sub fan-out)
+services/notifications   NestJS: e-mail queue (SMTP, Keycloak lookups) and in-app notifications from events
 services/*               further domain services (Phase 3)
 ai/*                     Python AI pillars (Phase 4)
 packages/service-kit     telemetry, logging, OpenBao, JWT guard, errors, resilience, health, shutdown,
@@ -64,7 +65,8 @@ built or configured lives under `deploy/`, grouped by component rather than by f
 | End-to-end (Playwright, Chromium)       | `tests/e2e/specs`                                  | `./raadi e2e`              |
 
 Contract tests validate controller output against the service's `openapi.yaml`, the same document that
-generates `@raadi/api-client` (`./raadi generate`).
+generates `@raadi/api-client`. `./raadi generate` rebuilds that client and the event JSON Schemas in
+`packages/events/schemas` (from the zod contracts); run it after changing either.
 
 ## Adding a NestJS service (checklist)
 

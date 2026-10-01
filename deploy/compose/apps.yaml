@@ -269,6 +269,44 @@ services:
       resources:
         limits: { memory: 256M, cpus: '1.0' }
 
+  notifications:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/notifications:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-service/Dockerfile
+      target: runtime
+      args: { SERVICE: notifications }
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: notifications
+      PORT: '4000'
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_FROM: Raadi <no-reply@${RAADI_DOMAIN}>
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/openbao
+        read_only: true
+        volume: { subpath: approle/notifications }
+    depends_on:
+      openbao-bootstrap: { condition: service_completed_successfully }
+      db-init: { condition: service_completed_successfully }
+      kafka-init: { condition: service_completed_successfully }
+      keycloak-init: { condition: service_completed_successfully }
+      otel-collector: { condition: service_started }
+    healthcheck: *node-health
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '1.0' }
+
   web:
     <<: *node-service
     image: ${RAADI_IMAGE_PREFIX}/web:${RAADI_VERSION}
@@ -288,6 +326,7 @@ services:
       LISTINGS_URL: http://listings:4000
       SEARCH_URL: http://search:4000
       MESSAGING_URL: http://messaging:4000
+      NOTIFICATIONS_URL: http://notifications:4000
     depends_on:
       identity-bff: { condition: service_healthy }
     healthcheck:

@@ -35,7 +35,7 @@ fi
 # --- Users ------------------------------------------------------------------
 # One SCRAM principal per client. Passwords are re-applied on every run, so a
 # rotated secret takes effect on the next `up`.
-users=(connect search media monitor)
+users=(connect search media notifications monitor)
 for u in "${users[@]}"; do
   "$BIN/kafka-configs.sh" --bootstrap-server "$BOOTSTRAP" --command-config "$ADMIN" --alter \
     --add-config "SCRAM-SHA-512=[iterations=8192,password=$(cat "$S/kafka_${u}_password")]" \
@@ -79,13 +79,15 @@ acl --allow-principal User:search --operation Read --operation Describe \
   --topic raadi.listing.events --group search-indexer
 acl --allow-principal User:media --operation Read --operation Describe \
   --topic raadi.listing.events --group media-listing-sync
-acl --allow-principal User:search --allow-principal User:media --operation Write --operation Describe \
-  --topic raadi.dlq
+acl --allow-principal User:notifications --operation Read --operation Describe \
+  --topic raadi.conversation.events --topic raadi.listing.events --group notifications
+acl --allow-principal User:search --allow-principal User:media --allow-principal User:notifications \
+  --operation Write --operation Describe --topic raadi.dlq
 # OpenTelemetry kafkametrics receiver: describe everything, read nothing.
 acl --allow-principal User:monitor --operation Describe --operation DescribeConfigs \
   --resource-pattern-type prefixed --topic raadi.
 acl --allow-principal User:monitor --operation Describe --resource-pattern-type prefixed \
-  --group search- --group media-
+  --group search- --group media- --group notifications
 acl --allow-principal User:monitor --operation Describe --cluster
 log "ACLs applied"
 

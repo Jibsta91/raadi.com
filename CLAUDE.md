@@ -60,6 +60,9 @@ A full reset (wipes data): `docker compose down -v --remove-orphans`.
   `./raadi e2e e2e specs/<file>.spec.ts`.
 - Grafana has basic auth disabled. For API checks, log in with `POST /login` (admin secret) and use the cookie.
 - OpenSearch's search user may only touch `raadi-listings*`, so index/alias calls must name that pattern.
+- All Playwright workers reach Traefik from one IP and share its per-client rate limit. A 429 on a page or
+  JS chunk means the page never hydrates (forms submit natively, `router.push`/`onChange` do nothing). Keep
+  links rendered on every page (header, footer) at `prefetch={false}`: each prefetch is a full dynamic render.
 
 ## Demo logins
 

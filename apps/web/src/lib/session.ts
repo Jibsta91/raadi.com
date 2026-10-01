@@ -30,9 +30,10 @@ export const getSession = cache(async (): Promise<Session> => {
 /**
  * Server-side token handling: exchange the session cookie for a short-lived
  * access token at identity-bff (the same call Traefik's forwardAuth makes),
- * then call the API with it. Tokens never reach the browser.
+ * then call the API with it. Tokens never reach the browser. Cached per
+ * request: the header and the page share one exchange (and one refresh).
  */
-export async function accessToken(): Promise<string | null> {
+export const accessToken = cache(async (): Promise<string | null> => {
   const cookie = await cookieHeader();
   if (!cookie) return null;
   const res = await fetch(`${env.identityBffUrl}/auth/forward`, {
@@ -41,7 +42,7 @@ export async function accessToken(): Promise<string | null> {
     signal: AbortSignal.timeout(3000),
   });
   return res.ok ? (res.headers.get('authorization')?.replace(/^Bearer /, '') ?? null) : null;
-}
+});
 
 export const getMe = cache(async (): Promise<Me | null> => {
   const token = await accessToken();

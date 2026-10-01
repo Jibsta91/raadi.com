@@ -55,7 +55,7 @@ C4Container
     Container(search, "search", "NestJS", "Event-fed index; full-text, facets, geo (semantic + saved searches later)")
     Container(media, "media", "NestJS", "Uploads: ClamAV scan, re-encode, EXIF strip, orphan GC")
     Container(messaging, "messaging", "NestJS", "Buyer-seller conversations; REST to send, WebSocket push")
-    Container(notifications, "notifications", "NestJS", "E-mail, Expo push, in-app (P3)")
+    Container(notifications, "notifications", "NestJS", "E-mail (queued, throttled) and in-app; Expo push later")
     Container(payments, "payments", "NestJS", "Promoted listings, pluggable providers (P3)")
     Container(trust, "reviews-trust", "NestJS", "Ratings, BankID-ready verification (P3)")
   }
@@ -97,6 +97,8 @@ C4Container
   Rel(traefik, messaging, "/api/v1/messaging, WebSocket")
   Rel(messaging, valkey, "Pub/sub fan-out (ACL user)")
   Rel(messaging, listings, "Seller lookup (internal API)")
+  Rel(kafka, notifications, "message and listing events")
+  Rel(notifications, keycloak, "E-mail address + language (view-users)")
   Rel(traefik, keycloak, "auth.<domain>")
   Rel(traefik, grafana, "grafana.<domain>")
   Rel(web, bff, "Session + token exchange")
@@ -210,7 +212,7 @@ reachable only on the internal Docker network.
 | openfga / opa                          | 2                    | 8080, 2112 (metrics) / 8181           | —                                                                  |
 | clamav                                 | 2                    | 3310                                  | —                                                                  |
 | messaging                              | 3                    | 4000                                  | `/api/v1/messaging/*`, WebSocket `/api/v1/messaging/ws`            |
-| notifications                          | 3                    | 4050                                  | `/api/v1/notifications`                                            |
+| notifications                          | 3                    | 4000                                  | `/api/v1/notifications/*`; SMTP out                                |
 | payments                               | 3                    | 4060                                  | `/api/v1/payments`                                                 |
 | reviews-trust                          | 3                    | 4070                                  | `/api/v1/trust`                                                    |
 | mobile (Expo dev server)               | 3                    | 8081                                  | LAN / tunnel                                                       |

@@ -8,10 +8,10 @@ export async function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-sm text-muted-foreground sm:flex-row sm:justify-between">
         <span>{t('tagline')}</span>
         <nav className="flex gap-4">
-          <Link href="/privacy" className="hover:underline">
+          <Link href="/privacy" prefetch={false} className="hover:underline">
             {t('privacy')}
           </Link>
-          <Link href="/status" className="hover:underline">
+          <Link href="/status" prefetch={false} className="hover:underline">
             {t('status')}
           </Link>
           <span>{t('openSource')}</span>

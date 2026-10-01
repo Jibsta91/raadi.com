@@ -10,8 +10,9 @@ groups:
           description: 'Prometheus could not scrape {{ $labels.instance }} for 2 minutes.'
           runbook_url: docs/runbooks/service-down.md
       - alert: ServiceStoppedReportingTelemetry
+        # One-shot seed jobs (*-seed) stop by design once they are done.
         expr: |
-          (max by (service_name) (max_over_time(target_info{service_namespace="raadi"}[1h])))
+          (max by (service_name) (max_over_time(target_info{service_namespace="raadi", service_name!~".+-seed"}[1h])))
             unless (max by (service_name) (target_info{service_namespace="raadi"}))
         for: 5m
         labels: { severity: warning }
@@ -28,12 +29,14 @@ groups:
 
   - name: gateway-slo
     rules:
+      # WebSocket connections (messaging-ws) are long-lived "requests"; they are
+      # kept out of the request rate, error and latency SLOs.
       - record: raadi:gateway_requests:rate5m
-        expr: sum by (service) (rate(traefik_service_requests_total[5m]))
+        expr: sum by (service) (rate(traefik_service_requests_total{service!~"messaging-ws@.*"}[5m]))
       - record: raadi:gateway_errors:ratio5m
         expr: |
-          sum by (service) (rate(traefik_service_requests_total{code=~"5.."}[5m]))
-            / clamp_min(sum by (service) (rate(traefik_service_requests_total[5m])), 1e-9)
+          sum by (service) (rate(traefik_service_requests_total{code=~"5..", service!~"messaging-ws@.*"}[5m]))
+            / clamp_min(sum by (service) (rate(traefik_service_requests_total{service!~"messaging-ws@.*"}[5m])), 1e-9)
       - alert: GatewayHighErrorRate
         expr: raadi:gateway_errors:ratio5m > 0.05 and raadi:gateway_requests:rate5m > 0.1
         for: 5m
@@ -43,7 +46,7 @@ groups:
           runbook_url: docs/runbooks/high-error-rate.md
       - alert: GatewayHighLatency
         expr: |
-          histogram_quantile(0.95, sum by (service, le) (rate(traefik_service_request_duration_seconds_bucket[5m]))) > 1
+          histogram_quantile(0.95, sum by (service, le) (rate(traefik_service_request_duration_seconds_bucket{service!~"messaging-ws@.*"}[5m]))) > 1
         for: 10m
         labels: { severity: warning }
         annotations:

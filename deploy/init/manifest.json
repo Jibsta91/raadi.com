@@ -34,7 +34,10 @@
     "listings_db_password",
     "media_db_password",
     "messaging_db_password",
-    "valkey_messaging_password"
+    "valkey_messaging_password",
+    "notifications_db_password",
+    "kafka_notifications_password",
+    "notifications_kc_client_secret"
   ],
   "fileConsumers": {
     "postgres": {
@@ -73,7 +76,8 @@
         "kafka_connect_password",
         "kafka_search_password",
         "kafka_media_password",
-        "kafka_monitor_password"
+        "kafka_monitor_password",
+        "kafka_notifications_password"
       ]
     },
     "kafka-connect": {
@@ -213,6 +217,16 @@
         "valkey_password": "valkey_messaging_password"
       },
       "shared": ["imgproxy"]
+    },
+    "notifications": {
+      "uid": 65532,
+      "database": "notifications",
+      "migrations": "notifications",
+      "openbao": {
+        "db_password": "notifications_db_password",
+        "kafka_password": "kafka_notifications_password",
+        "keycloak_client_secret": "notifications_kc_client_secret"
+      }
     }
   },
   "shared": {

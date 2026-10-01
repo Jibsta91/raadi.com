@@ -170,7 +170,7 @@ export class ListingsService {
     if (!current || current.status === 'deleted') throw new NotFoundException('Listing not found');
     if (!(await this.can(principal, 'can_delete', id)))
       throw new ForbiddenException('You cannot delete this listing');
-    await this.repo.softDelete(id);
+    await this.repo.softDelete(id, current.owner_id === principal.sub ? 'owner' : 'moderation');
     listingsWritten.add(1, { action: 'delete', category: current.category });
   }
 

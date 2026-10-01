@@ -52,6 +52,10 @@ export const contracts = {
     listingId: uuid,
     version: z.number().int().min(1),
     imageIds: z.array(uuid),
+    /** Added later (optional for BACKWARD compatibility): whose listing, and who removed it. */
+    ownerId: uuid.optional(),
+    title: z.string().min(1).max(120).optional(),
+    reason: z.enum(['owner', 'moderation']).optional(),
   }),
   'no.raadi.media.media.uploaded.v1': z.object({
     mediaId: uuid,

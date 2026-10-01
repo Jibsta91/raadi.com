@@ -53,8 +53,9 @@ http:
       buffering:
         maxRequestBodyBytes: 11534336
 
-    # A results page loads many thumbnails at once.
-    ratelimit-images:
+    # Static assets: a results page loads many thumbnails at once, and every
+    # page view loads about twenty hashed Next.js chunks.
+    ratelimit-assets:
       rateLimit:
         average: 200
         burst: 400

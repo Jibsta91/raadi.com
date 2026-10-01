@@ -14,7 +14,8 @@
     "newListing": "Ny annonse",
     "myListings": "Mine annonser",
     "messages": "Meldinger",
-    "unread": "{count, plural, one {# ulest melding} other {# uleste meldinger}}"
+    "unread": "{count, plural, one {# ulest melding} other {# uleste meldinger}}",
+    "notifications": "Varsler"
   },
   "home": {
     "heroTitle": "Finn det. Selg det. Raadi.",
@@ -372,6 +373,21 @@
       "listing_unavailable": "Denne annonsen er ikke lenger tilgjengelig.",
       "rate_limited": "Du sender for raskt. Vent litt og prøv igjen.",
       "generic": "Meldingen kunne ikke sendes. Prøv igjen."
+    }
+  },
+  "notifications": {
+    "title": "Varsler",
+    "empty": "Ingen varsler ennå.",
+    "markAllRead": "Merk alle som lest",
+    "kinds": {
+      "listing_removed": "Annonsen «{title}» ble fjernet av en moderator fordi den bryter reglene for markedsplassen."
+    },
+    "settings": {
+      "title": "E-post",
+      "emailMessages": "Send meg e-post når jeg får en ny melding",
+      "emailMessagesHint": "Maks én e-post per samtale hver halvtime. Varsler om annonsene dine sendes alltid.",
+      "saved": "Lagret",
+      "error": "Kunne ikke lagre. Prøv igjen."
     }
   }
 }

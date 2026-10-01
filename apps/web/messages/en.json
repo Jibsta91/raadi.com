@@ -14,7 +14,8 @@
     "newListing": "New listing",
     "myListings": "My listings",
     "messages": "Messages",
-    "unread": "{count, plural, one {# unread message} other {# unread messages}}"
+    "unread": "{count, plural, one {# unread message} other {# unread messages}}",
+    "notifications": "Notifications"
   },
   "home": {
     "heroTitle": "Find it. Sell it. Raadi.",
@@ -372,6 +373,21 @@
       "listing_unavailable": "This listing is no longer available.",
       "rate_limited": "You are sending too fast. Wait a moment and try again.",
       "generic": "The message could not be sent. Please try again."
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet.",
+    "markAllRead": "Mark all as read",
+    "kinds": {
+      "listing_removed": "Your listing \"{title}\" was removed by a moderator because it breaks the marketplace rules."
+    },
+    "settings": {
+      "title": "E-mail",
+      "emailMessages": "E-mail me when I get a new message",
+      "emailMessagesHint": "At most one e-mail per conversation every 30 minutes. Notices about your listings are always sent.",
+      "saved": "Saved",
+      "error": "Could not save. Please try again."
     }
   }
 }

@@ -1,0 +1,176 @@
+openapi: 3.1.0
+info:
+  title: Raadi notifications
+  version: 1.0.0
+  description: |
+    In-app notifications and e-mail preferences for the signed-in user. Notifications are
+    created from domain events (for example, a moderator removing a listing). E-mails are
+    sent from a queue: they contain a link back to the app, never message text.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: http://raadi.localhost
+    description: Local development through the gateway
+tags:
+  - name: notifications
+security: [{ bearer: [] }, { session: [] }]
+paths:
+  /api/v1/notifications:
+    get:
+      tags: [notifications]
+      operationId: notifications
+      summary: The caller's notifications, newest first, with the unread count
+      parameters:
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 50, default: 20 },
+          }
+      responses:
+        '200':
+          description: Notifications
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotificationList' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/notifications/unread:
+    get:
+      tags: [notifications]
+      operationId: unreadNotifications
+      summary: Number of unread notifications
+      responses:
+        '200':
+          description: Count
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [count]
+                properties:
+                  count: { type: integer, minimum: 0 }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/notifications/read-all:
+    post:
+      tags: [notifications]
+      operationId: markAllNotificationsRead
+      summary: Mark every notification read
+      responses:
+        '204': { description: Done }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/notifications/{id}/read:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [notifications]
+      operationId: markNotificationRead
+      summary: Mark one notification read
+      responses:
+        '204': { description: Done }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /api/v1/notifications/preferences:
+    get:
+      tags: [notifications]
+      operationId: notificationPreferences
+      summary: The caller's e-mail preferences
+      responses:
+        '200':
+          description: Preferences
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Preferences' }
+        '401': { $ref: '#/components/responses/Problem' }
+    put:
+      tags: [notifications]
+      operationId: saveNotificationPreferences
+      summary: Change the caller's e-mail preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Preferences' }
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Preferences' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      operationId: liveness
+      security: []
+      responses: { '200': { description: Process is alive } }
+  /readyz:
+    get:
+      operationId: readiness
+      security: []
+      responses:
+        '200': { description: Ready }
+        '503': { description: A dependency is unavailable or the service is draining }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    session: { type: apiKey, in: cookie, name: raadi_sid }
+  responses:
+    Problem:
+      description: RFC 9457 problem details
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Notification:
+      type: object
+      additionalProperties: false
+      required: [id, kind, params, link, createdAt, read]
+      properties:
+        id: { type: string, format: uuid }
+        kind:
+          type: string
+          enum: [listing_removed]
+          description: The client renders the localized text from the kind and params.
+        params:
+          type: object
+          additionalProperties: { type: string }
+          description: Values for the text, e.g. {"title":"…"} for listing_removed.
+        link: { type: string, description: Path in the web app (without locale) }
+        createdAt: { type: string, format: date-time }
+        read: { type: boolean }
+    NotificationList:
+      type: object
+      additionalProperties: false
+      required: [unread, items]
+      properties:
+        unread: { type: integer, minimum: 0 }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Notification' }
+    Preferences:
+      type: object
+      additionalProperties: false
+      required: [emailMessages]
+      properties:
+        emailMessages:
+          type: boolean
+          description: E-mail me about new messages. Service e-mails (moderation) are always sent.
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        traceId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path: { type: string }
+              message: { type: string }
+              code: { type: string }
