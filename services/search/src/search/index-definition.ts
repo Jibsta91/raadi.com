@@ -1,8 +1,8 @@
 /**
- * The listings index. Bump INDEX_VERSION when the mapping changes: the
- * service creates the new index, points the alias at it once it is empty
- * of conflicts, and the consumer group can be reset to re-index from Kafka
- * (events are retained for 14 days; the outbox can be replayed beyond that).
+ * The listings index. Bump INDEX_VERSION when the mapping changes: on start
+ * the service creates the new index, copies the documents from the old one
+ * and moves the alias (SearchIndex.ensureIndex). Fields that are not in the
+ * stored documents need a re-read of the topic (docs/runbooks/event-pipeline.md).
  */
 export const INDEX_VERSION = 1;
 

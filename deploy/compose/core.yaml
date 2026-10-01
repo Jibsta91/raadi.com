@@ -54,7 +54,7 @@ services:
         printf 'requirepass %s\n' "$$(cat /run/secrets/raadi/valkey_password)" > /tmp/valkey.conf
         exec valkey-server /tmp/valkey.conf --appendonly yes --maxmemory 96mb \
           --maxmemory-policy volatile-lru --protected-mode no
-    tmpfs: [/tmp]
+    tmpfs: [/tmp:mode=1777]
     volumes:
       - valkey-data:/data
       - type: volume

@@ -31,11 +31,11 @@ metrics_generator:
     remote_write:
       - url: http://prometheus:9090/api/v1/write
         send_exemplars: true
-  traces_storage:
-    path: /var/tempo/generator/traces
+# Only the processors Grafana uses (service map, RED metrics). "local-blocks"
+# (TraceQL metrics) keeps recent traces in memory and does not fit the budget.
 overrides:
   defaults:
     metrics_generator:
-      processors: [service-graphs, span-metrics, local-blocks]
+      processors: [service-graphs, span-metrics]
 usage_report:
   reporting_enabled: false

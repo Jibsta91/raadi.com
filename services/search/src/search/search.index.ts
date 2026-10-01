@@ -79,7 +79,13 @@ export class SearchIndex {
     return `${this.alias}-v${INDEX_VERSION}`;
   }
 
-  /** Creates the versioned index and points the alias at it (idempotent). */
+  /**
+   * Creates the versioned index and points the alias at it (idempotent). After
+   * an INDEX_VERSION bump the documents are copied from the previous index
+   * (keeping their external versions) before the alias moves in one atomic
+   * step, so search never answers from an empty or doubled index. This runs
+   * before the consumer starts, so nothing writes during the copy.
+   */
   async ensureIndex(): Promise<void> {
     await retry(
       async () => {
@@ -96,14 +102,46 @@ export class SearchIndex {
                 throw e;
             });
         }
+        const previous = (await this.aliasTargets()).filter((i) => i !== this.indexName);
+        for (const source of previous) {
+          await this.client.reindex({
+            body: {
+              conflicts: 'proceed',
+              source: { index: source },
+              dest: { index: this.indexName, version_type: 'external' },
+            },
+            refresh: true,
+            wait_for_completion: true,
+          });
+        }
         await this.client.indices.updateAliases({
           body: {
-            actions: [{ add: { index: this.indexName, alias: this.alias, is_write_index: true } }],
+            actions: [
+              ...previous.map((index) => ({ remove: { index, alias: this.alias } })),
+              { add: { index: this.indexName, alias: this.alias, is_write_index: true } },
+            ],
           },
         });
       },
       { retries: 10, baseDelayMs: 500, shouldRetry: transient },
     );
+  }
+
+  /**
+   * Indices the alias currently points at (none on first start). Scoped to
+   * this service's own indices: its OpenSearch user may not read the others.
+   */
+  private async aliasTargets(): Promise<string[]> {
+    try {
+      const res = await this.client.indices.getAlias({
+        index: `${this.alias}-v*`,
+        name: this.alias,
+      });
+      return Object.keys(res.body as Record<string, unknown>);
+    } catch (e) {
+      if (isNotFound(e)) return [];
+      throw e;
+    }
   }
 
   async upsert(doc: ListingDocument, version: number): Promise<'indexed' | 'stale'> {

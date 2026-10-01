@@ -1,0 +1,46 @@
+groups:
+  - name: event-pipeline
+    rules:
+      - record: raadi:dlq_messages
+        expr: |
+          sum(kafka_partition_current_offset_ratio{topic="raadi.dlq"})
+            - sum(kafka_partition_oldest_offset_ratio{topic="raadi.dlq"})
+      - alert: DeadLettersGrowing
+        expr: raadi:dlq_messages - (raadi:dlq_messages offset 15m) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $value }} new events went to raadi.dlq in the last 15 minutes'
+          description: A consumer gave up on events it can never process (contract violation or bad reference).
+          runbook_url: docs/runbooks/event-pipeline.md
+      - alert: ConsumerLagHigh
+        expr: max by (group, topic) (kafka_consumer_group_lag_sum_ratio) > 500
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $labels.group }} is {{ $value }} events behind on {{ $labels.topic }}'
+          runbook_url: docs/runbooks/event-pipeline.md
+      - alert: ConsumerGroupEmpty
+        expr: max by (group) (kafka_consumer_group_members) == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: 'No consumer is running in group {{ $labels.group }}'
+          runbook_url: docs/runbooks/event-pipeline.md
+      - alert: SearchIndexLagHigh
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(raadi_search_index_lag_seconds_bucket[5m]))) > 60
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: Listing changes take more than a minute to become searchable (p95)
+          runbook_url: docs/runbooks/event-pipeline.md
+
+  - name: marketplace-security
+    rules:
+      - alert: MalwareUploadsSpike
+        expr: sum(increase(raadi_media_uploads_total{outcome="malware"}[1h])) > 5
+        labels: { severity: warning }
+        annotations:
+          summary: More than 5 uploads were rejected as malware in the last hour
+          description: Look up the uploaders in the media database (rejected rows keep the user id and signature).
+          runbook_url: docs/runbooks/auth-anomalies.md

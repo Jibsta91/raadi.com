@@ -138,6 +138,30 @@ describe('SearchIndex + SearchService', () => {
     assert.equal((await search({})).total, 59);
   });
 
+  it('migrates to a new index version by copying documents and moving the alias', async () => {
+    const url = `http://${container.getHost()}:${container.getMappedPort(9200)}`;
+    const migrating = new SearchIndex(url, 'x', 'x', 'migrate-test');
+    const doc = toDocument(snapshot(1));
+    await migrating.client.indices.create({ index: 'migrate-test-v0' });
+    await migrating.client.indices.putAlias({ index: 'migrate-test-v0', name: 'migrate-test' });
+    await migrating.client.index({
+      index: 'migrate-test-v0',
+      id: doc.id,
+      body: doc,
+      version: 7,
+      version_type: 'external',
+      refresh: true,
+    });
+
+    await migrating.ensureIndex();
+
+    const targets = await migrating.client.indices.getAlias({ name: 'migrate-test' });
+    assert.deepEqual(Object.keys(targets.body), [migrating.indexName]);
+    const copied = await migrating.client.get({ index: migrating.indexName, id: doc.id });
+    assert.equal(copied.body._version, 7);
+    assert.equal(await migrating.upsert(doc, 6), 'stale');
+  });
+
   it('suggests titles for prefixes', async () => {
     const first = demoListings(60)[5]!.title;
     const r = await service.suggest(first.slice(0, 4));

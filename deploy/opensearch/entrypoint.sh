@@ -4,6 +4,9 @@
 set -euo pipefail
 CFG=/usr/share/opensearch/config
 mkdir -p "$CFG/certs"
+# The sources are read-only (0400) and the copies keep that mode. Without
+# CAP_DAC_OVERRIDE a restart cannot overwrite them, so replace them instead.
+rm -f "$CFG"/certs/*.pem "$CFG/opensearch-security/internal_users.yml"
 cp /run/certs/opensearch/node.pem /run/certs/opensearch/node-key.pem /run/certs/opensearch/ca.pem "$CFG/certs/"
 chmod 0600 "$CFG/certs/node-key.pem"
 cp /run/secrets/raadi/internal_users.yml "$CFG/opensearch-security/internal_users.yml"

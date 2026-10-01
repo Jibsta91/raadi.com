@@ -59,7 +59,7 @@ services:
     build:
       context: deploy/imgproxy
     read_only: true
-    tmpfs: [/tmp]
+    tmpfs: [/tmp:mode=1777]
     environment:
       IMGPROXY_BIND: :8080
       IMGPROXY_USE_S3: 'true'
@@ -111,7 +111,7 @@ services:
     pull_policy: build
     build:
       context: deploy/clamav
-    tmpfs: [/tmp]
+    tmpfs: [/tmp:mode=1777]
     environment:
       CLAMAV_FRESHCLAM: ${CLAMAV_FRESHCLAM}
       TZ: ${TZ}

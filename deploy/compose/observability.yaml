@@ -131,7 +131,7 @@ services:
       context: deploy/observability/tempo
     command: ['-config.file=/etc/tempo/tempo.yaml']
     environment:
-      GOMEMLIMIT: 300MiB
+      GOMEMLIMIT: 420MiB
     volumes:
       - ./deploy/observability/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       - tempo-data:/var/tempo
@@ -152,12 +152,13 @@ services:
       start_period: 30s
     deploy:
       resources:
-        limits: { memory: 384M, cpus: '1.0' }
+        limits: { memory: 512M, cpus: '1.0' }
 
   grafana:
     <<: *hardening
     image: grafana/grafana:13.2.3
     environment:
+      GOMEMLIMIT: 400MiB
       GF_SERVER_ROOT_URL: ${GRAFANA_BASE_URL}
       GF_SERVER_ENABLE_GZIP: 'true'
       GF_SECURITY_ADMIN_USER: admin
@@ -217,7 +218,7 @@ services:
       start_period: 30s
     deploy:
       resources:
-        limits: { memory: 256M, cpus: '1.0' }
+        limits: { memory: 512M, cpus: '1.0' }
 
 volumes:
   prometheus-data: {}

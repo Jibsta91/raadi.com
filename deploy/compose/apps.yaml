@@ -8,7 +8,9 @@ x-node-service: &node-service
   restart: unless-stopped
   logging: *logging
   read_only: true
-  tmpfs: [/tmp]
+  # Explicit mode: Docker remounts a tmpfs as root-owned 0755 when a container
+  # restarts, and these images run as non-root users.
+  tmpfs: [/tmp:mode=1777]
   security_opt: ['no-new-privileges:true']
   cap_drop: [ALL]
   stop_grace_period: 20s
@@ -224,7 +226,7 @@ services:
       context: .
       dockerfile: deploy/docker/web/Dockerfile
       target: runtime
-    tmpfs: [/tmp, /app/apps/web/.next/cache]
+    tmpfs: [/tmp:mode=1777, /app/apps/web/.next/cache:mode=1777]
     environment:
       <<: *otel-env
       OTEL_SERVICE_NAME: web

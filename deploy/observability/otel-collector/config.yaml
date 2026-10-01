@@ -2,6 +2,7 @@
 #   apps/Traefik/Keycloak --OTLP--> collector --> Tempo (traces)
 #                                              --> Prometheus OTLP receiver (metrics)
 #                                              --> Loki OTLP endpoint (logs)
+# The collector also pulls metrics from PostgreSQL, Valkey and Kafka.
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
@@ -24,6 +25,20 @@ receivers:
   redis/valkey:
     endpoint: valkey:6379
     password: ${file:/run/secrets/raadi/valkey_password}
+    collection_interval: 30s
+  # Consumer lag and topic offsets. The "monitor" SCRAM user may describe
+  # topics and groups but read nothing (deploy/kafka/init.sh).
+  kafkametrics:
+    brokers: [kafka:9092]
+    client_id: otel-collector
+    auth:
+      sasl:
+        username: monitor
+        password: ${file:/run/secrets/raadi/kafka_monitor_password}
+        mechanism: SCRAM-SHA-512
+    scrapers: [brokers, topics, consumers]
+    topic_match: ^raadi\.(user|listing|media)\.events$|^raadi\.dlq$
+    group_match: ^(search|media)-
     collection_interval: 30s
 
 processors:
@@ -85,7 +100,7 @@ service:
       processors: [memory_limiter, resource/env, attributes/scrub, batch]
       exporters: [otlp/tempo]
     metrics:
-      receivers: [otlp, postgresql, redis/valkey]
+      receivers: [otlp, postgresql, redis/valkey, kafkametrics]
       processors: [memory_limiter, resource/env, batch]
       exporters: [otlp_http/prometheus]
     logs:

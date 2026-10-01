@@ -16,3 +16,7 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0009](0009-open-source-licensing-policy.md)      | OSI-only licensing policy                                     | Accepted |
 | [0010](0010-pinned-versions.md)                   | Version pinning and deliberate version choices                | Accepted |
 | [0011](0011-resource-budget.md)                   | 16 GB laptop resource budget and profiles                     | Accepted |
+| [0012](0012-event-backbone.md)                    | Event backbone: Kafka, Debezium outbox, Apicurio contracts    | Accepted |
+| [0013](0013-authorization.md)                     | Authorization: OpenFGA relationships, OPA rules, fail closed  | Accepted |
+| [0014](0014-media-pipeline.md)                    | Media pipeline: scan, re-encode, signed URLs, orphan GC       | Accepted |
+| [0015](0015-search.md)                            | Search: OpenSearch fed by listing events                      | Accepted |

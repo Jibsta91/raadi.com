@@ -194,6 +194,7 @@ req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/tmp/not-an-image
   && ok "non-images are refused by content sniffing" || fail "content sniffing" "HTTP $status $(cat "$BODY")"
 # ClamAV's EICAR signature is anchored at offset 0, so the file is sent as is
 # (every upload is scanned before its type is checked).
+# shellcheck disable=SC2016 # the "$" characters are part of the EICAR string
 printf 'X5O!P%%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > /tmp/eicar.jpg
 req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/tmp/eicar.jpg;type=image/jpeg"
 [[ "$status" == "422" && "$(json '.errors[0].code')" == "malware" ]] && ok "ClamAV rejects the EICAR test virus" || fail "malware scan" "HTTP $status $(cat "$BODY")"

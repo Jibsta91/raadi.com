@@ -45,3 +45,13 @@ scrape_configs:
     static_configs: [{ targets: ['loki:3100'] }]
   - job_name: tempo
     static_configs: [{ targets: ['tempo:3200'] }]
+  - job_name: imgproxy
+    static_configs: [{ targets: ['imgproxy:8081'] }]
+  - job_name: openfga
+    static_configs: [{ targets: ['openfga:2112'] }]
+  - job_name: opa
+    static_configs: [{ targets: ['opa:8181'] }]
+  - job_name: seaweedfs
+    static_configs: [{ targets: ['seaweedfs:9327'] }]
+  - job_name: apicurio
+    static_configs: [{ targets: ['apicurio:9000'] }]

@@ -19,7 +19,7 @@ services:
     build:
       context: deploy/kafka
     read_only: true
-    tmpfs: [/tmp, /opt/kafka/logs]
+    tmpfs: [/tmp:mode=1777, /opt/kafka/logs:mode=1777]
     environment:
       KAFKA_HEAP_OPTS: -Xms256m -Xmx256m
       KAFKA_JVM_PERFORMANCE_OPTS: -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:+ExplicitGCInvokesConcurrent -XX:MaxDirectMemorySize=64m
@@ -54,7 +54,7 @@ services:
     security_opt: ['no-new-privileges:true']
     cap_drop: [ALL]
     read_only: true
-    tmpfs: [/tmp, /opt/kafka/logs]
+    tmpfs: [/tmp:mode=1777, /opt/kafka/logs:mode=1777]
     entrypoint: ['/opt/raadi/init.sh']
     volumes:
       - kafka-init-state:/state

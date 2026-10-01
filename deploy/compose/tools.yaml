@@ -29,6 +29,7 @@ x-workspace: &workspace
     RAADI_DOMAIN: ${RAADI_DOMAIN}
     PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
     AUTH_BASE_URL: ${AUTH_BASE_URL}
+    GRAFANA_BASE_URL: ${GRAFANA_BASE_URL}
     DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD}
     TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
     TESTCONTAINERS_RYUK_DISABLED: 'false'
@@ -49,6 +50,9 @@ services:
     <<: *workspace
     profiles: [tools, test]
     network_mode: service:traefik
+    # Chromium keeps renderer memory in /dev/shm; Docker's 64 MB default
+    # crashes it on large single-page apps such as Grafana.
+    shm_size: 512m
     command: ['e2e']
     depends_on:
       summary: { condition: service_healthy }
