@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.12
 # Shared image recipe for every TypeScript (NestJS) service.
-#   docker build -f deploy/images/node-service/Dockerfile --build-arg SERVICE=identity-bff .
+#   docker build -f deploy/docker/node-service/Dockerfile --build-arg SERVICE=identity-bff .
 # Stages: prune (turbo) -> build -> deploy (prod deps only) -> distroless runtime.
 # Build stages run on the build platform; production dependencies are pure JS,
 # so the multi-arch result needs no emulation.
@@ -29,7 +29,7 @@ RUN pnpm turbo run build --filter="${SERVICE}..." \
 
 FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:bb6b03d81066993293a10feda7250e8e1cc034035fe9b61cfceededa7c8bf04d AS runtime
 ARG SERVICE
-LABEL org.opencontainers.image.source="https://github.com/raadi/raadi" \
+LABEL org.opencontainers.image.source="https://github.com/Jibsta91/raadi.com" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.title="raadi-${SERVICE}"
 WORKDIR /app

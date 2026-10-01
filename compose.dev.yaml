@@ -7,7 +7,7 @@ x-dev: &dev
   pull_policy: build
   build: !override
     context: .
-    dockerfile: deploy/images/node-dev/Dockerfile
+    dockerfile: deploy/docker/node-dev/Dockerfile
   entrypoint: !reset null
   read_only: false
   # Dev containers run as root to write build output into the bind mount; keep

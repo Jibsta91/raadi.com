@@ -1,0 +1,19 @@
+# Contributing
+
+Docker is the only prerequisite. Every tool runs in the `toolbox` container through `./raadi` (or `make`).
+
+1. Read [docs/roadmap.md](docs/roadmap.md), [docs/development.md](docs/development.md) and the
+   [ADRs](docs/adr/README.md). Decisions recorded there are not reopened without a new ADR.
+2. Start the stack and check it is green before you change anything:
+   `./raadi up && ./raadi smoke && ./raadi e2e`.
+3. Keep commits small and working; each one should leave the stack green.
+4. Before you push, run the gates CI runs:
+   `./raadi lint && ./raadi typecheck && ./raadi test && ./raadi test-integration && ./raadi licenses && ./raadi security && ./raadi iac-scan`.
+
+## Conventions
+
+- Pin exact versions (never `latest`); Renovate proposes upgrades.
+- Only OSI-licensed dependencies ([ADR-0009](docs/adr/0009-open-source-licensing-policy.md)).
+- New services follow the checklist in [docs/development.md](docs/development.md#adding-a-nestjs-service-checklist).
+- Secrets come only from OpenBao; no personal data in logs or events.
+- Write an ADR for every significant decision ([format](docs/adr/0001-record-architecture-decisions.md)).

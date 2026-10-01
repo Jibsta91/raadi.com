@@ -30,13 +30,20 @@ packages/service-kit     telemetry, logging, OpenBao, JWT guard, errors, resilie
 packages/api-client      typed client generated from services' OpenAPI contracts
 packages/ui              design-system components
 packages/config          shared tsconfig and ESLint presets
-deploy/compose/*.yaml    compose slices included by compose.yaml
+deploy/compose/*.yaml    compose slices included by compose.yaml (one per concern)
+deploy/docker/*          build recipes for our own code: node-service (every NestJS service), web, node-dev
 deploy/init              raadi-init image: bootstrap scripts + secrets/DB manifest
-deploy/{traefik,keycloak,openbao,postgres,otel,observability,toolbox,images}
+deploy/toolbox           toolbox image (every dev/ops CLI, pinned)
+deploy/<component>/      everything for one third-party component: config, plus a Dockerfile only
+                         when we wrap the upstream image (traefik, keycloak, openbao, postgres, …)
+deploy/observability/*   the same, for the observability stack (otel-collector, prometheus, loki, …)
 infra/{tofu,ansible,cloud-init}  (Phase 5)
 tests/{smoke,e2e,licenses}
 docs/                    architecture, ADRs, threat model, runbooks
 ```
+
+Rule of thumb: code lives in `apps/`, `services/` and `packages/`; anything that describes how a container is
+built or configured lives under `deploy/`, grouped by component rather than by file type.
 
 ## Tests
 
@@ -58,7 +65,7 @@ generates `@raadi/api-client` (`./raadi generate`).
    `ZodValidationPipe`, `HealthRegistry` + `installGracefulShutdown`, `OpenBaoClient` for secrets.
 3. Register it in `deploy/init/manifest.json` (UID, database, extensions, OpenBao secrets). `secrets-init`,
    `openbao-bootstrap` and `db-init` pick it up automatically. Put SQL migrations in `migrations/` (dbmate format).
-4. Add the compose service in `deploy/compose/apps.yaml` (build with `deploy/images/node-service/Dockerfile`,
+4. Add the compose service in `deploy/compose/apps.yaml` (build with `deploy/docker/node-service/Dockerfile`,
    `SERVICE=<name>`) and a router in `deploy/traefik/dynamic/common/routes.yml` with the `forward-auth` middleware.
 5. Add `nm-<name>` volumes to `deploy/compose/tools.yaml` and `compose.dev.yaml`.
 6. Extend the smoke test and the Grafana dashboards. Write an ADR if a decision was involved.

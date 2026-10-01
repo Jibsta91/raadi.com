@@ -23,7 +23,7 @@ RUN pnpm turbo run build --filter=web... \
  && pnpm --filter @raadi/service-kit deploy --prod /otel
 
 FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:bb6b03d81066993293a10feda7250e8e1cc034035fe9b61cfceededa7c8bf04d AS runtime
-LABEL org.opencontainers.image.source="https://github.com/raadi/raadi" \
+LABEL org.opencontainers.image.source="https://github.com/Jibsta91/raadi.com" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.title="raadi-web"
 WORKDIR /app

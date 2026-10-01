@@ -8,7 +8,7 @@ management and IaC operations. All of it is 100% OSI-licensed and runs fully off
 ## Quickstart
 
 ```bash
-git clone https://github.com/<you>/raadi.git && cd raadi
+git clone https://github.com/Jibsta91/raadi.com.git raadi && cd raadi
 docker compose up
 ```
 

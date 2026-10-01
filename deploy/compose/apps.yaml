@@ -30,7 +30,7 @@ services:
     pull_policy: build
     build:
       context: .
-      dockerfile: deploy/images/node-service/Dockerfile
+      dockerfile: deploy/docker/node-service/Dockerfile
       target: runtime
       args: { SERVICE: identity-bff }
     environment:
@@ -75,7 +75,7 @@ services:
     pull_policy: build
     build:
       context: .
-      dockerfile: apps/web/Dockerfile
+      dockerfile: deploy/docker/web/Dockerfile
       target: runtime
     tmpfs: [/tmp, /app/apps/web/.next/cache]
     environment:

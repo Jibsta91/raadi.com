@@ -16,13 +16,13 @@ services:
     image: ${RAADI_IMAGE_PREFIX}/otel-collector:${RAADI_VERSION}
     pull_policy: build
     build:
-      context: deploy/images/otel-collector
+      context: deploy/observability/otel-collector
     command: ['--config=/etc/otelcol/config.yaml']
     environment:
       RAADI_ENV: ${RAADI_ENV}
       GOMEMLIMIT: 300MiB
     volumes:
-      - ./deploy/otel/collector.yaml:/etc/otelcol/config.yaml:ro
+      - ./deploy/observability/otel-collector/config.yaml:/etc/otelcol/config.yaml:ro
       - type: volume
         source: secrets
         target: /run/secrets/raadi
@@ -97,7 +97,7 @@ services:
     image: ${RAADI_IMAGE_PREFIX}/loki:${RAADI_VERSION}
     pull_policy: build
     build:
-      context: deploy/images/loki
+      context: deploy/observability/loki
     command: ['-config.file=/etc/loki/loki.yaml']
     environment:
       GOMEMLIMIT: 300MiB
@@ -128,7 +128,7 @@ services:
     image: ${RAADI_IMAGE_PREFIX}/tempo:${RAADI_VERSION}
     pull_policy: build
     build:
-      context: deploy/images/tempo
+      context: deploy/observability/tempo
     command: ['-config.file=/etc/tempo/tempo.yaml']
     environment:
       GOMEMLIMIT: 300MiB
