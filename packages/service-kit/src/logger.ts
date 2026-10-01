@@ -40,3 +40,12 @@ export function requestId(req: IncomingMessage): string {
   const candidate = Array.isArray(header) ? header[0] : header;
   return candidate && /^[\w.-]{8,128}$/.test(candidate) ? candidate : randomUUID();
 }
+
+/**
+ * pino-http `autoLogging.ignore` for health probes. Under Nest's Fastify
+ * adapter the logger runs as middleware, where `url` has the matched prefix
+ * stripped; `originalUrl` keeps the full path.
+ */
+export function isHealthProbe(req: IncomingMessage & { originalUrl?: string }): boolean {
+  return /^\/(healthz|readyz)(\?|$)/.test(req.originalUrl ?? req.url ?? '');
+}

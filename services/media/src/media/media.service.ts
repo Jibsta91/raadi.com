@@ -182,18 +182,18 @@ export class MediaService {
       case 'no.raadi.listings.listing.published.v1':
       case 'no.raadi.listings.listing.updated.v1': {
         const { listing } = parsed.data;
-        const images = listing.status === 'deleted' ? [] : listing.imageIds;
-        await this.repo.syncListingImages(parsed.id, listing.id, listing.ownerId, images);
+        await this.repo.syncListingImages(
+          parsed.id,
+          listing.id,
+          listing.status === 'deleted'
+            ? null
+            : { ownerId: listing.ownerId, imageIds: listing.imageIds },
+        );
         return;
       }
       case 'no.raadi.listings.listing.deleted.v1':
         // Detached images become orphans and are garbage-collected after the TTL.
-        await this.repo.syncListingImages(
-          parsed.id,
-          parsed.data.listingId,
-          '00000000-0000-0000-0000-000000000000',
-          [],
-        );
+        await this.repo.syncListingImages(parsed.id, parsed.data.listingId, null);
         return;
       default:
         return;

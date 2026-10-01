@@ -2,7 +2,9 @@ import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import {
+  HealthController,
   HealthRegistry,
+  isHealthProbe,
   JwtAuthGuard,
   JwtVerifier,
   loggerOptions,
@@ -15,7 +17,6 @@ import { AuthController } from './auth/auth.controller.js';
 import { OidcService } from './auth/oidc.service.js';
 import { SessionStore } from './auth/session.store.js';
 import type { AppConfig } from './config.js';
-import { HealthController } from './health/health.controller.js';
 import { createPool, createValkey, type Valkey } from './infra/clients.js';
 import { ValkeyThrottlerStorage } from './infra/throttler-storage.js';
 import { Lifecycle } from './lifecycle.js';
@@ -34,7 +35,7 @@ export class AppModule {
           pinoHttp: {
             ...loggerOptions('identity-bff', cfg.env.LOG_LEVEL),
             genReqId: requestId,
-            autoLogging: { ignore: (req) => /^\/(healthz|readyz)/.test(req.url ?? '') },
+            autoLogging: { ignore: isHealthProbe },
             serializers: {
               req: (req: { id: string; method: string; url: string }) => ({
                 id: req.id,
@@ -48,6 +49,7 @@ export class AppModule {
         ThrottlerModule.forRoot({
           throttlers: [{ name: 'default', ttl: 60_000, limit: 300 }],
           storage: new ValkeyThrottlerStorage(valkey),
+          skipIf: (ctx) => ctx.getClass() === HealthController,
         }),
       ],
       controllers: [AuthController, MeController, HealthController],

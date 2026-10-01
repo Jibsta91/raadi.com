@@ -7,6 +7,7 @@ import {
   HealthController,
   HealthRegistry,
   imgproxySigner,
+  isHealthProbe,
   JwtAuthGuard,
   JwtVerifier,
   keycloakVerifier,
@@ -39,7 +40,7 @@ export class AppModule {
           pinoHttp: {
             ...loggerOptions('media', env.LOG_LEVEL),
             genReqId: requestId,
-            autoLogging: { ignore: (req) => /^\/(healthz|readyz)/.test(req.url ?? '') },
+            autoLogging: { ignore: isHealthProbe },
             serializers: {
               req: (req: { id: string; method: string; url: string }) => ({
                 id: req.id,

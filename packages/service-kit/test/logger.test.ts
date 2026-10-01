@@ -3,7 +3,7 @@ import type { IncomingMessage } from 'node:http';
 import { describe, it } from 'node:test';
 import { Writable } from 'node:stream';
 import { pino } from 'pino';
-import { loggerOptions, requestId } from '../src/logger.js';
+import { isHealthProbe, loggerOptions, requestId } from '../src/logger.js';
 
 describe('logger', () => {
   it('redacts credentials', () => {
@@ -39,5 +39,15 @@ describe('logger', () => {
       headers: { 'x-request-id': 'bad id\n' },
     } as unknown as IncomingMessage);
     assert.match(replaced, /^[0-9a-f-]{36}$/);
+  });
+
+  it('recognises health probes, also when middleware stripped the url', () => {
+    const req = (url: string, originalUrl?: string) =>
+      ({ url, originalUrl }) as unknown as IncomingMessage & { originalUrl?: string };
+    assert.equal(isHealthProbe(req('/', '/readyz')), true);
+    assert.equal(isHealthProbe(req('/healthz')), true);
+    assert.equal(isHealthProbe(req('/readyz?verbose=1')), true);
+    assert.equal(isHealthProbe(req('/readyz-not', '/readyz-not')), false);
+    assert.equal(isHealthProbe(req('/', '/api/v1/listings')), false);
   });
 });

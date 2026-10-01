@@ -105,15 +105,16 @@ export class MediaRepository {
 
   /**
    * Applies a listing event exactly once (inbox table): attaches the listed
-   * images that belong to the listing's owner and detaches the rest.
-   * Returns false if the event was already processed.
+   * images that belong to the listing's owner and detaches the rest (all of
+   * them when `attach` is null, e.g. the listing was deleted). Returns false
+   * if the event was already processed.
    */
   async syncListingImages(
     eventId: string,
     listingId: string,
-    ownerId: string,
-    imageIds: string[],
+    attach: { ownerId: string; imageIds: string[] } | null,
   ): Promise<boolean> {
+    const imageIds = attach?.imageIds ?? [];
     return withTransaction(this.pool, async (client) => {
       const fresh = await client.query(
         'INSERT INTO processed_events (event_id) VALUES ($1) ON CONFLICT DO NOTHING',
@@ -125,11 +126,13 @@ export class MediaRepository {
           WHERE listing_id = $1 AND NOT (id = ANY($2::uuid[]))`,
         [listingId, imageIds],
       );
-      await client.query(
-        `UPDATE media SET listing_id = $1, attached_at = COALESCE(attached_at, now())
-          WHERE id = ANY($2::uuid[]) AND owner_id = $3 AND status = 'ready'`,
-        [listingId, imageIds, ownerId],
-      );
+      if (attach && imageIds.length) {
+        await client.query(
+          `UPDATE media SET listing_id = $1, attached_at = COALESCE(attached_at, now())
+            WHERE id = ANY($2::uuid[]) AND owner_id = $3 AND status = 'ready'`,
+          [listingId, imageIds, attach.ownerId],
+        );
+      }
       return true;
     });
   }
