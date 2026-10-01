@@ -10,17 +10,71 @@
     "grafana_oidc_client_secret",
     "identity_db_password",
     "bff_oidc_client_secret",
-    "bff_session_key"
+    "bff_session_key",
+    "kafka_admin_password",
+    "kafka_connect_password",
+    "kafka_search_password",
+    "kafka_media_password",
+    "kafka_monitor_password",
+    "debezium_db_password",
+    "apicurio_db_password",
+    "registry_init_client_secret"
   ],
   "fileConsumers": {
-    "postgres": { "uid": 999, "secrets": ["postgres_superuser_password"] },
-    "valkey": { "uid": 999, "secrets": ["valkey_password"] },
-    "keycloak": { "uid": 1000, "secrets": ["keycloak_db_password", "keycloak_admin_password"] },
-    "grafana": { "uid": 472, "secrets": ["grafana_admin_password", "grafana_oidc_client_secret"] },
-    "otel-collector": { "uid": 10001, "secrets": ["postgres_monitor_password", "valkey_password"] }
+    "postgres": {
+      "uid": 999,
+      "secrets": ["postgres_superuser_password"]
+    },
+    "valkey": {
+      "uid": 999,
+      "secrets": ["valkey_password"]
+    },
+    "keycloak": {
+      "uid": 1000,
+      "secrets": ["keycloak_db_password", "keycloak_admin_password"]
+    },
+    "grafana": {
+      "uid": 472,
+      "secrets": ["grafana_admin_password", "grafana_oidc_client_secret"]
+    },
+    "otel-collector": {
+      "uid": 10001,
+      "secrets": ["postgres_monitor_password", "valkey_password", "kafka_monitor_password"]
+    },
+    "kafka": {
+      "uid": 1000,
+      "secrets": ["kafka_admin_password"]
+    },
+    "kafka-init": {
+      "uid": 1000,
+      "secrets": [
+        "kafka_admin_password",
+        "kafka_connect_password",
+        "kafka_search_password",
+        "kafka_media_password",
+        "kafka_monitor_password"
+      ]
+    },
+    "kafka-connect": {
+      "uid": 1001,
+      "secrets": ["kafka_connect_password", "debezium_db_password"]
+    },
+    "apicurio": {
+      "uid": 1001,
+      "secrets": ["apicurio_db_password"]
+    }
   },
   "infraDatabases": {
-    "keycloak": { "owner": "keycloak", "password": "keycloak_db_password", "extensions": [] }
+    "keycloak": {
+      "owner": "keycloak",
+      "password": "keycloak_db_password",
+      "extensions": []
+    },
+    "apicurio": {
+      "owner": "apicurio",
+      "password": "apicurio_db_password",
+      "extensions": []
+    }
   },
   "services": {
     "identity-bff": {
@@ -33,10 +87,18 @@
         "oidc_client_secret": "bff_oidc_client_secret",
         "session_key": "bff_session_key"
       },
-      "shared": ["valkey"]
+      "shared": ["valkey"],
+      "outbox": true
     }
   },
   "shared": {
-    "valkey": { "password": "valkey_password" }
+    "valkey": {
+      "password": "valkey_password"
+    }
+  },
+  "cdc": {
+    "$comment": "Debezium reads the outbox table of every service with \"outbox\": true (ADR-0008).",
+    "role": "debezium",
+    "password": "debezium_db_password"
   }
 }

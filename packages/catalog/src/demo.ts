@@ -1,0 +1,385 @@
+/**
+ * Deterministic demo dataset (development only, SEED_DEMO_DATA=true).
+ *
+ * The listings and media seeders run independently in their own services; both
+ * derive the same listing and image ids from this module, so they agree without
+ * talking to each other. Same input, same output, on every machine.
+ */
+import { createHash } from 'node:crypto';
+import type { Attributes, Category, Subcategory } from './taxonomy.js';
+import { PLACES, type Place } from './places.js';
+
+/** Fixed Keycloak subjects of the demo users (deploy/keycloak/realm-raadi.json). */
+export const DEMO_USERS = [
+  { id: '3f0c5a6e-1b7d-4c2a-9e51-7a0d2b6c4f11', sellerName: 'Kari N.' },
+  { id: '8b2e4d90-5c3a-4f6b-a1d7-2e9c0f3b5a22', sellerName: 'Ola N.' },
+  { id: 'c7d1f2a4-9e6b-4a3c-8f50-1b4e7d2a6c33', sellerName: 'Amina H.' },
+] as const;
+
+export const DEMO_LISTING_COUNT = 500;
+
+/** RFC 4122 version-5 (name-based, SHA-1) UUID in the Raadi demo namespace. */
+export function demoUuid(name: string): string {
+  const ns = Buffer.from('6d9a2c1e4b7f4e0a9c3d5b8e1f2a7c64', 'hex');
+  const hash = createHash('sha1').update(ns).update(name).digest();
+  hash[6] = (hash[6]! & 0x0f) | 0x50;
+  hash[8] = (hash[8]! & 0x3f) | 0x80;
+  const h = hash.subarray(0, 16).toString('hex');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+/** mulberry32: tiny, fast, good enough for demo data. */
+function prng(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+type Rng = ReturnType<typeof prng>;
+const pick = <T>(rng: Rng, items: readonly T[]): T => items[Math.floor(rng() * items.length)]!;
+const between = (rng: Rng, min: number, max: number, step = 1) =>
+  Math.round((min + rng() * (max - min)) / step) * step;
+
+interface Template {
+  titles: readonly string[];
+  blurb: string;
+  price: [number, number, number];
+}
+
+const T = (titles: string[], blurb: string, price: [number, number, number]): Template => ({
+  titles,
+  blurb,
+  price,
+});
+
+const TEMPLATES: Record<Subcategory, Template> = {
+  elektronikk: T(
+    [
+      'iPhone 15 128 GB',
+      'Samsung Galaxy S24',
+      'MacBook Air M3',
+      'PlayStation 5 med to kontrollere',
+      'Sony WH-1000XM5 hodetelefoner',
+      'LG OLED 55" TV',
+      'iPad 10. generasjon',
+      'Nintendo Switch OLED',
+    ],
+    'Lite brukt og i god stand. Original eske og lader følger med.',
+    [500, 15000, 50],
+  ),
+  mobler: T(
+    [
+      'Sofa i grått stoff',
+      'Spisebord i eik med seks stoler',
+      'IKEA Billy bokhylle',
+      'Lenestol i skinn',
+      'Skrivebord med skuffer',
+      'Kommode i hvitt',
+      'Sengeramme 160 cm',
+    ],
+    'Røykfritt hjem uten dyr. Må hentes.',
+    [200, 12000, 50],
+  ),
+  klaer: T(
+    [
+      'Vinterjakke fra Norrøna',
+      'Bunad, Østfold',
+      'Joggesko str. 42',
+      'Ullgenser, strikket',
+      'Regnsett til barn',
+      'Dress str. 50',
+    ],
+    'Brukt noen få ganger. Kan sendes mot porto.',
+    [100, 6000, 50],
+  ),
+  sport: T(
+    [
+      'Langrennsski med bindinger',
+      'Terrengsykkel 29"',
+      'Telt for to personer',
+      'Slalåmski 170 cm',
+      'Kajakk med åre',
+      'Treningsbenk og vekter',
+    ],
+    'Godt vedlikeholdt. Prøvetur avtales.',
+    [300, 20000, 100],
+  ),
+  barn: T(
+    [
+      'Barnevogn, komplett',
+      'Bilstol 0–13 kg',
+      'Lekekjøkken i tre',
+      'Barneseng med madrass',
+      'Sparkesykkel',
+      'LEGO Duplo-kasse',
+    ],
+    'Fra røykfritt hjem. Rengjort og klar til bruk.',
+    [100, 5000, 50],
+  ),
+  hobby: T(
+    [
+      'Akustisk gitar',
+      'Symaskin fra Husqvarna',
+      'Frimerkesamling',
+      'Digitalpiano med benk',
+      'Speilreflekskamera med objektiv',
+      'Modelljernbane',
+    ],
+    'Selges grunnet flytting. Spør gjerne om flere bilder.',
+    [200, 10000, 50],
+  ),
+  personbil: T(
+    [
+      'Volkswagen Golf 1.5 TSI',
+      'Toyota Corolla Hybrid',
+      'Volvo V60 D4',
+      'Skoda Octavia stasjonsvogn',
+      'BMW 320d Touring',
+    ],
+    'Service fulgt. EU-godkjent. Vinterhjul på felg følger med.',
+    [60000, 450000, 1000],
+  ),
+  varebil: T(
+    ['Volkswagen Transporter', 'Ford Transit Custom', 'Toyota Proace', 'Mercedes Vito'],
+    'Godt egnet for håndverkere. Hengerfeste og innredning.',
+    [80000, 380000, 1000],
+  ),
+  motorsykkel: T(
+    ['Yamaha MT-07', 'Honda CB500X', 'BMW R 1250 GS', 'Kawasaki Z650'],
+    'Garasjeoppbevart. Nytt dekk bak.',
+    [40000, 220000, 1000],
+  ),
+  bobil: T(
+    ['Hymer B-klasse', 'Adria Matrix', 'Bürstner Lyseo', 'Knaus Sky Wave'],
+    'Klar for sommeren. Markise og solcellepanel.',
+    [350000, 900000, 5000],
+  ),
+  salg: T(
+    [
+      'Lys 3-roms med balkong',
+      'Rekkehus med hage',
+      'Enebolig med utsikt',
+      'Moderne 2-roms i sentrum',
+    ],
+    'Visning etter avtale. Kort vei til skole, butikk og kollektivtransport.',
+    [2500000, 9500000, 10000],
+  ),
+  utleie: T(
+    [
+      'Hybel nær universitetet',
+      '2-roms til leie',
+      'Møblert leilighet, korttid',
+      'Stor 4-roms til leie',
+    ],
+    'Depositum tre måneders leie. Ledig fra neste måned.',
+    [7000, 25000, 500],
+  ),
+  fritid: T(
+    [
+      'Hytte ved vannet',
+      'Fjellhytte med anneks',
+      'Sjøhytte med båtplass',
+      'Fritidsleilighet i skianlegg',
+    ],
+    'Strøm og innlagt vann. Bilvei helt frem.',
+    [900000, 4500000, 10000],
+  ),
+  tomt: T(
+    ['Regulert boligtomt', 'Hyttetomt med utsikt', 'Næringstomt nær E6'],
+    'Ferdig regulert. Vann og avløp i nærheten.',
+    [400000, 2500000, 10000],
+  ),
+  it: T(
+    ['Fullstack-utvikler', 'Plattformingeniør (DevOps)', 'IT-konsulent', 'Dataingeniør'],
+    'Vi søker en engasjert kollega til et voksende team. Fleksibel arbeidstid og hjemmekontor.',
+    [0, 0, 1],
+  ),
+  helse: T(
+    ['Sykepleier, sommervikar', 'Helsefagarbeider', 'Fysioterapeut', 'Tannhelsesekretær'],
+    'Godt arbeidsmiljø og faglig utvikling. Turnus etter avtale.',
+    [0, 0, 1],
+  ),
+  bygg: T(
+    ['Tømrer', 'Elektriker', 'Prosjektleder bygg', 'Rørlegger'],
+    'Faste oppdrag i regionen. Firmabil disponeres.',
+    [0, 0, 1],
+  ),
+  undervisning: T(
+    ['Lærer 1.–7. trinn', 'Barnehagelærer', 'Lektor i matematikk'],
+    'Spennende stilling i et inkluderende miljø.',
+    [0, 0, 1],
+  ),
+  handel: T(
+    ['Butikkmedarbeider', 'Butikksjef', 'Lagermedarbeider'],
+    'Serviceinnstilt og løsningsorientert? Søk i dag.',
+    [0, 0, 1],
+  ),
+  transport: T(
+    ['Sjåfør klasse C', 'Bussjåfør', 'Budbilsjåfør'],
+    'Gode betingelser og moderne bilpark.',
+    [0, 0, 1],
+  ),
+  hytteutleie: T(
+    ['Koselig hytte i fjellet', 'Hytte ved sjøen, ledig i sommer', 'Tømmerhytte med badstue'],
+    'Sengetøy kan leies. Pris per natt.',
+    [800, 4000, 100],
+  ),
+  leilighet: T(
+    ['Leilighet i sentrum, korttidsleie', 'Ferieleilighet med havutsikt', 'Studio nær stasjonen'],
+    'Rent og ryddig. Pris per natt.',
+    [600, 2500, 100],
+  ),
+  pakkereise: T(
+    ['Uke på Gran Canaria', 'Storbyhelg i Roma', 'Fotturer i Alpene'],
+    'Fly og hotell inkludert. Pris per person.',
+    [4000, 20000, 500],
+  ),
+};
+
+const SUBCATEGORIES: Record<Category, readonly Subcategory[]> = {
+  torget: ['elektronikk', 'mobler', 'klaer', 'sport', 'barn', 'hobby'],
+  bil: ['personbil', 'varebil', 'motorsykkel', 'bobil'],
+  eiendom: ['salg', 'utleie', 'fritid', 'tomt'],
+  jobb: ['it', 'helse', 'bygg', 'undervisning', 'handel', 'transport'],
+  reise: ['hytteutleie', 'leilighet', 'pakkereise'],
+};
+
+const CATEGORY_WEIGHTS: Array<[Category, number]> = [
+  ['torget', 0.45],
+  ['bil', 0.2],
+  ['eiendom', 0.12],
+  ['jobb', 0.13],
+  ['reise', 0.1],
+];
+
+const EMPLOYERS = [
+  'Nordlys AS',
+  'Fjordteknikk',
+  'Helse Vest',
+  'Byggmester Berg',
+  'Kommunen',
+  'Handelshuset',
+];
+
+export interface DemoImage {
+  id: string;
+  /** Hue (0–359) for the generated illustration. */
+  hue: number;
+  category: Category;
+  label: string;
+}
+
+export interface DemoListing {
+  id: string;
+  ownerId: string;
+  sellerName: string;
+  category: Category;
+  subcategory: Subcategory;
+  title: string;
+  description: string;
+  priceNok: number | null;
+  attributes: Attributes[Category];
+  place: Place;
+  images: DemoImage[];
+  /** Days before "now" the listing was published (0–60). */
+  ageDays: number;
+}
+
+function attributesFor(
+  rng: Rng,
+  category: Category,
+  sub: Subcategory,
+  title: string,
+): Attributes[Category] {
+  switch (category) {
+    case 'torget':
+      return { condition: pick(rng, ['new', 'like_new', 'good', 'fair'] as const) };
+    case 'bil': {
+      const [make = 'Volvo', ...model] = title.split(' ');
+      return {
+        make,
+        model: model.join(' ') || 'Ukjent',
+        year: between(rng, 2008, 2025),
+        mileageKm: between(rng, 5000, 250000, 1000),
+        fuel:
+          sub === 'motorsykkel'
+            ? 'petrol'
+            : pick(rng, ['petrol', 'diesel', 'electric', 'hybrid'] as const),
+        gearbox: pick(rng, ['manual', 'automatic'] as const),
+      };
+    }
+    case 'eiendom':
+      return {
+        propertyType:
+          sub === 'tomt'
+            ? 'plot'
+            : sub === 'fritid'
+              ? 'cabin'
+              : pick(rng, ['apartment', 'house', 'townhouse'] as const),
+        areaM2: sub === 'tomt' ? between(rng, 400, 2000, 10) : between(rng, 25, 220),
+        ...(sub === 'tomt' ? {} : { bedrooms: between(rng, 0, 5) }),
+      };
+    case 'jobb':
+      return {
+        employer: pick(rng, EMPLOYERS),
+        employmentType: pick(rng, [
+          'full_time',
+          'full_time',
+          'part_time',
+          'temporary',
+          'internship',
+        ] as const),
+      };
+    case 'reise':
+      return { guests: between(rng, 2, 8) };
+  }
+}
+
+function imageCount(rng: Rng, category: Category): number {
+  if (category === 'jobb') return 1;
+  if (category === 'bil' || category === 'eiendom') return between(rng, 2, 3);
+  return between(rng, 1, 3);
+}
+
+/** The full demo dataset, generated identically on every call. */
+export function demoListings(count = DEMO_LISTING_COUNT): DemoListing[] {
+  const rng = prng(20261001);
+  const listings: DemoListing[] = [];
+  for (let i = 0; i < count; i++) {
+    let roll = rng();
+    const category = CATEGORY_WEIGHTS.find(([, w]) => (roll -= w) < 0)?.[0] ?? 'torget';
+    const subcategory = pick(rng, SUBCATEGORIES[category]);
+    const template = TEMPLATES[subcategory];
+    const title = pick(rng, template.titles);
+    const owner = DEMO_USERS[i % DEMO_USERS.length]!;
+    const place = pick(rng, PLACES);
+    const [min, max, step] = template.price;
+    const id = demoUuid(`listing-${i}`);
+    const hue = Math.floor(rng() * 360);
+    listings.push({
+      id,
+      ownerId: owner.id,
+      sellerName: owner.sellerName,
+      category,
+      subcategory,
+      title,
+      description: `${title}. ${template.blurb} Henting i ${place.name}.`,
+      priceNok: category === 'jobb' ? null : between(rng, min, max, step),
+      attributes: attributesFor(rng, category, subcategory, title),
+      place,
+      images: Array.from({ length: imageCount(rng, category) }, (_, j) => ({
+        id: demoUuid(`listing-${i}-image-${j}`),
+        hue: (hue + j * 40) % 360,
+        category,
+        label: title,
+      })),
+      ageDays: Math.floor(rng() * 60),
+    });
+  }
+  return listings;
+}

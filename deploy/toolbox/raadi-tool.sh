@@ -38,7 +38,8 @@ HELP
     install_deps
     pnpm turbo run lint "$@"
     pnpm exec prettier --check . --log-level warn
-    shellcheck -x raadi deploy/init/scripts/*.sh deploy/toolbox/*.sh tests/smoke/*.sh
+    # shellcheck disable=SC2046  # word splitting of the file list is intended
+    shellcheck -x raadi $(git ls-files "*.sh")
     ;;
   format) install_deps; pnpm exec prettier --write . "$@" ;;
   typecheck) install_deps; pnpm turbo run typecheck "$@" ;;

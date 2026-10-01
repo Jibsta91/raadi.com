@@ -66,3 +66,34 @@ for svc in $(jq -r '.services | to_entries[] | select(.value.database) | .key' "
     info "database ${db} migrated (${applied} migration(s) applied)"
   fi
 done
+
+# Change data capture (Debezium, ADR-0008): one REPLICATION role that can read
+# only the outbox table of each service that publishes events. The publication
+# is created here (as superuser), so the CDC role needs no table ownership. The
+# heartbeat table gives an idle database WAL traffic, so its slot keeps advancing.
+cdc_role="$(jq -r '.cdc.role' "$MANIFEST")"
+psql_q -v role="$cdc_role" -v pw="$(secret "$(jq -r '.cdc.password' "$MANIFEST")")" <<'SQL'
+SELECT format('CREATE ROLE %I LOGIN REPLICATION', :'role') WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'role')
+\gexec
+SELECT format('ALTER ROLE %I WITH LOGIN REPLICATION NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD %L', :'role', :'pw')
+\gexec
+SQL
+for svc in $(jq -r '.services | to_entries[] | select(.value.outbox) | .key' "$MANIFEST"); do
+  db=$(jq -r --arg s "$svc" '.services[$s].database' "$MANIFEST")
+  psql_q -d "$db" -v db="$db" -v role="$cdc_role" <<'SQL'
+SELECT format('GRANT CONNECT ON DATABASE %I TO %I', :'db', :'role')
+\gexec
+SELECT format('GRANT USAGE ON SCHEMA public TO %I', :'role')
+\gexec
+SELECT format('GRANT SELECT ON public.outbox TO %I', :'role')
+\gexec
+CREATE TABLE IF NOT EXISTS public.cdc_heartbeat (id int PRIMARY KEY, beat_at timestamptz NOT NULL);
+INSERT INTO public.cdc_heartbeat VALUES (1, now()) ON CONFLICT (id) DO NOTHING;
+SELECT format('GRANT SELECT, UPDATE ON public.cdc_heartbeat TO %I', :'role')
+\gexec
+SELECT 'CREATE PUBLICATION dbz_outbox FOR TABLE public.outbox'
+ WHERE NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'dbz_outbox')
+\gexec
+SQL
+  info "database ${db} published for CDC (outbox)"
+done

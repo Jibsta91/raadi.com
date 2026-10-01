@@ -30,6 +30,7 @@ x-dev: &dev
     - nm-service-kit:/workspace/packages/service-kit/node_modules
     - nm-ui:/workspace/packages/ui/node_modules
     - nm-api-client:/workspace/packages/api-client/node_modules
+    - nm-catalog:/workspace/packages/catalog/node_modules
     - nm-config:/workspace/packages/config/node_modules
     - nm-e2e:/workspace/tests/e2e/node_modules
     - pnpm-store:/pnpm/store
@@ -102,6 +103,7 @@ volumes:
   nm-service-kit: {}
   nm-ui: {}
   nm-api-client: {}
+  nm-catalog: {}
   nm-config: {}
   nm-e2e: {}
   pnpm-store: {}

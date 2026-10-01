@@ -1,0 +1,124 @@
+# Event backbone (ADR-0012): Kafka (KRaft, SASL/SCRAM + ACLs), Kafka Connect
+# with Debezium (transactional outbox -> Kafka), Apicurio Registry (event
+# schemas). Services never produce to Kafka directly; they write outbox rows.
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+x-hardening: &hardening
+  restart: unless-stopped
+  logging: *logging
+  security_opt: ['no-new-privileges:true']
+  cap_drop: [ALL]
+
+services:
+  kafka:
+    <<: *hardening
+    image: ${RAADI_IMAGE_PREFIX}/kafka:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/kafka
+    read_only: true
+    tmpfs: [/tmp, /opt/kafka/logs]
+    environment:
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx256m
+      KAFKA_JVM_PERFORMANCE_OPTS: -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:+ExplicitGCInvokesConcurrent -XX:MaxDirectMemorySize=64m
+      KAFKA_LOG4J_OPTS: -Dlog4j2.configurationFile=/etc/kafka/docker/log4j2.yaml
+      TZ: ${TZ}
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: kafka }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+    healthcheck:
+      # A TCP probe keeps the healthcheck out of the JVM budget; kafka-init
+      # verifies the broker functionally (authenticated admin calls).
+      test: ['CMD', 'bash', '-c', '</dev/tcp/127.0.0.1/9092']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+    deploy:
+      resources:
+        limits: { memory: 640M, cpus: '1.0' }
+
+  kafka-init:
+    image: ${RAADI_IMAGE_PREFIX}/kafka:${RAADI_VERSION}
+    pull_policy: build
+    restart: 'no'
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp, /opt/kafka/logs]
+    entrypoint: ['/opt/raadi/init.sh']
+    volumes:
+      - kafka-init-state:/state
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: kafka-init }
+    depends_on:
+      kafka: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { memory: 384M, cpus: '2.0' }
+
+  kafka-connect:
+    <<: *hardening
+    image: ${RAADI_IMAGE_PREFIX}/kafka-connect:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/kafka-connect
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: raadi-connect
+      CONFIG_STORAGE_TOPIC: raadi.connect.configs
+      OFFSET_STORAGE_TOPIC: raadi.connect.offsets
+      STATUS_STORAGE_TOPIC: raadi.connect.status
+      HEAP_OPTS: -Xms192m -Xmx320m
+      ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_SASL_MECHANISM: SCRAM-SHA-512
+      CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_PRODUCER_SASL_MECHANISM: SCRAM-SHA-512
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_CONSUMER_SASL_MECHANISM: SCRAM-SHA-512
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '1'
+      # Connector configs reference secrets as ${dir:/run/secrets/raadi:<name>}.
+      CONNECT_CONFIG_PROVIDERS: dir
+      CONNECT_CONFIG_PROVIDERS_DIR_CLASS: org.apache.kafka.common.config.provider.DirectoryConfigProvider
+      CONNECT_CONFIG_PROVIDERS_DIR_PARAM_ALLOWED_PATHS: /run/secrets/raadi
+      CONNECT_TOPIC_CREATION_ENABLE: 'true'
+      LOG_LEVEL: WARN
+      TZ: ${TZ}
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: kafka-connect }
+    depends_on:
+      kafka-init: { condition: service_completed_successfully }
+      db-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', '-o', '/dev/null', 'http://127.0.0.1:8083/connectors']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+    deploy:
+      resources:
+        limits: { memory: 640M, cpus: '1.0' }
+
+volumes:
+  kafka-data: {}
+  kafka-init-state: {}
+  secrets: {}

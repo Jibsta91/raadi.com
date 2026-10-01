@@ -97,6 +97,13 @@ services:
     depends_on:
       keycloak: { condition: service_healthy }
 
+  connect-init:
+    <<: *init
+    command: ['/opt/raadi/bin/connect-init.sh']
+    user: '65532:65532'
+    depends_on:
+      kafka-connect: { condition: service_healthy }
+
   # Prints every URL and the demo logins once the platform is healthy.
   summary:
     <<: *init
@@ -122,6 +129,7 @@ services:
       tempo: { condition: service_healthy }
       otel-collector: { condition: service_healthy }
       mailpit: { condition: service_healthy }
+      connect-init: { condition: service_completed_successfully }
 
   # End-to-end smoke test against the running stack (CI and `./raadi smoke`).
   smoke:
