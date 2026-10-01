@@ -52,11 +52,40 @@ services:
       ]
     restart: 'no'
 
-  identity-bff:
+  # Rebuilds the shared packages on change, once for every service: each dev
+  # server restarts when a package's dist/ changes (node --watch-path).
+  dev-packages:
     <<: *dev
-    command: ['pnpm', 'turbo', 'run', 'dev', '--filter=identity-bff...', '--ui=stream']
+    command:
+      [
+        'pnpm',
+        'turbo',
+        'run',
+        'dev',
+        '--filter=@raadi/service-kit',
+        '--filter=@raadi/catalog',
+        '--filter=@raadi/events',
+        '--ui=stream',
+      ]
     depends_on:
       dev-deps: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'test -f packages/service-kit/dist/index.js && test -f packages/catalog/dist/index.js && test -f packages/events/dist/index.js',
+        ]
+      interval: 10s
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { memory: 768M }
+
+  identity-bff:
+    <<: *dev
+    command: ['pnpm', '--filter', 'identity-bff', 'dev']
+    depends_on:
+      dev-packages: { condition: service_healthy }
     healthcheck:
       test:
         [
@@ -68,7 +97,61 @@ services:
       start_period: 90s
     deploy:
       resources:
-        limits: { memory: 768M }
+        limits: { memory: 640M }
+
+  listings:
+    <<: *dev
+    command: ['pnpm', '--filter', 'listings', 'dev']
+    depends_on:
+      dev-packages: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/readyz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      start_period: 90s
+    deploy:
+      resources:
+        limits: { memory: 640M }
+
+  media:
+    <<: *dev
+    command: ['pnpm', '--filter', 'media', 'dev']
+    depends_on:
+      dev-packages: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/readyz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      start_period: 90s
+    deploy:
+      resources:
+        limits: { memory: 640M }
+
+  search:
+    <<: *dev
+    command: ['pnpm', '--filter', 'search', 'dev']
+    depends_on:
+      dev-packages: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/readyz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      start_period: 90s
+    deploy:
+      resources:
+        limits: { memory: 640M }
 
   web:
     <<: *dev

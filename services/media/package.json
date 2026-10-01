@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "dev": "tsc -p tsconfig.build.json && (tsc -p tsconfig.build.json --watch --preserveWatchOutput & node --watch-path=dist --watch-path=../../packages/service-kit/dist --import ./dist/telemetry.js dist/main.js)",
+    "dev": "tsc -p tsconfig.build.json && (tsc -p tsconfig.build.json --watch --preserveWatchOutput & node --watch-path=dist --watch-path=../../packages/service-kit/dist --watch-path=../../packages/catalog/dist --watch-path=../../packages/events/dist --import ./dist/telemetry.js dist/main.js)",
     "start": "node --import ./dist/telemetry.js dist/main.js",
     "seed": "node --import ./dist/telemetry.js dist/seed.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
