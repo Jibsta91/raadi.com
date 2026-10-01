@@ -51,3 +51,26 @@ chown "$TRAEFIK_UID:0" "$CERTS_DIR/tls.key" "$CERTS_DIR/tls.crt"
 chmod 0400 "$CERTS_DIR/tls.key" "$CERTS_DIR/ca.key"
 chmod 0444 "$CERTS_DIR/tls.crt" "$CERTS_DIR/ca.crt"
 chmod 0755 "$CERTS_DIR"
+
+# Internal TLS for OpenSearch node-to-node transport (required by its security
+# plugin), signed by the same local CA. PKCS#8 keys, readable by UID 1000 only.
+issue_internal() { # <dir> <file-stem> <cn> <extendedKeyUsage>
+  local dir="$1" stem="$2" cn="$3" eku="$4"
+  mkdir -p "$dir"
+  if [[ ! -s "$dir/$stem.pem" ]] \
+     || ! openssl x509 -in "$dir/$stem.pem" -noout -checkend $((30 * 86400)) >/dev/null \
+     || ! openssl verify -CAfile "$CERTS_DIR/ca.crt" "$dir/$stem.pem" >/dev/null 2>&1; then
+    openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256 -out "$dir/$stem-key.pem"
+    openssl req -new -key "$dir/$stem-key.pem" -subj "/O=Raadi Development/CN=$cn" -out /tmp/internal.csr
+    openssl x509 -req -in /tmp/internal.csr -CA "$CERTS_DIR/ca.crt" -CAkey "$CERTS_DIR/ca.key" \
+      -CAcreateserial -days 397 -sha256 -out "$dir/$stem.pem" 2>/dev/null -extfile <(printf '%s\n' \
+        "subjectAltName=DNS:$cn,DNS:localhost" "basicConstraints=critical,CA:FALSE" \
+        "keyUsage=critical,digitalSignature,keyEncipherment" "extendedKeyUsage=$eku")
+    info "issued internal certificate ${cn}"
+  fi
+}
+os="$CERTS_DIR/opensearch"
+issue_internal "$os" node opensearch serverAuth,clientAuth
+issue_internal "$os" admin opensearch-admin clientAuth
+cp "$CERTS_DIR/ca.crt" "$os/ca.pem"
+chown -R 1000:0 "$os"; chmod 0500 "$os"; chmod 0400 "$os"/*.pem

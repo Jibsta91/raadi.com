@@ -104,6 +104,14 @@ services:
     depends_on:
       kafka-connect: { condition: service_healthy }
 
+  authz-init:
+    <<: *init
+    command: ['/opt/raadi/bin/authz-init.sh']
+    volumes:
+      - secrets:/secrets
+    depends_on:
+      openfga: { condition: service_healthy }
+
   # Prints every URL and the demo logins once the platform is healthy.
   summary:
     <<: *init
@@ -130,6 +138,12 @@ services:
       otel-collector: { condition: service_healthy }
       mailpit: { condition: service_healthy }
       connect-init: { condition: service_completed_successfully }
+      authz-init: { condition: service_completed_successfully }
+      apicurio: { condition: service_healthy }
+      opensearch: { condition: service_healthy }
+      imgproxy: { condition: service_healthy }
+      clamav: { condition: service_healthy }
+      opa: { condition: service_healthy }
 
   # End-to-end smoke test against the running stack (CI and `./raadi smoke`).
   smoke:

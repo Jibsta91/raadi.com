@@ -1,0 +1,18 @@
+---
+# Rendered by secrets-init (deploy/init/manifest.json "templates"); hashes are
+# bcrypt of the generated passwords. Never commit a rendered copy.
+_meta:
+  type: 'internalusers'
+  config_version: 2
+admin:
+  hash: '${bcrypt_opensearch_admin_password}'
+  reserved: true
+  description: Operators (all_access); not used by any service
+search:
+  hash: '${bcrypt_opensearch_search_password}'
+  reserved: true
+  description: search service
+monitor:
+  hash: '${bcrypt_opensearch_monitor_password}'
+  reserved: true
+  description: healthchecks and metrics

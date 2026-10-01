@@ -1,0 +1,13 @@
+---
+_meta:
+  type: 'rolesmapping'
+  config_version: 2
+all_access:
+  reserved: true
+  users: [admin]
+raadi_search:
+  reserved: true
+  users: [search]
+raadi_monitor:
+  reserved: true
+  users: [monitor]

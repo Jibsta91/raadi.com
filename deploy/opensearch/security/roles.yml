@@ -1,0 +1,22 @@
+---
+_meta:
+  type: 'roles'
+  config_version: 2
+# The search service owns the listings indices (create, alias swaps, CRUD) and
+# nothing else.
+raadi_search:
+  reserved: true
+  cluster_permissions:
+    - cluster_monitor
+    - cluster_composite_ops
+    - 'indices:admin/index_template/*'
+  index_permissions:
+    - index_patterns: ['raadi-listings*']
+      allowed_actions: [indices_all]
+# Health and metrics probes.
+raadi_monitor:
+  reserved: true
+  cluster_permissions: [cluster_monitor]
+  index_permissions:
+    - index_patterns: ['raadi-*']
+      allowed_actions: [indices_monitor]

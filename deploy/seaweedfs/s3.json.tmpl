@@ -1,0 +1,24 @@
+{
+  "identities": [
+    {
+      "name": "media",
+      "credentials": [{ "accessKey": "media", "secretKey": "${seaweedfs_media_secret}" }],
+      "actions": [
+        "Admin:raadi-media",
+        "Read:raadi-media",
+        "Write:raadi-media",
+        "List:raadi-media",
+        "Tagging:raadi-media",
+        "Admin:raadi-uploads",
+        "Read:raadi-uploads",
+        "Write:raadi-uploads",
+        "List:raadi-uploads"
+      ]
+    },
+    {
+      "name": "imgproxy",
+      "credentials": [{ "accessKey": "imgproxy", "secretKey": "${seaweedfs_imgproxy_secret}" }],
+      "actions": ["Read:raadi-media", "Read:raadi-uploads"]
+    }
+  ]
+}

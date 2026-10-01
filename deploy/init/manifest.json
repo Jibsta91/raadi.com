@@ -18,7 +18,21 @@
     "kafka_monitor_password",
     "debezium_db_password",
     "apicurio_db_password",
-    "registry_init_client_secret"
+    "registry_init_client_secret",
+    "seaweedfs_media_secret",
+    "seaweedfs_imgproxy_secret",
+    "imgproxy_key",
+    "imgproxy_salt",
+    "opensearch_admin_password",
+    "opensearch_search_password",
+    "opensearch_monitor_password",
+    "openfga_db_password",
+    "openfga_key_listings",
+    "openfga_key_media",
+    "openfga_key_init",
+    "opa_token_listings",
+    "listings_db_password",
+    "media_db_password"
   ],
   "fileConsumers": {
     "postgres": {
@@ -39,7 +53,12 @@
     },
     "otel-collector": {
       "uid": 10001,
-      "secrets": ["postgres_monitor_password", "valkey_password", "kafka_monitor_password"]
+      "secrets": [
+        "postgres_monitor_password",
+        "valkey_password",
+        "kafka_monitor_password",
+        "opensearch_monitor_password"
+      ]
     },
     "kafka": {
       "uid": 1000,
@@ -62,8 +81,55 @@
     "apicurio": {
       "uid": 1001,
       "secrets": ["apicurio_db_password"]
+    },
+    "seaweedfs": {
+      "uid": 1000,
+      "secrets": []
+    },
+    "imgproxy": {
+      "uid": 999,
+      "secrets": ["imgproxy_key", "imgproxy_salt", "seaweedfs_imgproxy_secret"]
+    },
+    "opensearch": {
+      "uid": 1000,
+      "secrets": ["opensearch_monitor_password"]
+    },
+    "openfga": {
+      "uid": 65532,
+      "secrets": []
+    },
+    "opa": {
+      "uid": 1000,
+      "secrets": []
     }
   },
+  "templates": [
+    {
+      "src": "seaweedfs/s3.json.tmpl",
+      "consumer": "seaweedfs",
+      "dest": "s3.json"
+    },
+    {
+      "src": "opensearch/internal_users.yml.tmpl",
+      "consumer": "opensearch",
+      "dest": "internal_users.yml"
+    },
+    {
+      "src": "openfga/config.yaml.tmpl",
+      "consumer": "openfga",
+      "dest": "config.yaml"
+    },
+    {
+      "src": "opa/secrets.json.tmpl",
+      "consumer": "opa",
+      "dest": "data.json"
+    }
+  ],
+  "bcrypt": [
+    "opensearch_admin_password",
+    "opensearch_search_password",
+    "opensearch_monitor_password"
+  ],
   "infraDatabases": {
     "keycloak": {
       "owner": "keycloak",
@@ -74,7 +140,17 @@
       "owner": "apicurio",
       "password": "apicurio_db_password",
       "extensions": []
+    },
+    "openfga": {
+      "owner": "openfga",
+      "password": "openfga_db_password",
+      "extensions": []
     }
+  },
+  "cdc": {
+    "$comment": "Debezium reads the outbox table of every service with \"outbox\": true (ADR-0008).",
+    "role": "debezium",
+    "password": "debezium_db_password"
   },
   "services": {
     "identity-bff": {
@@ -89,16 +165,50 @@
       },
       "shared": ["valkey"],
       "outbox": true
+    },
+    "listings": {
+      "uid": 65532,
+      "database": "listings",
+      "extensions": ["postgis", "pgcrypto"],
+      "migrations": "listings",
+      "outbox": true,
+      "openbao": {
+        "db_password": "listings_db_password",
+        "fga_key": "openfga_key_listings",
+        "opa_token": "opa_token_listings"
+      },
+      "shared": ["imgproxy"]
+    },
+    "media": {
+      "uid": 65532,
+      "database": "media",
+      "extensions": ["pgcrypto"],
+      "migrations": "media",
+      "outbox": true,
+      "openbao": {
+        "db_password": "media_db_password",
+        "s3_secret": "seaweedfs_media_secret",
+        "kafka_password": "kafka_media_password",
+        "fga_key": "openfga_key_media"
+      },
+      "shared": ["imgproxy"]
+    },
+    "search": {
+      "uid": 65532,
+      "openbao": {
+        "opensearch_password": "opensearch_search_password",
+        "kafka_password": "kafka_search_password"
+      },
+      "shared": ["imgproxy"]
     }
   },
   "shared": {
     "valkey": {
       "password": "valkey_password"
+    },
+    "imgproxy": {
+      "key": "imgproxy_key",
+      "salt": "imgproxy_salt"
     }
-  },
-  "cdc": {
-    "$comment": "Debezium reads the outbox table of every service with \"outbox\": true (ADR-0008).",
-    "role": "debezium",
-    "password": "debezium_db_password"
   }
 }

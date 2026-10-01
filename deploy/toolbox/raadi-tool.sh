@@ -38,12 +38,18 @@ HELP
     install_deps
     pnpm turbo run lint "$@"
     pnpm exec prettier --check . --log-level warn
+    opa fmt --fail --list deploy/opa/policies >/dev/null
+    opa check --strict deploy/opa/policies
     # shellcheck disable=SC2046  # word splitting of the file list is intended
     shellcheck -x raadi $(git ls-files "*.sh")
     ;;
   format) install_deps; pnpm exec prettier --write . "$@" ;;
   typecheck) install_deps; pnpm turbo run typecheck "$@" ;;
-  test) install_deps; pnpm turbo run test "$@" ;;
+  test)
+    install_deps
+    pnpm turbo run test "$@"
+    opa test deploy/opa/policies
+    ;;
   test-integration)
     install_deps
     # Testcontainers talks to the host's Docker through the mounted socket.
@@ -72,7 +78,7 @@ HELP
     echo "SBOM written to sbom/"
     ;;
   versions)
-    for t in node pnpm turbo uv tofu tflint trivy checkov ansible gitleaks osv-scanner syft docker; do
+    for t in node pnpm turbo uv tofu tflint trivy checkov ansible gitleaks osv-scanner syft opa docker; do
       printf '%-12s %s\n' "$t" "$("$t" --version 2>/dev/null | head -1 || "$t" version 2>/dev/null | head -1)"
     done
     printf '%-12s %s\n' playwright "browsers: $(find /ms-playwright -mindepth 1 -maxdepth 1 -printf '%f ')"

@@ -1,0 +1,58 @@
+# Full-text, faceted and geo search over listings (ADR-0015): OpenSearch with
+# the security plugin (TLS transport, basic auth, least-privilege users).
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+services:
+  opensearch:
+    image: ${RAADI_IMAGE_PREFIX}/opensearch:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/opensearch
+    restart: unless-stopped
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    environment:
+      OPENSEARCH_JAVA_OPTS: -Xms384m -Xmx384m -XX:+UseG1GC
+      TZ: ${TZ}
+    ulimits:
+      nofile: { soft: 65536, hard: 65536 }
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: opensearch }
+      - type: volume
+        source: certs
+        target: /run/certs/opensearch
+        read_only: true
+        volume: { subpath: opensearch }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+      certs-init: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -fsS
+        - -o
+        - /dev/null
+        - --netrc-file
+        - /tmp/.netrc
+        - http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=2s
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { memory: 1G, cpus: '2.0' }
+
+volumes:
+  opensearch-data: {}
+  secrets: {}
+  certs: {}

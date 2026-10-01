@@ -1,0 +1,14 @@
+---
+_meta:
+  type: 'audit'
+  config_version: 2
+config:
+  enabled: true
+  audit:
+    enable_rest: true
+    disabled_rest_categories: [AUTHENTICATED, GRANTED_PRIVILEGES]
+    enable_transport: false
+    ignore_users: [monitor]
+    log_request_body: false
+  compliance:
+    enabled: false

@@ -118,6 +118,58 @@ services:
       resources:
         limits: { memory: 640M, cpus: '1.0' }
 
+  apicurio:
+    <<: *hardening
+    image: ${RAADI_IMAGE_PREFIX}/apicurio:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/apicurio
+    environment:
+      APICURIO_STORAGE_KIND: sql
+      APICURIO_STORAGE_SQL_KIND: postgresql
+      APICURIO_DATASOURCE_URL: jdbc:postgresql://postgres:5432/apicurio
+      APICURIO_DATASOURCE_USERNAME: apicurio
+      APICURIO_DATASOURCE_JDBC_INITIAL_SIZE: '2'
+      APICURIO_DATASOURCE_JDBC_MIN_SIZE: '2'
+      APICURIO_DATASOURCE_JDBC_MAX_SIZE: '10'
+      # Writes need a Keycloak token with apicurio-registry/sr-admin; reads are
+      # anonymous so consumers in any language can fetch schemas.
+      QUARKUS_OIDC_TENANT_ENABLED: 'true'
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/${KEYCLOAK_REALM}
+      QUARKUS_OIDC_DISCOVERY_ENABLED: 'false'
+      QUARKUS_OIDC_JWKS_PATH: protocol/openid-connect/certs
+      QUARKUS_OIDC_TOKEN_ISSUER: ${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM}
+      QUARKUS_OIDC_TOKEN_AUDIENCE: apicurio-registry
+      QUARKUS_OIDC_CLIENT_ID: apicurio-registry
+      APICURIO_AUTH_ROLE_BASED_AUTHORIZATION: 'true'
+      APICURIO_AUTH_ANONYMOUS_READ_ACCESS_ENABLED: 'true'
+      APICURIO_REST_DELETION_ARTIFACT_ENABLED: 'false'
+      QUARKUS_OTEL_ENABLED: 'true'
+      QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      QUARKUS_OTEL_SERVICE_NAME: apicurio-registry
+      QUARKUS_LOG_CONSOLE_JSON: 'true'
+      JAVA_MAX_MEM_RATIO: '50'
+      JAVA_INITIAL_MEM_RATIO: '20'
+      TZ: ${TZ}
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: apicurio }
+    depends_on:
+      db-init: { condition: service_completed_successfully }
+      keycloak: { condition: service_healthy }
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', '-o', '/dev/null', 'http://127.0.0.1:9000/health/ready']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    deploy:
+      resources:
+        limits: { memory: 448M, cpus: '1.0' }
+
 volumes:
   kafka-data: {}
   kafka-init-state: {}

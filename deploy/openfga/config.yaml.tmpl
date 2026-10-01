@@ -1,0 +1,27 @@
+# OpenFGA configuration, rendered by secrets-init (contains credentials).
+datastore:
+  engine: postgres
+  uri: postgres://openfga:${openfga_db_password}@postgres:5432/openfga?sslmode=disable
+  maxOpenConns: 10
+  maxIdleConns: 4
+authn:
+  method: preshared
+  preshared:
+    # One key per client, so each can be revoked on its own.
+    keys: ['${openfga_key_listings}', '${openfga_key_media}', '${openfga_key_init}']
+log:
+  format: json
+  level: info
+metrics:
+  enabled: true
+  addr: 0.0.0.0:2112
+playground:
+  enabled: false
+trace:
+  enabled: true
+  otlp:
+    endpoint: otel-collector:4317
+    tls:
+      enabled: false
+  sampleRatio: 1.0
+  serviceName: openfga

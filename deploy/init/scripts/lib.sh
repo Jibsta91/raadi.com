@@ -15,7 +15,7 @@ log() {
 }
 info() { log info "$@"; }
 warn() { log warn "$@"; }
-die() { log error "$@"; exit 1; }
+die() { log error "$@" >&2; exit 1; }
 
 # secret <name> — print a generated secret from the bootstrap store.
 secret() {

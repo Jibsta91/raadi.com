@@ -13,6 +13,9 @@ include:
   - { path: deploy/compose/identity.yaml, project_directory: . }
   - { path: deploy/compose/gateway.yaml, project_directory: . }
   - { path: deploy/compose/events.yaml, project_directory: . }
+  - { path: deploy/compose/storage.yaml, project_directory: . }
+  - { path: deploy/compose/search.yaml, project_directory: . }
+  - { path: deploy/compose/authz.yaml, project_directory: . }
   - { path: deploy/compose/observability.yaml, project_directory: . }
   - { path: deploy/compose/apps.yaml, project_directory: . }
   - { path: deploy/compose/tools.yaml, project_directory: . }

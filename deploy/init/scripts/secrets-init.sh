@@ -32,6 +32,27 @@ for consumer in $(jq -r '.fileConsumers | keys[]' "$MANIFEST"); do
   chown "$uid:0" "$dir"; chmod 0500 "$dir"
 done
 
+# Config files for containers that take credentials only from a file (distroless
+# images, or formats such as bcrypt hashes). Templates live next to their
+# component under deploy/ and reference secrets as ${name} or ${bcrypt_name}.
+render_vars=()
+for name in $(jq -r '.secrets[]' "$MANIFEST"); do
+  export "${name}=$(cat "${MASTER_DIR}/${name}")"; render_vars+=("\${${name}}")
+done
+for name in $(jq -r '.bcrypt // [] | .[]' "$MANIFEST"); do
+  hash="$(htpasswd -nbBC 10 x "$(cat "${MASTER_DIR}/${name}")" | cut -d: -f2- | tr -d '\n')"
+  export "bcrypt_${name}=${hash}"; render_vars+=("\${bcrypt_${name}}")
+done
+while IFS=$'\t' read -r src consumer dest; do
+  uid=$(jq -r --arg c "$consumer" '.fileConsumers[$c].uid' "$MANIFEST")
+  dir="${SECRETS_DIR}/${consumer}"
+  mkdir -p "$dir"
+  envsubst "${render_vars[*]}" < "/opt/raadi/templates/${src}" > "${dir}/${dest}.tmp"
+  install -m 0400 -o "$uid" -g 0 "${dir}/${dest}.tmp" "${dir}/${dest}"; rm -f "${dir}/${dest}.tmp"
+  chown "$uid:0" "$dir"; chmod 0500 "$dir"
+done < <(jq -r '.templates // [] | .[] | [.src, .consumer, .dest] | @tsv' "$MANIFEST")
+unset "${!bcrypt_@}"
+
 # Directories for OpenBao AppRole credentials, filled by openbao-bootstrap.
 for svc in $(jq -r '.services | keys[]' "$MANIFEST"); do
   uid=$(jq -r --arg s "$svc" '.services[$s].uid' "$MANIFEST")

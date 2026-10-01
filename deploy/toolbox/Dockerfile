@@ -16,6 +16,7 @@ ARG TRIVY_VERSION=0.74.0
 ARG GITLEAKS_VERSION=8.30.1
 ARG OSV_SCANNER_VERSION=2.6.0
 ARG SYFT_VERSION=1.52.0
+ARG OPA_VERSION=1.21.1
 ARG CHECKOV_VERSION=3.3.22
 ARG ANSIBLE_CORE_VERSION=2.21.4
 
@@ -76,7 +77,11 @@ RUN arch="${TARGETARCH:-amd64}"; \
     # Syft (SBOMs)
     f="syft_${SYFT_VERSION}_linux_${arch}.tar.gz"; base="https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}"; \
     fetch "$base/$f" "$f"; fetch "$base/syft_${SYFT_VERSION}_checksums.txt" sums; verify "$f" sums; \
-    tar -xzf "$f" -C /usr/local/bin syft; rm -f ./*
+    tar -xzf "$f" -C /usr/local/bin syft; rm -f ./*; \
+    # Open Policy Agent (policy unit tests and formatting)
+    f="opa_linux_${arch}_static"; base="https://github.com/open-policy-agent/opa/releases/download/v${OPA_VERSION}"; \
+    fetch "$base/$f" "$f"; fetch "$base/$f.sha256" sums; verify "$f" sums; \
+    install -m 0755 "$f" /usr/local/bin/opa; rm -f ./*
 
 COPY --chmod=0755 deploy/toolbox/raadi-tool.sh /usr/local/bin/raadi-tool
 RUN git config --system --add safe.directory /workspace && mkdir -p /pnpm/store

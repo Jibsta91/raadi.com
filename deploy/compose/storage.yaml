@@ -1,0 +1,139 @@
+# Media storage and processing (ADR-0014): SeaweedFS (S3 API), imgproxy
+# (on-the-fly resizing from S3, signed URLs only) and ClamAV (upload scanning).
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+x-hardening: &hardening
+  restart: unless-stopped
+  logging: *logging
+  security_opt: ['no-new-privileges:true']
+  cap_drop: [ALL]
+
+services:
+  seaweedfs:
+    <<: *hardening
+    image: chrislusf/seaweedfs:4.48
+    user: '1000:1000'
+    entrypoint: ['/usr/bin/weed']
+    command:
+      - -logtostderr=true
+      - server
+      - -dir=/data
+      - -ip=seaweedfs
+      - -ip.bind=0.0.0.0
+      - -master.volumeSizeLimitMB=256
+      - -master.defaultReplication=000
+      - -volume.max=0
+      - -filer
+      - -filer.disableDirListing
+      - -s3
+      - -s3.port=8333
+      - -s3.config=/run/secrets/raadi/s3.json
+      - -metricsPort=9327
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - seaweedfs-data:/data
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: seaweedfs }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8333/healthz']
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 15s
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '1.0' }
+
+  imgproxy:
+    <<: *hardening
+    image: ${RAADI_IMAGE_PREFIX}/imgproxy:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/imgproxy
+    read_only: true
+    tmpfs: [/tmp]
+    environment:
+      IMGPROXY_BIND: :8080
+      IMGPROXY_USE_S3: 'true'
+      IMGPROXY_S3_ENDPOINT: http://seaweedfs:8333
+      IMGPROXY_S3_ENDPOINT_USE_PATH_STYLE: 'true'
+      IMGPROXY_S3_REGION: us-east-1
+      IMGPROXY_S3_ALLOWED_BUCKETS: raadi-media,raadi-uploads
+      AWS_ACCESS_KEY_ID: imgproxy
+      # Only S3 sources; the media service signs every URL (key/salt).
+      IMGPROXY_ALLOWED_SOURCES: s3://
+      IMGPROXY_WORKERS: '2'
+      IMGPROXY_MAX_SRC_RESOLUTION: '40'
+      IMGPROXY_MAX_SRC_FILE_SIZE: '12582912'
+      IMGPROXY_STRIP_METADATA: 'true'
+      IMGPROXY_STRIP_COLOR_PROFILE: 'false'
+      IMGPROXY_AUTO_ROTATE: 'true'
+      IMGPROXY_ENFORCE_WEBP: 'false'
+      IMGPROXY_TTL: '2592000'
+      IMGPROXY_PRESETS: thumb=rs:fill:320:240/g:sm/q:75,card=rs:fill:640:480/g:sm/q:78,large=rs:fit:1600:1200/q:82
+      IMGPROXY_PROMETHEUS_BIND: :8081
+      IMGPROXY_PROMETHEUS_NAMESPACE: imgproxy
+      IMGPROXY_OPEN_TELEMETRY_ENABLE: 'true'
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: imgproxy
+      IMGPROXY_LOG_FORMAT: json
+      IMGPROXY_MALLOC: jemalloc
+      TZ: ${TZ}
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: imgproxy }
+    depends_on:
+      seaweedfs: { condition: service_healthy }
+    healthcheck:
+      test: ['CMD', 'imgproxy', 'health']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits: { memory: 320M, cpus: '1.0' }
+
+  clamav:
+    <<: *hardening
+    image: ${RAADI_IMAGE_PREFIX}/clamav:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/clamav
+    tmpfs: [/tmp]
+    environment:
+      CLAMAV_FRESHCLAM: ${CLAMAV_FRESHCLAM}
+      TZ: ${TZ}
+    volumes:
+      - clamav-db:/var/lib/clamav
+    networks: [scan]
+    healthcheck:
+      test: ['CMD-SHELL', 'echo PING | nc 127.0.0.1 3310 | grep -q PONG']
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 180s
+    deploy:
+      resources:
+        limits: { memory: 1280M, cpus: '1.0' }
+
+networks:
+  # Only the media service joins this network: clamd has no authentication.
+  scan:
+    internal: true
+
+volumes:
+  seaweedfs-data: {}
+  clamav-db: {}
+  secrets: {}

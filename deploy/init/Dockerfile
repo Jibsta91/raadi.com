@@ -13,14 +13,21 @@ RUN mkdir -p /out && for d in /src/services/*/migrations; do \
       svc="$(basename "$(dirname "$d")")"; cp -r "$d" "/out/$svc"; \
     done
 
+# Config templates rendered by secrets-init (deploy/<component>/**/*.tmpl).
+FROM alpine:3.24.2 AS templates
+COPY deploy/ /src/deploy/
+RUN mkdir -p /out && cd /src/deploy && find . -name '*.tmpl' | tar -cf - -T - | tar -xf - -C /out
+
 FROM alpine:3.24.2
-RUN apk add --no-cache bash curl jq openssl ca-certificates coreutils gettext postgresql17-client \
+RUN apk add --no-cache bash curl jq openssl ca-certificates coreutils gettext postgresql17-client apache2-utils \
  && addgroup -S -g 65532 raadi && adduser -S -D -H -u 65532 -G raadi raadi
 COPY --from=bao /usr/bin/bao /usr/local/bin/bao
 COPY --from=dbmate /usr/local/bin/dbmate /usr/local/bin/dbmate
 COPY --from=migrations /out/ /opt/raadi/migrations/
+COPY --from=templates /out/ /opt/raadi/templates/
 COPY deploy/init/manifest.json /opt/raadi/manifest.json
 COPY deploy/keycloak/realm-raadi.json /opt/raadi/keycloak/realm-raadi.json
+COPY deploy/openfga/model.json /opt/raadi/openfga/model.json
 COPY deploy/init/scripts/ /opt/raadi/bin/
 COPY tests/smoke/smoke.sh /opt/raadi/bin/smoke.sh
 RUN chmod 0755 /opt/raadi/bin/*.sh

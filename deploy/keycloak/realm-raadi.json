@@ -72,7 +72,19 @@
         "name": "platform-admin",
         "description": "Operates the platform (Grafana admin, admin APIs)"
       }
-    ]
+    ],
+    "client": {
+      "apicurio-registry": [
+        {
+          "name": "sr-admin",
+          "description": "Apicurio Registry: manage schemas and rules"
+        },
+        {
+          "name": "sr-readonly",
+          "description": "Apicurio Registry: read schemas"
+        }
+      ]
+    }
   },
   "clients": [
     {
@@ -192,10 +204,40 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "apicurio-registry",
+      "name": "Apicurio Registry (resource server)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "attributes": {}
+    },
+    {
+      "clientId": "registry-init",
+      "name": "Schema registration (init container)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${REGISTRY_INIT_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "defaultClientScopes": ["basic", "roles"]
     }
   ],
   "users": [
     {
+      "id": "3f0c5a6e-1b7d-4c2a-9e51-7a0d2b6c4f11",
       "username": "kari.nordmann@${RAADI_DOMAIN}",
       "email": "kari.nordmann@${RAADI_DOMAIN}",
       "firstName": "Kari",
@@ -215,6 +257,7 @@
       "realmRoles": ["user"]
     },
     {
+      "id": "8b2e4d90-5c3a-4f6b-a1d7-2e9c0f3b5a22",
       "username": "ola.nordmann@${RAADI_DOMAIN}",
       "email": "ola.nordmann@${RAADI_DOMAIN}",
       "firstName": "Ola",
@@ -234,6 +277,7 @@
       "realmRoles": ["user"]
     },
     {
+      "id": "c7d1f2a4-9e6b-4a3c-8f50-1b4e7d2a6c33",
       "username": "amina.hassan@${RAADI_DOMAIN}",
       "email": "amina.hassan@${RAADI_DOMAIN}",
       "firstName": "Amina",
@@ -253,6 +297,7 @@
       "realmRoles": ["user"]
     },
     {
+      "id": "1a9e3c5b-7d2f-4e8a-b6c1-9f0d4a2e7b44",
       "username": "moderator@${RAADI_DOMAIN}",
       "email": "moderator@${RAADI_DOMAIN}",
       "firstName": "Mona",
@@ -272,6 +317,7 @@
       "realmRoles": ["user", "moderator"]
     },
     {
+      "id": "5e7b9d1f-3a4c-4b6e-9d2a-0c8f6e1b3d55",
       "username": "admin@${RAADI_DOMAIN}",
       "email": "admin@${RAADI_DOMAIN}",
       "firstName": "Ada",

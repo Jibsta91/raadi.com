@@ -1,0 +1,92 @@
+# Authorization (ADR-0013): OpenFGA for relationships (who owns what) and OPA
+# for policy-as-code (marketplace rules). Both require client credentials.
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+x-hardening: &hardening
+  restart: unless-stopped
+  logging: *logging
+  security_opt: ['no-new-privileges:true']
+  cap_drop: [ALL]
+  read_only: true
+
+x-openfga: &openfga
+  image: openfga/openfga:v1.21.0
+  volumes:
+    - type: volume
+      source: secrets
+      target: /etc/openfga
+      read_only: true
+      volume: { subpath: openfga }
+
+services:
+  openfga-migrate:
+    <<: [*hardening, *openfga]
+    restart: 'no'
+    command: ['migrate']
+    depends_on:
+      db-init: { condition: service_completed_successfully }
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '0.5' }
+
+  openfga:
+    <<: [*hardening, *openfga]
+    command: ['run']
+    depends_on:
+      openfga-migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD', '/usr/local/bin/grpc_health_probe', '-addr=127.0.0.1:8081']
+      interval: 10s
+      timeout: 3s
+      retries: 20
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '1.0' }
+
+  opa:
+    <<: *hardening
+    image: ${RAADI_IMAGE_PREFIX}/opa:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/opa
+    command:
+      - run
+      - --server
+      - --addr=0.0.0.0:8181
+      - --authentication=token
+      - --authorization=basic
+      - --log-format=json
+      - --set=decision_logs.console=true
+      - --ignore=*_test.rego
+      - /policies
+      - /run/secrets/raadi/data.json
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: opa }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          '/usr/local/bin/busybox',
+          'wget',
+          '-q',
+          '-O',
+          '/dev/null',
+          'http://127.0.0.1:8181/health',
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '0.5' }
+
+volumes:
+  secrets: {}
