@@ -25,3 +25,27 @@ export const baseEnvSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535),
   SHUTDOWN_DRAIN_MS: z.coerce.number().int().min(0).default(3000),
 });
+
+/** Token validation against Keycloak (every service validates JWTs itself). */
+export const authEnvSchema = z.object({
+  AUTH_BASE_URL: z.url(),
+  KEYCLOAK_INTERNAL_URL: z.url().default('http://keycloak:8080'),
+  KEYCLOAK_REALM: z.string().min(1).default('raadi'),
+  API_AUDIENCE: z.string().min(1).default('raadi-api'),
+});
+
+/** Where the service's AppRole credentials are mounted (ADR-0005). */
+export const openBaoEnvSchema = z.object({
+  OPENBAO_ADDR: z.url().default('http://openbao:8200'),
+  OPENBAO_ROLE_ID_FILE: z.string().default('/run/secrets/openbao/role_id'),
+  OPENBAO_SECRET_ID_FILE: z.string().default('/run/secrets/openbao/secret_id'),
+});
+
+/** PostgreSQL connection (database per service, ADR-0008); the password comes from OpenBao. */
+export const dbEnvSchema = z.object({
+  DB_HOST: z.string().default('postgres'),
+  DB_PORT: z.coerce.number().int().default(5432),
+  DB_NAME: z.string().min(1),
+  DB_USER: z.string().min(1),
+  DB_POOL_MAX: z.coerce.number().int().min(1).default(10),
+});

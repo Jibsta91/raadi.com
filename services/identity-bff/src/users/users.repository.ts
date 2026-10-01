@@ -1,5 +1,6 @@
-import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
+import { buildEvent, type EventData, type EventType } from '@raadi/events';
+import { appendToOutbox } from '@raadi/service-kit';
 import type pg from 'pg';
 import { PG_POOL } from '../tokens.js';
 
@@ -29,20 +30,6 @@ const toProfile = (r: Row): UserProfile => ({
   createdAt: r.created_at.toISOString(),
   lastLoginAt: r.last_login_at?.toISOString() ?? null,
 });
-
-/** CloudEvents 1.0 envelope written to the outbox. Payloads carry ids, never PII. */
-function cloudEvent(type: string, subject: string, data: Record<string, unknown>) {
-  return {
-    specversion: '1.0',
-    id: randomUUID(),
-    source: 'urn:raadi:identity-bff',
-    type: `no.raadi.identity.${type}.v1`,
-    subject,
-    time: new Date().toISOString(),
-    datacontenttype: 'application/json',
-    data,
-  };
-}
 
 @Injectable()
 export class UsersRepository {
@@ -75,7 +62,7 @@ export class UsersRepository {
       );
       const row = rows[0]!;
       if (row.inserted) {
-        await this.outbox(client, 'user', row.id, 'user.registered', {
+        await this.outbox(client, row.id, 'no.raadi.identity.user.registered.v1', {
           userId: row.id,
           locale: row.locale,
         });
@@ -104,7 +91,7 @@ export class UsersRepository {
         [id, patch.locale ?? null, patch.displayName ?? null],
       );
       if (!rows[0]) return null;
-      await this.outbox(client, 'user', id, 'user.preferences_changed', {
+      await this.outbox(client, id, 'no.raadi.identity.user.preferences_changed.v1', {
         userId: id,
         changed: Object.keys(patch).filter((k) => patch[k as keyof typeof patch] !== undefined),
       });
@@ -116,19 +103,15 @@ export class UsersRepository {
     await this.pool.query('SELECT 1');
   }
 
-  private async outbox(
+  /** Validates the event against its contract and appends it in the same transaction. */
+  private async outbox<T extends EventType>(
     client: pg.PoolClient,
-    aggregate: string,
-    aggregateId: string,
-    type: string,
-    data: object,
+    userId: string,
+    type: T,
+    data: EventData<T>,
   ) {
-    const event = cloudEvent(type, aggregateId, data as Record<string, unknown>);
-    await client.query(
-      `INSERT INTO outbox (id, aggregate_type, aggregate_id, event_type, payload)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [event.id, aggregate, aggregateId, event.type, event],
-    );
+    const event = buildEvent(type, { source: 'urn:raadi:identity-bff', subject: userId, data });
+    await appendToOutbox(client, 'user', userId, event);
   }
 
   private async tx<T>(fn: (client: pg.PoolClient) => Promise<T>): Promise<T> {

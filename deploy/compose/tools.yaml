@@ -13,10 +13,12 @@ x-workspace: &workspace
     - nm-root:/workspace/node_modules
     - nm-web:/workspace/apps/web/node_modules
     - nm-identity-bff:/workspace/services/identity-bff/node_modules
+    - nm-listings:/workspace/services/listings/node_modules
     - nm-service-kit:/workspace/packages/service-kit/node_modules
     - nm-ui:/workspace/packages/ui/node_modules
     - nm-api-client:/workspace/packages/api-client/node_modules
     - nm-catalog:/workspace/packages/catalog/node_modules
+    - nm-events:/workspace/packages/events/node_modules
     - nm-config:/workspace/packages/config/node_modules
     - nm-e2e:/workspace/tests/e2e/node_modules
     - pnpm-store:/pnpm/store
@@ -53,10 +55,12 @@ volumes:
   nm-root: {}
   nm-web: {}
   nm-identity-bff: {}
+  nm-listings: {}
   nm-service-kit: {}
   nm-ui: {}
   nm-api-client: {}
   nm-catalog: {}
+  nm-events: {}
   nm-config: {}
   nm-e2e: {}
   pnpm-store: {}

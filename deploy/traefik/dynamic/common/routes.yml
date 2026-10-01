@@ -24,6 +24,13 @@ http:
       middlewares: [security-headers, ratelimit-default, forward-auth]
       priority: 100
 
+    api-listings:
+      rule: Host(`{{ $d }}`) && PathPrefix(`/api/v1/listings`)
+      entryPoints: [web, websecure]
+      service: listings
+      middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
+      priority: 100
+
     keycloak:
       rule: >-
         Host(`auth.{{ $d }}`) && (PathPrefix(`/realms/`) || PathPrefix(`/resources/`) || PathPrefix(`/js/`)
@@ -46,6 +53,10 @@ http:
     identity-bff:
       loadBalancer:
         servers: [{ url: "http://identity-bff:4000" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
+    listings:
+      loadBalancer:
+        servers: [{ url: "http://listings:4000" }]
         healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
     keycloak:
       loadBalancer:

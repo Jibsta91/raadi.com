@@ -19,6 +19,20 @@ export interface Principal {
   claims: JWTPayload;
 }
 
+/** Verifier for tokens issued by the Raadi Keycloak realm (public issuer, internal JWKS). */
+export function keycloakVerifier(env: {
+  AUTH_BASE_URL: string;
+  KEYCLOAK_INTERNAL_URL: string;
+  KEYCLOAK_REALM: string;
+  API_AUDIENCE: string;
+}): JwtVerifier {
+  return new JwtVerifier({
+    issuer: `${env.AUTH_BASE_URL}/realms/${env.KEYCLOAK_REALM}`,
+    jwksUrl: `${env.KEYCLOAK_INTERNAL_URL}/realms/${env.KEYCLOAK_REALM}/protocol/openid-connect/certs`,
+    audience: env.API_AUDIENCE,
+  });
+}
+
 /** Validates RS256/ES256 access tokens against the IdP's JWKS (cached + rotated by jose). */
 export class JwtVerifier {
   private readonly jwks: ReturnType<typeof createRemoteJWKSet>;

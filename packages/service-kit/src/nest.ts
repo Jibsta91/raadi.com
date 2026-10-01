@@ -14,13 +14,18 @@ import {
   UnauthorizedException,
   ForbiddenException,
   BadRequestException,
+  Controller,
+  Get,
   Logger,
+  Res,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { trace } from '@opentelemetry/api';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Observable } from 'rxjs';
 import type { z } from 'zod';
+import { AuthzUnavailableError } from './authz.js';
+import { HealthRegistry } from './health.js';
 import { JwtVerifier, type Principal } from './jwt.js';
 
 // ---------------------------------------------------------------------------
@@ -33,11 +38,17 @@ export class ProblemDetailsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const reply = host.switchToHttp().getResponse<FastifyReply>();
     const req = host.switchToHttp().getRequest<FastifyRequest>();
+    const unavailable = exception instanceof AuthzUnavailableError;
     const status =
-      exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : unavailable
+          ? HttpStatus.SERVICE_UNAVAILABLE
+          : HttpStatus.INTERNAL_SERVER_ERROR;
     const body = exception instanceof HttpException ? exception.getResponse() : undefined;
-    const detail =
-      status >= 500
+    const detail = unavailable
+      ? 'A dependency is temporarily unavailable; please retry.'
+      : status >= 500
         ? 'An unexpected error occurred.'
         : typeof body === 'string'
           ? body
@@ -98,10 +109,17 @@ export class JwtAuthGuard implements CanActivate {
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const targets = [ctx.getHandler(), ctx.getClass()];
-    if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, targets)) return true;
-
     const req = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
     const header = req.headers.authorization;
+    if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, targets)) {
+      // Public routes still recognise a valid token (e.g. an owner viewing their
+      // own listing); an invalid one is ignored rather than rejected.
+      if (header?.startsWith('Bearer ')) {
+        req.principal = await this.verifier.verify(header.slice(7)).catch(() => undefined);
+      }
+      return true;
+    }
+
     if (!header?.startsWith('Bearer ')) throw new UnauthorizedException('Missing bearer token');
     try {
       req.principal = await this.verifier.verify(header.slice(7));
@@ -115,6 +133,26 @@ export class JwtAuthGuard implements CanActivate {
       throw new ForbiddenException('Insufficient role');
     }
     return true;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Health: liveness and readiness (dependency checks, draining on shutdown).
+// ---------------------------------------------------------------------------
+@Public()
+@Controller()
+export class HealthController {
+  constructor(private readonly health: HealthRegistry) {}
+
+  @Get('healthz')
+  liveness() {
+    return { status: 'ok' };
+  }
+
+  @Get('readyz')
+  async readiness(@Res() reply: FastifyReply): Promise<void> {
+    const report = await this.health.readiness();
+    void reply.status(report.status === 'ok' ? 200 : 503).send(report);
   }
 }
 

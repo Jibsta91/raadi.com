@@ -43,6 +43,11 @@ http:
         burst: 20
         period: 1s
 
+    # JSON APIs: refuse oversized bodies at the edge (uploads use media-body-limit).
+    api-body-limit:
+      buffering:
+        maxRequestBodyBytes: 1048576
+
     compress:
       compress:
         excludedContentTypes: ['text/event-stream']

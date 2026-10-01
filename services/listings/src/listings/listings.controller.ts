@@ -1,0 +1,112 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { type AuthenticatedRequest, Public, Roles, ZodValidationPipe } from '@raadi/service-kit';
+import type { FastifyReply } from 'fastify';
+import { z } from 'zod';
+import {
+  type CreateListing,
+  createListingSchema,
+  type Listing,
+  type UpdateListing,
+  updateListingSchema,
+} from './listing.model.js';
+import { ListingsService } from './listings.service.js';
+
+const pageSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).max(10_000).default(0),
+});
+
+const WRITE_THROTTLE = { default: { limit: 30, ttl: 60_000 } };
+
+/** ETag carries the version so clients can send If-Match (optimistic concurrency). */
+const etag = (l: Listing) => `"${l.version}"`;
+function parseIfMatch(header: string | undefined): number | undefined {
+  const m = header?.match(/^(?:W\/)?"(\d+)"$/);
+  return m ? Number(m[1]) : undefined;
+}
+
+@Controller('api/v1/listings')
+export class ListingsController {
+  constructor(private readonly listings: ListingsService) {}
+
+  @Get('mine')
+  @Roles('user')
+  mine(
+    @Req() req: AuthenticatedRequest,
+    @Query(new ZodValidationPipe(pageSchema)) page: z.infer<typeof pageSchema>,
+  ) {
+    return this.listings.mine(req.principal!, page.limit, page.offset);
+  }
+
+  @Public()
+  @Get(':id')
+  async get(
+    @Param('id', new ParseUUIDPipe({ version: undefined })) id: string,
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<Listing> {
+    const listing = await this.listings.get(id, req.principal);
+    // Personalised responses (viewer permissions) must not be shared by caches.
+    void reply
+      .header('etag', etag(listing))
+      .header('cache-control', req.principal ? 'private, no-store' : 'public, max-age=30');
+    return listing;
+  }
+
+  @Post()
+  @Roles('user')
+  @Throttle(WRITE_THROTTLE)
+  async create(
+    @Req() req: AuthenticatedRequest,
+    @Body(new ZodValidationPipe(createListingSchema)) body: CreateListing,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<Listing> {
+    const listing = await this.listings.create(req.principal!, body);
+    void reply
+      .status(201)
+      .header('location', `/api/v1/listings/${listing.id}`)
+      .header('etag', etag(listing));
+    return listing;
+  }
+
+  @Patch(':id')
+  @Roles('user')
+  @Throttle(WRITE_THROTTLE)
+  async update(
+    @Param('id', new ParseUUIDPipe({ version: undefined })) id: string,
+    @Req() req: AuthenticatedRequest,
+    @Body(new ZodValidationPipe(updateListingSchema)) body: UpdateListing,
+    @Headers('if-match') ifMatch: string | undefined,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<Listing> {
+    const listing = await this.listings.update(req.principal!, id, body, parseIfMatch(ifMatch));
+    void reply.header('etag', etag(listing));
+    return listing;
+  }
+
+  @Delete(':id')
+  @Roles('user')
+  @Throttle(WRITE_THROTTLE)
+  @HttpCode(204)
+  async remove(
+    @Param('id', new ParseUUIDPipe({ version: undefined })) id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<void> {
+    await this.listings.remove(req.principal!, id);
+  }
+}

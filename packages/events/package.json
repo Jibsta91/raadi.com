@@ -1,0 +1,35 @@
+{
+  "name": "@raadi/events",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Event contracts: CloudEvents 1.0 envelopes and data schemas (zod), with generated JSON Schemas registered in Apicurio.",
+  "type": "module",
+  "files": [
+    "dist",
+    "schemas"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "generate": "tsc -p tsconfig.build.json && node dist/generate.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "tsc -p tsconfig.json && node --test --test-reporter=spec '.build/test/**/*.test.js'"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@raadi/config": "workspace:*",
+    "@types/node": "24.19.0",
+    "eslint": "10.11.0",
+    "typescript": "6.0.3"
+  }
+}

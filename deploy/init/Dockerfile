@@ -28,6 +28,7 @@ COPY --from=templates /out/ /opt/raadi/templates/
 COPY deploy/init/manifest.json /opt/raadi/manifest.json
 COPY deploy/keycloak/realm-raadi.json /opt/raadi/keycloak/realm-raadi.json
 COPY deploy/openfga/model.json /opt/raadi/openfga/model.json
+COPY packages/events/schemas/ /opt/raadi/events/schemas/
 COPY deploy/init/scripts/ /opt/raadi/bin/
 COPY tests/smoke/smoke.sh /opt/raadi/bin/smoke.sh
 RUN chmod 0755 /opt/raadi/bin/*.sh

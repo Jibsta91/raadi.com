@@ -112,6 +112,15 @@ services:
     depends_on:
       openfga: { condition: service_healthy }
 
+  registry-init:
+    <<: *init
+    command: ['/opt/raadi/bin/registry-init.sh']
+    volumes:
+      - secrets:/secrets
+    depends_on:
+      apicurio: { condition: service_healthy }
+      keycloak-init: { condition: service_completed_successfully }
+
   # Prints every URL and the demo logins once the platform is healthy.
   summary:
     <<: *init
@@ -139,6 +148,9 @@ services:
       mailpit: { condition: service_healthy }
       connect-init: { condition: service_completed_successfully }
       authz-init: { condition: service_completed_successfully }
+      registry-init: { condition: service_completed_successfully }
+      listings: { condition: service_healthy }
+      listings-seed: { condition: service_completed_successfully }
       apicurio: { condition: service_healthy }
       opensearch: { condition: service_healthy }
       imgproxy: { condition: service_healthy }

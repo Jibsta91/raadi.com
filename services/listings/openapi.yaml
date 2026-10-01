@@ -1,0 +1,274 @@
+openapi: 3.1.0
+info:
+  title: Raadi listings
+  version: 1.0.0
+  description: |
+    Create, edit and read marketplace listings. Reads are public; writes need a
+    bearer token (browsers get one from the gateway's token handler). Ownership is
+    enforced with OpenFGA and marketplace rules with OPA. Search and browsing are
+    served by the search API (`/api/v1/search`).
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: http://raadi.localhost
+    description: Local development through the gateway
+tags:
+  - name: listings
+paths:
+  /api/v1/listings:
+    post:
+      tags: [listings]
+      operationId: createListing
+      summary: Publish a new listing
+      security: [{ bearer: [] }, { session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateListing' }
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location: { schema: { type: string } }
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Listing' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /api/v1/listings/mine:
+    get:
+      tags: [listings]
+      operationId: myListings
+      summary: The caller's own listings (active and sold)
+      security: [{ bearer: [] }, { session: [] }]
+      parameters:
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
+          }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: A page of listings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListingPage' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/listings/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [listings]
+      operationId: getListing
+      summary: A listing (public; with a token, also the caller's permissions)
+      responses:
+        '200':
+          description: The listing
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Listing' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [listings]
+      operationId: updateListing
+      summary: Edit a listing or mark it sold (owner or platform admin)
+      security: [{ bearer: [] }, { session: [] }]
+      parameters:
+        - name: If-Match
+          in: header
+          description: ETag from a previous read; the update fails with 412 if the listing changed since.
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateListing' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Listing' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [listings]
+      operationId: deleteListing
+      summary: Remove a listing (owner or moderator)
+      security: [{ bearer: [] }, { session: [] }]
+      responses:
+        '204': { description: Removed }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      operationId: liveness
+      responses: { '200': { description: Process is alive } }
+  /readyz:
+    get:
+      operationId: readiness
+      responses:
+        '200': { description: Ready }
+        '503': { description: A dependency is unavailable or the service is draining }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    session: { type: apiKey, in: cookie, name: raadi_sid }
+  responses:
+    Problem:
+      description: RFC 9457 problem details
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Category: { type: string, enum: [torget, bil, eiendom, jobb, reise] }
+    Attributes:
+      type: object
+      description: Category-specific attributes (see @raadi/catalog), e.g. {"condition":"good"} for torget.
+      additionalProperties: { type: [string, number, boolean] }
+    Location:
+      type: object
+      required: [placeId, name, county, lat, lon]
+      properties:
+        placeId: { type: string }
+        name: { type: string }
+        county: { type: string }
+        lat: { type: number }
+        lon: { type: number }
+    ImageUrls:
+      type: object
+      required: [thumb, card, large]
+      properties:
+        thumb: { type: string }
+        card: { type: string }
+        large: { type: string }
+    ListingImage:
+      type: object
+      required: [id, urls]
+      properties:
+        id: { type: string, format: uuid }
+        urls: { $ref: '#/components/schemas/ImageUrls' }
+    Listing:
+      type: object
+      required:
+        [
+          id,
+          version,
+          status,
+          category,
+          subcategory,
+          title,
+          description,
+          priceNok,
+          attributes,
+          location,
+          images,
+          seller,
+          publishedAt,
+          updatedAt,
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        version: { type: integer, minimum: 1 }
+        status: { type: string, enum: [active, sold, deleted] }
+        category: { $ref: '#/components/schemas/Category' }
+        subcategory: { type: string }
+        title: { type: string }
+        description: { type: string }
+        priceNok: { type: [integer, 'null'] }
+        attributes: { $ref: '#/components/schemas/Attributes' }
+        location: { $ref: '#/components/schemas/Location' }
+        images: { type: array, items: { $ref: '#/components/schemas/ListingImage' } }
+        seller:
+          type: object
+          required: [name]
+          properties: { name: { type: string } }
+        publishedAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        viewer:
+          type: object
+          required: [isOwner, canEdit, canDelete]
+          properties:
+            isOwner: { type: boolean }
+            canEdit: { type: boolean }
+            canDelete: { type: boolean }
+      additionalProperties: false
+    ListingPage:
+      type: object
+      required: [total, limit, offset, items]
+      properties:
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+        items: { type: array, items: { $ref: '#/components/schemas/Listing' } }
+    CreateListing:
+      type: object
+      required: [category, subcategory, title, description, attributes, placeId]
+      additionalProperties: false
+      properties:
+        category: { $ref: '#/components/schemas/Category' }
+        subcategory: { type: string, maxLength: 40 }
+        title: { type: string, minLength: 3, maxLength: 120 }
+        description: { type: string, minLength: 1, maxLength: 5000 }
+        priceNok:
+          {
+            type: [integer, 'null'],
+            minimum: 0,
+            description: Required except for jobb (must be null),
+          }
+        attributes: { $ref: '#/components/schemas/Attributes' }
+        placeId: { type: string, description: Place id from the gazetteer (e.g. oslo, bergen) }
+        imageIds:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          items: { type: string, format: uuid }
+          description: Ids returned by the media API; only your own, scanned images
+    UpdateListing:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        category: { $ref: '#/components/schemas/Category' }
+        subcategory: { type: string, maxLength: 40 }
+        title: { type: string, minLength: 3, maxLength: 120 }
+        description: { type: string, minLength: 1, maxLength: 5000 }
+        priceNok: { type: [integer, 'null'], minimum: 0 }
+        attributes: { $ref: '#/components/schemas/Attributes' }
+        placeId: { type: string }
+        imageIds:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          items: { type: string, format: uuid }
+        status: { type: string, enum: [active, sold] }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        traceId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path: { type: string }
+              message: { type: string }
+              code: { type: string }

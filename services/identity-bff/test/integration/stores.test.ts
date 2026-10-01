@@ -23,11 +23,13 @@ before(async () => {
     new GenericContainer('valkey/valkey:9.0.6-alpine3.24').withExposedPorts(6379).start(),
   ]);
   pool = new pg.Pool({ connectionString: pgc.getConnectionUri() });
-  const migration = readFileSync(
-    new URL('../../../migrations/20260101000000_user_profiles_and_outbox.sql', import.meta.url),
-    'utf8',
-  );
-  await pool.query(migration.split('-- migrate:down')[0]!.replace('-- migrate:up', ''));
+  for (const file of [
+    '20260101000000_user_profiles_and_outbox.sql',
+    '20261001000000_outbox_traceparent.sql',
+  ]) {
+    const migration = readFileSync(new URL(`../../../migrations/${file}`, import.meta.url), 'utf8');
+    await pool.query(migration.split('-- migrate:down')[0]!.replace('-- migrate:up', ''));
+  }
   valkey = new Redis({ host: vkc.getHost(), port: vkc.getMappedPort(6379) });
 });
 
