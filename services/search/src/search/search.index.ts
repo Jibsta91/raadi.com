@@ -1,0 +1,167 @@
+import { Client, errors } from '@opensearch-project/opensearch';
+import type { ListingSnapshot } from '@raadi/events';
+import { circuitBreaker, retry } from '@raadi/service-kit';
+import { INDEX_VERSION, indexBody } from './index-definition.js';
+
+export interface ListingDocument {
+  id: string;
+  ownerId: string;
+  status: string;
+  category: string;
+  subcategory: string;
+  title: string;
+  description: string;
+  priceNok: number | null;
+  attributes: Record<string, string | number | boolean>;
+  placeId: string;
+  placeName: string;
+  county: string;
+  location: { lat: number; lon: number };
+  imageIds: string[];
+  publishedAt: string;
+  updatedAt: string;
+}
+
+export function toDocument(l: ListingSnapshot): ListingDocument {
+  return {
+    id: l.id,
+    ownerId: l.ownerId,
+    status: l.status,
+    category: l.category,
+    subcategory: l.subcategory,
+    title: l.title,
+    description: l.description,
+    priceNok: l.priceNok,
+    attributes: l.attributes,
+    placeId: l.location.placeId,
+    placeName: l.location.name,
+    county: l.location.county,
+    location: { lat: l.location.lat, lon: l.location.lon },
+    imageIds: l.imageIds,
+    publishedAt: l.publishedAt,
+    updatedAt: l.updatedAt,
+  };
+}
+
+const isConflict = (e: unknown) => e instanceof errors.ResponseError && e.statusCode === 409;
+const isNotFound = (e: unknown) => e instanceof errors.ResponseError && e.statusCode === 404;
+const transient = (e: unknown) =>
+  !(e instanceof errors.ResponseError) || e.statusCode >= 500 || e.statusCode === 429;
+
+/**
+ * The OpenSearch side of search: index lifecycle, idempotent writes and
+ * queries. Writes use the listing version as an external version, so a
+ * redelivered or out-of-order event can never overwrite newer data.
+ */
+export class SearchIndex {
+  readonly client: Client;
+  private readonly query;
+
+  constructor(
+    url: string,
+    username: string,
+    password: string,
+    readonly alias: string,
+  ) {
+    this.client = new Client({
+      node: url,
+      auth: { username, password },
+      requestTimeout: 10_000,
+      maxRetries: 2,
+    });
+    this.query = circuitBreaker(
+      (body: Record<string, unknown>) => this.client.search({ index: this.alias, body }),
+      { name: 'opensearch-search', timeoutMs: 10_000 },
+    );
+  }
+
+  get indexName(): string {
+    return `${this.alias}-v${INDEX_VERSION}`;
+  }
+
+  /** Creates the versioned index and points the alias at it (idempotent). */
+  async ensureIndex(): Promise<void> {
+    await retry(
+      async () => {
+        const exists = await this.client.indices.exists({ index: this.indexName });
+        if (!exists.body) {
+          await this.client.indices
+            // The client's typings are stricter than the REST API for this static body.
+            .create({ index: this.indexName, body: indexBody as never })
+            .catch((e: unknown) => {
+              if (!(
+                e instanceof errors.ResponseError &&
+                e.body?.error?.type === 'resource_already_exists_exception'
+              ))
+                throw e;
+            });
+        }
+        await this.client.indices.updateAliases({
+          body: {
+            actions: [{ add: { index: this.indexName, alias: this.alias, is_write_index: true } }],
+          },
+        });
+      },
+      { retries: 10, baseDelayMs: 500, shouldRetry: transient },
+    );
+  }
+
+  async upsert(doc: ListingDocument, version: number): Promise<'indexed' | 'stale'> {
+    try {
+      await this.client.index({
+        index: this.alias,
+        id: doc.id,
+        body: doc,
+        version,
+        version_type: 'external',
+      });
+      return 'indexed';
+    } catch (e) {
+      if (isConflict(e)) return 'stale';
+      throw e;
+    }
+  }
+
+  async remove(id: string, version: number): Promise<'deleted' | 'stale'> {
+    try {
+      await this.client.delete({ index: this.alias, id, version, version_type: 'external' });
+      return 'deleted';
+    } catch (e) {
+      if (isConflict(e) || isNotFound(e)) return 'stale';
+      throw e;
+    }
+  }
+
+  async search(body: Record<string, unknown>) {
+    const res = await this.query.fire(body);
+    return res.body as unknown as SearchResponse;
+  }
+
+  async count(): Promise<number> {
+    const res = await this.client.count({ index: this.alias });
+    return res.body.count;
+  }
+
+  async ping(): Promise<void> {
+    const res = await this.client.cluster.health({ index: this.alias, timeout: '1s' });
+    if (res.body.status === 'red') throw new Error('index is red');
+  }
+}
+
+export interface SearchResponse {
+  took: number;
+  hits: {
+    total: { value: number };
+    hits: Array<{
+      _id: string;
+      _score: number | null;
+      _source: Omit<ListingDocument, 'description' | 'ownerId'>;
+      fields?: { distance_km?: number[] };
+      sort?: unknown[];
+    }>;
+  };
+  aggregations: Record<
+    string,
+    { values: { buckets: Array<{ key: string; doc_count: number; from?: number; to?: number }> } }
+  >;
+}

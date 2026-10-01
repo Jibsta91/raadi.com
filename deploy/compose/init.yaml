@@ -151,6 +151,9 @@ services:
       registry-init: { condition: service_completed_successfully }
       listings: { condition: service_healthy }
       listings-seed: { condition: service_completed_successfully }
+      media: { condition: service_healthy }
+      media-seed: { condition: service_completed_successfully }
+      search: { condition: service_healthy }
       apicurio: { condition: service_healthy }
       opensearch: { condition: service_healthy }
       imgproxy: { condition: service_healthy }

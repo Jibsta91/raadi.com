@@ -130,6 +130,92 @@ services:
       resources:
         limits: { memory: 256M, cpus: '1.0' }
 
+  media:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/media:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-service/Dockerfile
+      target: runtime
+      args: { SERVICE: media }
+    environment: &media-env
+      <<: *otel-env
+      OTEL_SERVICE_NAME: media
+      PORT: '4000'
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA}
+    volumes: &media-secrets
+      - type: volume
+        source: secrets
+        target: /run/secrets/openbao
+        read_only: true
+        volume: { subpath: approle/media }
+    # "scan" is the only network that reaches ClamAV.
+    networks: [default, scan]
+    depends_on:
+      openbao-bootstrap: { condition: service_completed_successfully }
+      db-init: { condition: service_completed_successfully }
+      authz-init: { condition: service_completed_successfully }
+      kafka-init: { condition: service_completed_successfully }
+      seaweedfs: { condition: service_healthy }
+      imgproxy: { condition: service_healthy }
+      clamav: { condition: service_healthy }
+      otel-collector: { condition: service_started }
+    healthcheck: *node-health
+    deploy:
+      resources:
+        limits: { memory: 320M, cpus: '1.0' }
+
+  # Demo images (SEED_DEMO_DATA=true only); idempotent, runs on every `up`.
+  media-seed:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/media:${RAADI_VERSION}
+    pull_policy: build
+    restart: 'no'
+    entrypoint: ['/nodejs/bin/node', '--import', './dist/telemetry.js', 'dist/seed.js']
+    environment:
+      <<: *media-env
+      OTEL_SERVICE_NAME: media-seed
+    volumes: *media-secrets
+    depends_on:
+      media: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { memory: 320M, cpus: '1.0' }
+
+  search:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/search:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-service/Dockerfile
+      target: runtime
+      args: { SERVICE: search }
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: search
+      PORT: '4000'
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/openbao
+        read_only: true
+        volume: { subpath: approle/search }
+    depends_on:
+      openbao-bootstrap: { condition: service_completed_successfully }
+      kafka-init: { condition: service_completed_successfully }
+      opensearch: { condition: service_healthy }
+      otel-collector: { condition: service_started }
+    healthcheck: *node-health
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '1.0' }
+
   web:
     <<: *node-service
     image: ${RAADI_IMAGE_PREFIX}/web:${RAADI_VERSION}
@@ -146,6 +232,8 @@ services:
       AUTH_BASE_URL: ${AUTH_BASE_URL}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       IDENTITY_BFF_URL: http://identity-bff:4000
+      LISTINGS_URL: http://listings:4000
+      SEARCH_URL: http://search:4000
     depends_on:
       identity-bff: { condition: service_healthy }
     healthcheck:
@@ -163,6 +251,10 @@ services:
     deploy:
       resources:
         limits: { memory: 384M, cpus: '1.0' }
+
+networks:
+  scan:
+    internal: true
 
 volumes:
   secrets: {}

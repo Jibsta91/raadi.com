@@ -36,6 +36,8 @@ export interface BreakerOptions {
   errorThresholdPercentage?: number;
   resetTimeoutMs?: number;
   volumeThreshold?: number;
+  /** Return true for errors that are the caller's fault; they do not count as failures. */
+  errorFilter?: (error: unknown) => boolean;
 }
 
 /**
@@ -52,6 +54,7 @@ export function circuitBreaker<A extends unknown[], R>(
     errorThresholdPercentage: opts.errorThresholdPercentage ?? 50,
     resetTimeout: opts.resetTimeoutMs ?? 15_000,
     volumeThreshold: opts.volumeThreshold ?? 5,
+    ...(opts.errorFilter ? { errorFilter: opts.errorFilter } : {}),
   });
   return { fire: (...args: A) => breaker.fire(...args), breaker };
 }

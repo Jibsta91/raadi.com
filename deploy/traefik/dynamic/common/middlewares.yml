@@ -48,6 +48,22 @@ http:
       buffering:
         maxRequestBodyBytes: 1048576
 
+    # Image uploads: one file of at most 10 MB plus the multipart envelope.
+    media-body-limit:
+      buffering:
+        maxRequestBodyBytes: 11534336
+
+    # A results page loads many thumbnails at once.
+    ratelimit-images:
+      rateLimit:
+        average: 200
+        burst: 400
+        period: 1s
+
+    strip-img:
+      stripPrefix:
+        prefixes: ['/img']
+
     compress:
       compress:
         excludedContentTypes: ['text/event-stream']

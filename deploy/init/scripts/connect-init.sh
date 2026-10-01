@@ -2,6 +2,8 @@
 # Registers one Debezium outbox connector per service with "outbox": true
 # (ADR-0008). PUT /connectors/<name>/config is an upsert, so this is idempotent
 # and picks up config changes on the next `up`. Waits until every task runs.
+# The payload is forwarded as the exact JSON text the service wrote (no schema
+# inference, which would drop null fields and break the event contracts).
 # shellcheck source=lib.sh
 source /opt/raadi/bin/lib.sh
 TASK="connect-init"
@@ -31,14 +33,13 @@ connector_config() { # <database>
     "topic.creation.default.replication.factor": "1",
     "topic.creation.default.partitions": "1",
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-    "value.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
     "transforms": "outbox",
     "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
     "transforms.outbox.table.field.event.id": "id",
     "transforms.outbox.table.field.event.key": "aggregate_id",
     "transforms.outbox.table.field.event.payload": "payload",
-    "transforms.outbox.table.expand.json.payload": "true",
+    "transforms.outbox.table.expand.json.payload": "false",
     "transforms.outbox.table.fields.additional.placement": "event_type:header:ce_type,traceparent:header:traceparent",
     "transforms.outbox.route.by.field": "aggregate_type",
     "transforms.outbox.route.topic.replacement": "raadi.${routedByValue}.events"

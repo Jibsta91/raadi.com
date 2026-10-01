@@ -1,0 +1,184 @@
+openapi: 3.1.0
+info:
+  title: Raadi search
+  version: 1.0.0
+  description: |
+    Public, anonymous search over active listings: full text (Norwegian stemming,
+    typo tolerance), facets, price ranges and geo radius. Results are eventually
+    consistent with the listings API (typically within a second, via Kafka).
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: http://raadi.localhost
+    description: Local development through the gateway
+tags:
+  - name: search
+paths:
+  /api/v1/search/listings:
+    get:
+      tags: [search]
+      operationId: searchListings
+      summary: Search listings
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: category, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: subcategory, in: query, description: Comma-separated, schema: { type: string } }
+        - {
+            name: county,
+            in: query,
+            description: Comma-separated county ids,
+            schema: { type: string },
+          }
+        - { name: condition, in: query, schema: { type: string } }
+        - { name: fuel, in: query, schema: { type: string } }
+        - { name: propertyType, in: query, schema: { type: string } }
+        - { name: employmentType, in: query, schema: { type: string } }
+        - { name: priceMin, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: priceMax, in: query, schema: { type: integer, minimum: 0 } }
+        - {
+            name: near,
+            in: query,
+            description: Place id (centre of a radius search),
+            schema: { type: string },
+          }
+        - { name: lat, in: query, schema: { type: number } }
+        - { name: lon, in: query, schema: { type: number } }
+        - {
+            name: radiusKm,
+            in: query,
+            schema: { type: number, minimum: 1, maximum: 2000, default: 50 },
+          }
+        - name: sort
+          in: query
+          schema:
+            {
+              type: string,
+              enum: [relevance, newest, price_asc, price_desc, distance],
+              default: relevance,
+            }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 1 } }
+        - {
+            name: pageSize,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 48, default: 24 },
+          }
+      responses:
+        '200':
+          description: Results with facets
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchResult' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /api/v1/search/suggest:
+    get:
+      tags: [search]
+      operationId: suggest
+      summary: Title suggestions for search-as-you-type
+      parameters:
+        - {
+            name: q,
+            in: query,
+            required: true,
+            schema: { type: string, minLength: 2, maxLength: 60 },
+          }
+      responses:
+        '200':
+          description: Suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [suggestions]
+                properties:
+                  suggestions: { type: array, items: { type: string } }
+        '400': { $ref: '#/components/responses/Problem' }
+components:
+  responses:
+    Problem:
+      description: RFC 9457 problem details
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    FacetValue:
+      type: object
+      required: [value, count]
+      properties:
+        value: { type: string }
+        count: { type: integer }
+    SearchHit:
+      type: object
+      required:
+        [id, title, priceNok, category, subcategory, location, imageCount, attributes, publishedAt]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        priceNok: { type: [integer, 'null'] }
+        category: { type: string }
+        subcategory: { type: string }
+        location:
+          type: object
+          required: [placeId, name, county, countyName, lat, lon]
+          properties:
+            placeId: { type: string }
+            name: { type: string }
+            county: { type: string }
+            countyName: { type: string }
+            lat: { type: number }
+            lon: { type: number }
+        distanceKm: { type: number }
+        image:
+          type: object
+          required: [thumb, card]
+          properties:
+            thumb: { type: string }
+            card: { type: string }
+        imageCount: { type: integer }
+        attributes:
+          type: object
+          additionalProperties: { type: [string, number, boolean] }
+        publishedAt: { type: string, format: date-time }
+    SearchResult:
+      type: object
+      required: [total, page, pageSize, items, facets]
+      properties:
+        total: { type: integer }
+        page: { type: integer }
+        pageSize: { type: integer }
+        items: { type: array, items: { $ref: '#/components/schemas/SearchHit' } }
+        facets:
+          type: object
+          required:
+            [category, subcategory, county, condition, fuel, propertyType, employmentType, price]
+          properties:
+            category: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            subcategory: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            county: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            condition: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            fuel: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            propertyType: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            employmentType: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            price:
+              type: array
+              items:
+                type: object
+                required: [key, count]
+                properties:
+                  key: { type: string }
+                  from: { type: number }
+                  to: { type: number }
+                  count: { type: integer }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        traceId: { type: string }
+        errors: { type: array, items: { type: object } }

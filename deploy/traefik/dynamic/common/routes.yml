@@ -31,6 +31,28 @@ http:
       middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
       priority: 100
 
+    api-search:
+      rule: Host(`{{ $d }}`) && PathPrefix(`/api/v1/search`)
+      entryPoints: [web, websecure]
+      service: search
+      middlewares: [security-headers, ratelimit-default, compress]
+      priority: 100
+
+    api-media:
+      rule: Host(`{{ $d }}`) && PathPrefix(`/api/v1/media`)
+      entryPoints: [web, websecure]
+      service: media
+      middlewares: [security-headers, ratelimit-default, media-body-limit, forward-auth]
+      priority: 100
+
+    # Listing images: signed imgproxy URLs only (anything else is refused upstream).
+    images:
+      rule: Host(`{{ $d }}`) && PathPrefix(`/img/`)
+      entryPoints: [web, websecure]
+      service: imgproxy
+      middlewares: [security-headers, ratelimit-images, strip-img]
+      priority: 100
+
     keycloak:
       rule: >-
         Host(`auth.{{ $d }}`) && (PathPrefix(`/realms/`) || PathPrefix(`/resources/`) || PathPrefix(`/js/`)
@@ -58,6 +80,17 @@ http:
       loadBalancer:
         servers: [{ url: "http://listings:4000" }]
         healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
+    search:
+      loadBalancer:
+        servers: [{ url: "http://search:4000" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
+    media:
+      loadBalancer:
+        servers: [{ url: "http://media:4000" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
+    imgproxy:
+      loadBalancer:
+        servers: [{ url: "http://imgproxy:8080" }]
     keycloak:
       loadBalancer:
         servers: [{ url: "http://keycloak:8080" }]

@@ -14,6 +14,8 @@ x-workspace: &workspace
     - nm-web:/workspace/apps/web/node_modules
     - nm-identity-bff:/workspace/services/identity-bff/node_modules
     - nm-listings:/workspace/services/listings/node_modules
+    - nm-media:/workspace/services/media/node_modules
+    - nm-search:/workspace/services/search/node_modules
     - nm-service-kit:/workspace/packages/service-kit/node_modules
     - nm-ui:/workspace/packages/ui/node_modules
     - nm-api-client:/workspace/packages/api-client/node_modules
@@ -56,6 +58,8 @@ volumes:
   nm-web: {}
   nm-identity-bff: {}
   nm-listings: {}
+  nm-media: {}
+  nm-search: {}
   nm-service-kit: {}
   nm-ui: {}
   nm-api-client: {}
