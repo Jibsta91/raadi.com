@@ -23,4 +23,6 @@ regexes = [
   '''valkey/valkey:[\w.-]+''',
   # C4 diagram element named "sec"
   '''Container\(sec, "ai-cybersecurity"''',
+  # imgproxy's published example signing key (packages/service-kit/test/imgproxy.test.ts)
+  '''943b421c9eb07c830af81030552c86009268de4e532ba2ee2eab8247c6da0881''',
 ]

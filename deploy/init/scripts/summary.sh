@@ -16,6 +16,7 @@ declare -A urls=(
   [web]="${PUBLIC_BASE_URL}/"
   [auth]="${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM:-raadi}/.well-known/openid-configuration"
   [grafana]="${GRAFANA_BASE_URL}/api/health"
+  [search]="${PUBLIC_BASE_URL}/api/v1/search/listings?pageSize=1"
 )
 for name in "${!urls[@]}"; do
   retry 20 up "${urls[$name]}" || warn "${name} did not answer through the gateway: ${urls[$name]}"
@@ -32,10 +33,13 @@ cat <<BANNER
     Web app ............ ${PUBLIC_BASE_URL}
     API (via gateway) .. ${PUBLIC_BASE_URL}/api/v1/
     Login (Keycloak) ... ${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM:-raadi}/account
+    Search listings .... ${PUBLIC_BASE_URL}/en/search
+    Sell something ..... ${PUBLIC_BASE_URL}/en/listings/new   (log in as a demo user)
     Status page ........ ${PUBLIC_BASE_URL}/en/status
 
   Operations
-    Grafana ............ ${GRAFANA_BASE_URL}   (log in with a platform admin below)
+    Grafana ............ ${GRAFANA_BASE_URL}   (log in with a platform admin below;
+                         dashboards: Platform overview, Marketplace, Services, Gateway)
     Keycloak admin ..... ${AUTH_BASE_URL}/admin/   (user: admin, password: ./raadi secret keycloak_admin_password)
     OpenBao UI ......... ${S}://bao.${D}${P}/ui/   (token: ./raadi secret openbao_root_token)
     Traefik dashboard .. ${S}://traefik.${D}${P}/dashboard/

@@ -1,4 +1,4 @@
-# Threat model (Phase 1 scope)
+# Threat model (Phases 1–2)
 
 Method: STRIDE per trust boundary. Target: OWASP ASVS 4.0 Level 2. GDPR applies (Norway/EU). This document
 grows with each phase; Phase 6 adds a full ASVS checklist.
@@ -9,23 +9,33 @@ grows with each phase; Phase 6 adds a full ASVS checklist.
 2. **Traefik → services** (internal Docker network; no service is published directly).
 3. **Services → data stores / OpenBao / Keycloak back channel.**
 4. **Operators → admin surfaces** (Grafana SSO; Keycloak admin, OpenBao UI and Traefik dashboard are dev-only routes).
+5. **User uploads → media pipeline** (untrusted bytes: scanned and re-encoded before anyone else sees them).
+6. **Services → event backbone** (Kafka with one SCRAM principal and least-privilege ACLs per client).
 
 ## Threats and mitigations
 
-| STRIDE                 | Threat                            | Mitigation (implemented)                                                                                                                                                                                                                                     |
-| ---------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Spoofing               | Stolen/forged tokens              | Tokens never reach browsers (token-handler BFF). Every service verifies JWT signature, issuer, audience, expiry. PKCE S256 + state + nonce on login                                                                                                          |
-| Spoofing               | Session fixation / hijack         | New 256-bit session id per login, HttpOnly + SameSite=Lax (+ Secure on HTTPS) cookie, server-side sessions encrypted with AES-256-GCM, logout revokes refresh token and ends the IdP session                                                                 |
-| Spoofing               | Credential stuffing / brute force | Keycloak brute-force detection, password policy (≥12 chars, not username/email), per-IP rate limits on `/auth` and Keycloak, MFA (OTP) and passkeys available                                                                                                |
-| Tampering              | CSRF on state-changing APIs       | Origin / Sec-Fetch-Site check in the forward-auth step and on logout, plus SameSite cookies                                                                                                                                                                  |
-| Tampering              | Open redirect after login         | `returnTo` restricted to same-site relative paths (unit-tested)                                                                                                                                                                                              |
-| Tampering              | Header smuggling / path confusion | Traefik deletes aliasing headers, rejects encoded `/`, `\`, NUL; strips untrusted X-Forwarded-*                                                                                                                                                              |
-| Repudiation            | Untraceable actions               | Structured JSON logs with trace ids, Keycloak login/admin events, OpenBao audit log to stdout, outbox events                                                                                                                                                 |
-| Information disclosure | Secrets leakage                   | No secrets in Git, images or env; first-boot generation; OpenBao AppRole per service with least-privilege policies; per-consumer secret files with owner-only permissions; log redaction (auth headers, cookies, tokens, passwords) plus collector scrubbing |
-| Information disclosure | Error detail leakage              | RFC 9457 problem responses without internals; `X-Powered-By`/`Server` removed                                                                                                                                                                                |
-| Information disclosure | Cross-service data access         | One database and role per service, `PUBLIC` revoked                                                                                                                                                                                                          |
-| Denial of service      | Request floods                    | Token-bucket rate limits at the edge and in services (Valkey-backed), body size limits, timeouts, circuit breakers, memory limits per container                                                                                                              |
-| Elevation of privilege | Container breakout                | Non-root, read-only root filesystems, `no-new-privileges`, all capabilities dropped for app containers, distroless runtime images, no Docker socket in any runtime container                                                                                 |
+| STRIDE                 | Threat                                                   | Mitigation (implemented)                                                                                                                                                                                                                                     |
+| ---------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Spoofing               | Stolen/forged tokens                                     | Tokens never reach browsers (token-handler BFF). Every service verifies JWT signature, issuer, audience, expiry. PKCE S256 + state + nonce on login                                                                                                          |
+| Spoofing               | Session fixation / hijack                                | New 256-bit session id per login, HttpOnly + SameSite=Lax (+ Secure on HTTPS) cookie, server-side sessions encrypted with AES-256-GCM, logout revokes refresh token and ends the IdP session                                                                 |
+| Spoofing               | Credential stuffing / brute force                        | Keycloak brute-force detection, password policy (≥12 chars, not username/email), per-IP rate limits on `/auth` and Keycloak, MFA (OTP) and passkeys available                                                                                                |
+| Tampering              | CSRF on state-changing APIs                              | Origin / Sec-Fetch-Site check in the forward-auth step and on logout, plus SameSite cookies                                                                                                                                                                  |
+| Tampering              | Open redirect after login                                | `returnTo` restricted to same-site relative paths (unit-tested)                                                                                                                                                                                              |
+| Tampering              | Header smuggling / path confusion                        | Traefik deletes aliasing headers, rejects encoded `/`, `\`, NUL; strips untrusted X-Forwarded-*                                                                                                                                                              |
+| Spoofing               | Acting on someone else's listing or image                | OpenFGA ownership checks on every write (`can_edit`, `can_delete`, `can_attach`); roles arrive as contextual tuples from the verified token, never stored; fails closed with `503` if OpenFGA is unavailable                                                 |
+| Tampering              | Malicious upload (malware, polyglot, decompression bomb) | 10 MB limit at the gateway and service; ClamAV scan of every upload before parsing; magic-byte sniffing (JPEG/PNG/WebP only); imgproxy re-encode with bounded resolution; raw uploads never public                                                           |
+| Tampering              | Abusing imgproxy as an open proxy                        | Only HMAC-signed URLs with fixed presets are served; sources restricted to the two S3 buckets                                                                                                                                                                |
+| Tampering              | Forged or out-of-order events                            | Only Debezium (`connect` principal) can write event topics; consumers validate contracts (zod) and dead-letter violations; external versions in search reject stale updates                                                                                  |
+| Tampering              | Policy bypass (prohibited items, quotas)                 | OPA decides on create and update; OPA's API needs a per-client token and policies cannot be changed over it; fails closed                                                                                                                                    |
+| Repudiation            | Untraceable actions                                      | Structured JSON logs with trace ids, Keycloak login/admin events, OpenBao audit log to stdout, outbox events                                                                                                                                                 |
+| Information disclosure | Secrets leakage                                          | No secrets in Git, images or env; first-boot generation; OpenBao AppRole per service with least-privilege policies; per-consumer secret files with owner-only permissions; log redaction (auth headers, cookies, tokens, passwords) plus collector scrubbing |
+| Information disclosure | Error detail leakage                                     | RFC 9457 problem responses without internals; `X-Powered-By`/`Server` removed                                                                                                                                                                                |
+| Information disclosure | Cross-service data access                                | One database and role per service, `PUBLIC` revoked                                                                                                                                                                                                          |
+| Information disclosure | Location leak through photos                             | EXIF/XMP metadata (GPS, camera serials) stripped by the re-encode; only the re-encoded file is stored                                                                                                                                                        |
+| Information disclosure | Personal data in events or search                        | Events carry ids and listing content, not e-mail or names; the search index omits owner ids from responses                                                                                                                                                   |
+| Denial of service      | Expensive searches                                       | zod-validated parameters, page depth capped (200 × 48), rate limits at the edge, circuit breaker in front of OpenSearch                                                                                                                                      |
+| Denial of service      | Request floods                                           | Token-bucket rate limits at the edge and in services (Valkey-backed), body size limits, timeouts, circuit breakers, memory limits per container                                                                                                              |
+| Elevation of privilege | Container breakout                                       | Non-root, read-only root filesystems, `no-new-privileges`, all capabilities dropped for app containers, distroless runtime images, no Docker socket in any runtime container                                                                                 |
 
 ## Accepted risks / open items
 
@@ -34,9 +44,16 @@ grows with each phase; Phase 6 adds a full ASVS checklist.
   services is a later hardening option.
 - **CSP allows `'unsafe-inline'` scripts** for Next.js hydration. Phase 6 moves to nonce-based CSP.
 - **CrowdSec and the Coraza WAF (OWASP CRS)** arrive in Phase 6.
+- **ClamAV signatures can lag** behind new malware, and freshclam needs internet access. Re-encoding through
+  imgproxy is the second line of defence. Air-gapped installs update signatures with new images.
+- **Kafka and OpenSearch traffic is not encrypted** on the internal network (SASL/SCRAM and HTTP basic auth
+  only). TLS for both is planned with the service mTLS work.
+- **Deleted listings keep their OpenFGA owner tuple.** This is harmless because checks also require the
+  listing to exist ([ADR-0013](adr/0013-authorization.md)).
 
-## GDPR notes (Phase 1)
+## GDPR notes
 
-Data minimisation: the local profile stores only id, e-mail, display name, locale and timestamps. Events carry ids,
+Data minimisation: the local profile stores only id, e-mail, display name, locale and timestamps. Listings store
+the seller's display name and a place (municipality level, never an address). Image metadata is stripped. Events carry ids,
 not personal data. Only one strictly necessary cookie is set, so no consent banner is required. Export (Art. 15),
 erasure (Art. 17) and retention automation are delivered by the AI Governance pillar (Phase 4).

@@ -35,11 +35,11 @@ jobs:
   stack:
     name: Full stack (compose up, smoke, Playwright)
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: docker compose up --wait
-        run: docker compose up -d --wait --wait-timeout 900
+        run: docker compose up -d --wait --wait-timeout 1200
       - name: Smoke test
         run: ./raadi smoke
       - name: Playwright end-to-end tests

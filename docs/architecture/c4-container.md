@@ -3,7 +3,7 @@
 Raadi is a classifieds marketplace built from independently deployable containers that all run under a single
 Docker Compose project, both on a laptop and on a cloud VM. This page covers the **system context** and the
 **container** level of the C4 model. Containers marked _(Pn)_ arrive in phase _n_ of the [roadmap](../roadmap.md);
-everything else runs today.
+everything else runs today (Phases 1 and 2).
 
 ## Level 1 — System context
 
@@ -51,9 +51,9 @@ C4Container
 
   System_Boundary(domain, "Domain services (NestJS)") {
     Container(bff, "identity-bff", "NestJS", "OIDC login, encrypted sessions, token handler")
-    Container(listings, "listings", "NestJS", "Listings, categories, drafts, pricing (P2)")
-    Container(search, "search", "NestJS", "Indexing, full-text/geo/semantic search, saved searches (P2)")
-    Container(media, "media", "NestJS", "Signed uploads, ClamAV, EXIF strip, moderation (P2)")
+    Container(listings, "listings", "NestJS", "Listings, taxonomy, OPA rules, OpenFGA ownership")
+    Container(search, "search", "NestJS", "Event-fed index; full-text, facets, geo (semantic + saved searches later)")
+    Container(media, "media", "NestJS", "Uploads: ClamAV scan, re-encode, EXIF strip, orphan GC")
     Container(messaging, "messaging", "NestJS", "Buyer-seller chat over WebSockets (P3)")
     Container(notifications, "notifications", "NestJS", "E-mail, Expo push, in-app (P3)")
     Container(payments, "payments", "NestJS", "Promoted listings, pluggable providers (P3)")
@@ -73,10 +73,10 @@ C4Container
     ContainerDb(pg, "PostgreSQL 17", "PostGIS + pgvector", "One database and role per service")
     ContainerDb(valkey, "Valkey", "Key-value", "Sessions, rate limits, cache")
     Container(bao, "OpenBao", "Secrets", "KV v2 + AppRole per service")
-    ContainerQueue(kafka, "Kafka (KRaft)", "Apicurio, Debezium", "Domain events, CDC outbox (P2)")
-    ContainerDb(os, "OpenSearch", "Search", "Full-text, facets, geo, vectors (P2)")
-    ContainerDb(s3, "SeaweedFS + imgproxy", "S3", "Images and lakehouse (P2)")
-    Container(fga, "OpenFGA + OPA", "Authorization", "ReBAC + policy decisions (P2)")
+    ContainerQueue(kafka, "Kafka (KRaft)", "Apicurio, Debezium", "Domain events from the outbox (CDC)")
+    ContainerDb(os, "OpenSearch", "Search", "Full-text, facets, geo (vectors in P4)")
+    ContainerDb(s3, "SeaweedFS + imgproxy", "S3", "Images (signed, resized URLs); lakehouse in P4")
+    Container(fga, "OpenFGA + OPA", "Authorization", "Relationships (ownership) + marketplace rules")
   }
 
   System_Boundary(obs, "Observability") {
@@ -91,7 +91,9 @@ C4Container
   Rel(ops, traefik, "HTTPS")
   Rel(traefik, web, "HTTP")
   Rel(traefik, bff, "/auth/*, /api/v1/identity, forwardAuth")
-  Rel(traefik, listings, "/api/v1/listings (P2)")
+  Rel(traefik, listings, "/api/v1/listings")
+  Rel(traefik, search, "/api/v1/search")
+  Rel(traefik, media, "/api/v1/media, /img")
   Rel(traefik, keycloak, "auth.<domain>")
   Rel(traefik, grafana, "grafana.<domain>")
   Rel(web, bff, "Session + token exchange")
@@ -99,8 +101,13 @@ C4Container
   Rel(bff, valkey, "Sessions")
   Rel(bff, pg, "Profiles + outbox")
   Rel(bff, bao, "AppRole login")
-  Rel(listings, kafka, "Outbox via Debezium (P2)")
-  Rel(search, os, "Index / query (P2)")
+  Rel(listings, pg, "Listings + outbox")
+  Rel(listings, fga, "Owner tuples, checks")
+  Rel(media, s3, "Store re-encoded images")
+  Rel(pg, kafka, "Outbox via Debezium")
+  Rel(kafka, search, "listing events")
+  Rel(kafka, media, "listing events")
+  Rel(search, os, "Index / query")
   Rel(sec, llm, "Classify (P4)")
   Rel(bff, otel, "OTLP")
   Rel(otel, prom, "Metrics")
@@ -142,6 +149,34 @@ Browsers never see tokens. Mobile apps send their own bearer token, which `forwa
 unchanged. Every service validates the JWT itself (zero trust between services), and the gateway's
 `forwardAuth` is never the only check.
 
+## Publishing a listing (Phase 2)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant B as Browser
+  participant M as media
+  participant L as listings
+  participant P as PostgreSQL
+  participant D as Debezium
+  participant K as Kafka
+  participant S as search
+  B->>M: POST /api/v1/media (image)
+  M->>M: ClamAV scan → sniff type → imgproxy re-encode
+  M->>P: media row + outbox; OpenFGA owner tuple
+  B->>L: POST /api/v1/listings (imageIds)
+  L->>L: OPA rules (quota, price, prohibited items); OpenFGA can_attach
+  L->>P: listing + listing.published event (one transaction)
+  D->>P: read outbox from the WAL
+  D->>K: raadi.listing.events (keyed by listing id)
+  K->>S: index with external version (idempotent)
+  K->>M: mark images attached
+```
+
+Search is eventually consistent. A listing becomes searchable once the indexer has processed its event
+(`raadi_search_index_lag_seconds`, Marketplace dashboard). Decisions:
+[ADR-0012](../adr/0012-event-backbone.md) to [ADR-0015](../adr/0015-search.md).
+
 ## Services and ports
 
 Only Traefik publishes ports on the host (80/443, bound to `127.0.0.1` in development). Everything else is
@@ -163,13 +198,13 @@ reachable only on the internal Docker network.
 | loki                                   | 1                    | 3100                                  | — (via Grafana)                                                    |
 | tempo                                  | 1                    | 3200, 4317                            | — (via Grafana)                                                    |
 | grafana                                | 1                    | 3000                                  | `http://grafana.raadi.localhost`                                   |
-| listings                               | 2                    | 4010                                  | `/api/v1/listings`                                                 |
-| search                                 | 2                    | 4020                                  | `/api/v1/search`                                                   |
-| media                                  | 2                    | 4040                                  | `/api/v1/media`                                                    |
+| listings                               | 2                    | 4000                                  | `/api/v1/listings`                                                 |
+| search                                 | 2                    | 4000                                  | `/api/v1/search`                                                   |
+| media                                  | 2                    | 4000                                  | `/api/v1/media`                                                    |
 | kafka / apicurio / debezium            | 2                    | 9092 / 8080 / 8083                    | —                                                                  |
 | opensearch                             | 2                    | 9200                                  | —                                                                  |
-| seaweedfs (S3) / imgproxy              | 2                    | 8333 / 8080                           | `img.raadi.localhost`                                              |
-| openfga / opa                          | 2                    | 8080 / 8181                           | —                                                                  |
+| seaweedfs (S3) / imgproxy              | 2                    | 8333, 9327 / 8080, 8081 (metrics)     | `/img/…` on the main host (signed)                                 |
+| openfga / opa                          | 2                    | 8080, 2112 (metrics) / 8181           | —                                                                  |
 | clamav                                 | 2                    | 3310                                  | —                                                                  |
 | messaging                              | 3                    | 4030                                  | `/api/v1/messaging`, WebSocket                                     |
 | notifications                          | 3                    | 4050                                  | `/api/v1/notifications`                                            |
@@ -195,5 +230,12 @@ flowchart LR
   secrets --> valkey[(valkey)]
   certs[certs-init: dev CA] --> traefik
   baoinit & db & kci & valkey --> bff[identity-bff] --> web
-  traefik & web & bff & obs[observability stack] --> summary[summary: URLs + logins]
+  kafka[(kafka)] --> kinit[kafka-init: users, topics, ACLs]
+  connect[kafka-connect] --> cinit[connect-init: outbox connectors]
+  kci & apicurio[apicurio] --> rinit[registry-init: event schemas]
+  openfga[openfga] --> ainit[authz-init: model]
+  baoinit & db & ainit & opa[opa] --> listings --> lseed[listings-seed]
+  baoinit & db & ainit & kinit & clamav & imgproxy & seaweedfs --> media --> mseed[media-seed]
+  baoinit & kinit & opensearch --> search
+  traefik & web & bff & obs[observability stack] & cinit & rinit & lseed & mseed & search --> summary[summary: URLs + logins]
 ```

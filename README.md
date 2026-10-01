@@ -40,15 +40,24 @@ Generated infrastructure credentials are never committed. Read them with `./raad
 flowchart LR
   U((Browser / app)) -->|80/443| T[Traefik<br/>TLS · rate limits · headers · forward-auth]
   T --> W[web<br/>Next.js]
-  T --> B[identity-bff<br/>NestJS]
+  T --> B[identity-bff<br/>token handler]
+  T --> LS[listings] & SE[search] & ME[media]
+  T -->|/img| IP[imgproxy<br/>signed URLs]
   T --> K[Keycloak<br/>OIDC · MFA · passkeys]
   T --> G[Grafana]
-  W --> B
+  W --> B & SE & LS
   B --> K
   B --> V[(Valkey<br/>sessions)]
-  B --> P[(PostgreSQL 17<br/>PostGIS · pgvector)]
-  B --> O[OpenBao<br/>secrets]
-  B & W & T & K -->|OTLP| C[OTel Collector]
+  B & LS & ME --> P[(PostgreSQL 17<br/>PostGIS · pgvector)]
+  LS & ME --> FGA[OpenFGA]
+  LS --> OPA[OPA]
+  ME --> AV[ClamAV] & S3[(SeaweedFS S3)]
+  IP --> S3
+  P -->|outbox CDC| DBZ[Debezium] --> KA[(Kafka)]
+  KA --> SE & ME
+  SE --> OS[(OpenSearch)]
+  B & LS & ME & SE -.->|AppRole| O[OpenBao]
+  B & W & T & K & LS & ME & SE -->|OTLP| C[OTel Collector]
   C --> PR[(Prometheus)] & L[(Loki)] & TE[(Tempo)]
   PR --> AM[Alertmanager]
   G --> PR & L & TE
@@ -63,18 +72,23 @@ The C4 context and container diagrams, the request flow and the startup graph ar
 Only the gateway publishes host ports (`127.0.0.1:80` and `:443` in development). Internal ports are on the
 Compose network.
 
-| Service                       | Internal port           | URL (development)                                                       |
-| ----------------------------- | ----------------------- | ----------------------------------------------------------------------- |
-| Web app (Next.js)             | 3000                    | http://raadi.localhost                                                  |
-| identity-bff (NestJS)         | 4000                    | http://raadi.localhost/auth/_, http://raadi.localhost/api/v1/identity/_ |
-| Keycloak                      | 8080, 9000              | http://auth.raadi.localhost (admin console: `/admin/`)                  |
-| Grafana                       | 3000                    | http://grafana.raadi.localhost (SSO as `admin@raadi.localhost`)         |
-| Prometheus / Alertmanager     | 9090 / 9093             | http://prometheus.raadi.localhost                                       |
-| Traefik dashboard             | — (`api@internal`)      | http://traefik.raadi.localhost/dashboard/                               |
-| OpenBao                       | 8200                    | http://bao.raadi.localhost/ui/                                          |
-| Mailpit (all e-mail in dev)   | 1025 / 8025             | http://mail.raadi.localhost                                             |
-| PostgreSQL · Valkey           | 5432 · 6379             | internal only                                                           |
-| OTel Collector · Loki · Tempo | 4317/4318 · 3100 · 3200 | internal only (via Grafana)                                             |
+| Service                            | Internal port           | URL (development)                                               |
+| ---------------------------------- | ----------------------- | --------------------------------------------------------------- |
+| Web app (Next.js)                  | 3000                    | http://raadi.localhost                                          |
+| identity-bff (NestJS)              | 4000                    | http://raadi.localhost/auth/\*, /api/v1/identity/\*             |
+| listings · search · media (NestJS) | 4000 each               | /api/v1/listings · /api/v1/search · /api/v1/media               |
+| imgproxy (listing images)          | 8080                    | http://raadi.localhost/img/… (signed URLs only)                 |
+| Keycloak                           | 8080, 9000              | http://auth.raadi.localhost (admin console: `/admin/`)          |
+| Grafana                            | 3000                    | http://grafana.raadi.localhost (SSO as `admin@raadi.localhost`) |
+| Prometheus / Alertmanager          | 9090 / 9093             | http://prometheus.raadi.localhost                               |
+| Traefik dashboard                  | — (`api@internal`)      | http://traefik.raadi.localhost/dashboard/                       |
+| OpenBao                            | 8200                    | http://bao.raadi.localhost/ui/                                  |
+| Mailpit (all e-mail in dev)        | 1025 / 8025             | http://mail.raadi.localhost                                     |
+| PostgreSQL · Valkey                | 5432 · 6379             | internal only                                                   |
+| Kafka · Kafka Connect · Apicurio   | 9092 · 8083 · 8080      | internal only                                                   |
+| OpenSearch · SeaweedFS · ClamAV    | 9200 · 8333 · 3310      | internal only                                                   |
+| OpenFGA · OPA                      | 8080 · 8181             | internal only                                                   |
+| OTel Collector · Loki · Tempo      | 4317/4318 · 3100 · 3200 | internal only (via Grafana)                                     |
 
 The full table, including the services that later phases add, is in
 [docs/architecture/c4-container.md](docs/architecture/c4-container.md#services-and-ports).
@@ -88,7 +102,7 @@ Each command is available as `./raadi <command>` or `make <command>`. Everything
 | `./raadi up` / `down`                        | start (and wait until healthy) / stop                                 |
 | `./raadi dev`                                | hot-reload mode: source bind-mounted, `node_modules` in named volumes |
 | `./raadi lint` · `typecheck` · `test`        | quality checks in the toolbox                                         |
-| `./raadi test-integration`                   | Testcontainers tests (PostgreSQL, Valkey)                             |
+| `./raadi test-integration`                   | Testcontainers tests (PostgreSQL, Valkey, OpenSearch)                 |
 | `./raadi smoke` · `e2e`                      | smoke test and Playwright tests against the running stack             |
 | `./raadi security` · `iac-scan` · `licenses` | Trivy, Gitleaks, OSV-Scanner · Checkov · OSI license gate             |
 | `./raadi toolbox`                            | shell with pnpm, uv, tofu, ansible, checkov, trivy, playwright…       |
@@ -115,8 +129,10 @@ workflow, Let's Encrypt, backups and the "zero to live in 15 minutes" guide arri
 
 ## Project status
 
-Phase 1 (foundation) is complete: repo skeleton, compose stack, toolbox, Keycloak, Postgres, gateway,
-observability, identity-bff and the web shell. See the [roadmap](docs/roadmap.md) for later phases.
+Phases 1 (foundation) and 2 (listings, search, media, web) are complete. You can browse and search about 500
+demo listings (full text, facets, geo radius), and sign in to create, edit, sell and delete listings with
+virus-scanned images. Listing changes reach search through the outbox, Debezium and Kafka. See the
+[roadmap](docs/roadmap.md) for later phases.
 
 ## Documentation
 

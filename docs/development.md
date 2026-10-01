@@ -13,7 +13,8 @@ Prerequisites: **Docker** (Desktop, or Engine + Compose v2) and **Git**. Every o
 In hot-reload mode the repository is bind-mounted at `/workspace`. `node_modules` and the pnpm store live in
 named volumes (`nm-*`, `pnpm-store`) shared with the toolbox, so nothing platform-specific is written to your
 machine. File watching uses polling, so edits made on macOS/Windows/Docker Desktop are picked up (web ≈ 3 s,
-services ≈ 10 s).
+services ≈ 10 s). One `dev-packages` container rebuilds the shared packages (`service-kit`, `catalog`,
+`events`); every service restarts when one of them changes.
 
 After editing gateway configuration (`deploy/traefik/**`), run `./raadi restart traefik`. File-change events
 don't always cross Docker Desktop's file sharing.
@@ -24,9 +25,15 @@ don't always cross Docker Desktop's file sharing.
 apps/web                 Next.js 16 (App Router, RSC), next-intl (nb/en/so), Tailwind 4, shadcn/ui-style components
 apps/mobile              Expo app (Phase 3)
 services/identity-bff    NestJS: OIDC login, encrypted sessions, token handler, /api/v1/identity
-services/*               further domain services (Phase 2–3)
+services/listings        NestJS: listings CRUD, OPA marketplace rules, OpenFGA ownership, outbox events
+services/search          NestJS: OpenSearch indexer (Kafka consumer) and search/suggest API
+services/media           NestJS: image uploads (ClamAV, imgproxy re-encode), attachment sync, orphan GC
+services/*               further domain services (Phase 3)
 ai/*                     Python AI pillars (Phase 4)
-packages/service-kit     telemetry, logging, OpenBao, JWT guard, errors, resilience, health, shutdown
+packages/service-kit     telemetry, logging, OpenBao, JWT guard, errors, resilience, health, shutdown,
+                         outbox, Kafka consumer (retries, DLQ), OpenFGA/OPA clients, imgproxy signing
+packages/catalog         taxonomy, attribute schemas, places (geo) and the deterministic demo dataset
+packages/events          CloudEvents contracts (zod), JSON Schemas for Apicurio, topic names
 packages/api-client      typed client generated from services' OpenAPI contracts
 packages/ui              design-system components
 packages/config          shared tsconfig and ESLint presets
@@ -51,6 +58,7 @@ built or configured lives under `deploy/`, grouped by component rather than by f
 | --------------------------------------- | -------------------------------------------------- | -------------------------- |
 | Unit + contract                         | `**/test/unit`, `packages/*/test`, `apps/web/test` | `./raadi test`             |
 | Integration (Testcontainers)            | `services/*/test/integration`                      | `./raadi test-integration` |
+| Authorization policies (Rego)           | `deploy/opa/policies/**/*_test.rego`               | `./raadi test`             |
 | Smoke (full stack, through the gateway) | `tests/smoke/smoke.sh`                             | `./raadi smoke`            |
 | End-to-end (Playwright, Chromium)       | `tests/e2e/specs`                                  | `./raadi e2e`              |
 
@@ -67,8 +75,12 @@ generates `@raadi/api-client` (`./raadi generate`).
    `openbao-bootstrap` and `db-init` pick it up automatically. Put SQL migrations in `migrations/` (dbmate format).
 4. Add the compose service in `deploy/compose/apps.yaml` (build with `deploy/docker/node-service/Dockerfile`,
    `SERVICE=<name>`) and a router in `deploy/traefik/dynamic/common/routes.yml` with the `forward-auth` middleware.
-5. Add `nm-<name>` volumes to `deploy/compose/tools.yaml` and `compose.dev.yaml`.
-6. Extend the smoke test and the Grafana dashboards. Write an ADR if a decision was involved.
+5. Add `nm-<name>` volumes to `deploy/compose/tools.yaml` and `compose.dev.yaml`, and a hot-reload override in
+   `compose.dev.yaml` (`pnpm --filter <name> dev`, depending on `dev-packages`).
+6. If it publishes events: set `"outbox": true` in the manifest (connect-init registers a Debezium connector),
+   add the contracts to `@raadi/events` and the topic and ACLs to `deploy/kafka/init.sh`.
+7. Make `summary` depend on it, extend the smoke test, e2e specs and Grafana dashboards. Write an ADR if a
+   decision was involved.
 
 ## Conventions
 

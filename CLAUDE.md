@@ -43,7 +43,7 @@ Verify the current state before starting new work:
 
 A full reset (wipes data): `docker compose down -v --remove-orphans`.
 
-## Environment gotchas (Docker Desktop for Linux, ~7.5 GiB VM)
+## Environment gotchas (Docker Desktop for Linux; give the VM 12+ GB from Phase 2)
 
 - Bind mounts work only from paths under `/home`. Pipe scripts into containers via stdin instead.
 - Host file events don't reach containers: dev hot reload polls, and Traefik needs
@@ -54,6 +54,12 @@ A full reset (wipes data): `docker compose down -v --remove-orphans`.
 - Prettier re-quotes YAML. Check that `user: '0:0'`-style values survive a format run.
 - Turbo 2 strict env mode hides container env vars unless they're listed in `passThroughEnv`.
 - Init-container CLIs (bao, dbmate) thrash below ~256M memory.
+- Docker remounts a `tmpfs` as root-owned 0755 when a container restarts. Always give tmpfs entries an
+  explicit `:mode=1777`, and never `cp` over read-only files in entrypoints (`cap_drop: ALL`, no DAC override).
+- Arguments to `./raadi e2e` replace the container command: run one spec with
+  `./raadi e2e e2e specs/<file>.spec.ts`.
+- Grafana has basic auth disabled. For API checks, log in with `POST /login` (admin secret) and use the cookie.
+- OpenSearch's search user may only touch `raadi-listings*`, so index/alias calls must name that pattern.
 
 ## Demo logins
 
