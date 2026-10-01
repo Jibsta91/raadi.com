@@ -1,0 +1,26 @@
+node_modules/
+.pnpm-store/
+dist/
+.next/
+.turbo/
+coverage/
+.venv/
+__pycache__/
+*.pyc
+.expo/
+playwright-report/
+test-results/
+*.log
+.DS_Store
+# Local-only overrides and exported dev CA
+.env.local
+compose.override.yaml
+deploy/certs/*.crt
+deploy/certs/*.pem
+# OpenTofu
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.build/
+*.tsbuildinfo

@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "title": "Raadi — kjøp og selg lokalt",
+    "description": "Raadi er en åpen markedsplass for kjøp og salg i Norge: torget, bil, eiendom, jobb og reise."
+  },
+  "nav": {
+    "main": "Hovedmeny",
+    "skip": "Hopp til innhold",
+    "status": "Status",
+    "language": "Språk",
+    "login": "Logg inn",
+    "logout": "Logg ut"
+  },
+  "home": {
+    "heroTitle": "Finn det. Selg det. Raadi.",
+    "heroSubtitle": "En trygg og åpen markedsplass for alt fra brukte møbler til ditt neste hjem eller din neste jobb.",
+    "categoriesTitle": "Kategorier",
+    "categories": {
+      "torget": {
+        "name": "Torget",
+        "description": "Møbler, elektronikk, klær og alt imellom."
+      },
+      "bil": {
+        "name": "Bil",
+        "description": "Biler, motorsykler, båter og andre kjøretøy."
+      },
+      "eiendom": {
+        "name": "Eiendom",
+        "description": "Boliger til salgs og til leie."
+      },
+      "jobb": {
+        "name": "Jobb",
+        "description": "Stillinger fra arbeidsgivere i hele Norge."
+      },
+      "reise": {
+        "name": "Reise",
+        "description": "Feriehus, reiser og reisetilbud."
+      }
+    },
+    "trustTitle": "Hvorfor Raadi",
+    "trust": {
+      "verified": {
+        "title": "Verifiserte brukere",
+        "body": "Vurderinger og identitetsbekreftelse gjør at du vet hvem du handler med."
+      },
+      "ai": {
+        "title": "Beskyttelse mot svindel",
+        "body": "Annonser og meldinger sjekkes for svindel, og usikre saker vurderes av mennesker."
+      },
+      "privacy": {
+        "title": "Dine data, dine rettigheter",
+        "body": "Personvern innebygd: eksporter eller slett dataene dine når du vil."
+      }
+    }
+  },
+  "account": {
+    "title": "Min konto",
+    "signedInAs": "Innlogget som {email}",
+    "email": "E-post",
+    "locale": "Språk",
+    "roles": "Roller",
+    "memberSince": "Medlem siden",
+    "lastLogin": "Sist innlogget",
+    "locales": {
+      "nb": "Norsk",
+      "en": "English",
+      "so": "Soomaali"
+    },
+    "securityTitle": "Sikkerhet",
+    "securityHint": "Bytt passord, slå på totrinnsbekreftelse eller legg til en passnøkkel.",
+    "manageSecurity": "Administrer innlogging og sikkerhet",
+    "logout": "Logg ut"
+  },
+  "status": {
+    "title": "Driftsstatus",
+    "subtitle": "Sanntidsstatus for Raadis tjenester.",
+    "allOk": "Alle systemer fungerer normalt",
+    "degraded": "Noen komponenter har redusert drift",
+    "groups": {
+      "app": "Applikasjon",
+      "platform": "Plattform",
+      "observability": "Overvåking"
+    },
+    "latency": "{ms} ms",
+    "down": "Nede"
+  },
+  "privacy": {
+    "title": "Personvern",
+    "intro": "Slik behandler Raadi personopplysninger etter GDPR og personopplysningsloven.",
+    "controller": {
+      "title": "Behandlingsansvarlig",
+      "body": "Den som drifter denne Raadi-installasjonen er behandlingsansvarlig for personopplysningene som behandles på plattformen."
+    },
+    "data": {
+      "title": "Hva vi behandler",
+      "body": "Kontoopplysninger (e-post, navn, språk), annonser og meldinger du lager, og sikkerhetslogger. Vi samler bare inn det som trengs for å drive markedsplassen."
+    },
+    "cookies": {
+      "title": "Informasjonskapsler",
+      "body": "Vi bruker én nødvendig sesjonskapsel for å holde deg innlogget. Vi bruker ingen sporings- eller reklamekapsler, så samtykkebanner trengs ikke."
+    },
+    "ai": {
+      "title": "Automatiserte avgjørelser",
+      "body": "KI hjelper med å oppdage svindel og kategorisere annonser. Personopplysninger fjernes før de når en språkmodell, alle KI-avgjørelser logges, og usikre avgjørelser vurderes av et menneske."
+    },
+    "rights": {
+      "title": "Dine rettigheter",
+      "body": "Du kan be om innsyn, retting, eksport eller sletting av dataene dine, og protestere mot behandling. Du kan også klage til Datatilsynet."
+    },
+    "retention": {
+      "title": "Lagringstid",
+      "body": "Data lagres bare så lenge det trengs: utløpte annonser og sikkerhetslogger slettes automatisk etter våre slettepolicyer."
+    },
+    "contact": {
+      "title": "Kontakt",
+      "body": "Kontakt den som drifter denne installasjonen med spørsmål om personvern."
+    }
+  },
+  "footer": {
+    "tagline": "Raadi — åpen kildekode-markedsplass",
+    "privacy": "Personvern",
+    "status": "Status",
+    "openSource": "Apache-2.0"
+  },
+  "notFound": {
+    "title": "Fant ikke siden",
+    "body": "Siden du leter etter finnes ikke.",
+    "home": "Tilbake til forsiden"
+  },
+  "auth": {
+    "error": {
+      "expired": "Innloggingen tok for lang tid eller er allerede brukt. Prøv igjen.",
+      "cancelled": "Innloggingen ble avbrutt.",
+      "login_failed": "Vi kunne ikke logge deg inn. Prøv igjen.",
+      "idp_error": "Innloggingstjenesten meldte en feil. Prøv igjen senere."
+    }
+  }
+}

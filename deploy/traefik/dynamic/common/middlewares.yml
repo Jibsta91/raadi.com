@@ -1,0 +1,73 @@
+# Shared middlewares. Templated by Traefik (Go templates + Sprig).
+http:
+  middlewares:
+    security-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: false
+        referrerPolicy: strict-origin-when-cross-origin
+        permissionsPolicy: 'camera=(), microphone=(), geolocation=(self), payment=()'
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        customResponseHeaders:
+          Server: ''
+          X-Powered-By: ''
+          Cross-Origin-Opener-Policy: same-origin
+
+    # Content-Security-Policy for the web app. Next.js needs inline scripts for
+    # hydration; nonces are a Phase 6 hardening item tracked in docs/threat-model.md.
+    web-csp:
+      headers:
+        contentSecurityPolicy: >-
+          default-src 'self';
+          script-src 'self' 'unsafe-inline'{{ if eq (env "WEB_DEV_MODE") "true" }} 'unsafe-eval'{{ end }};
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data: blob:;
+          connect-src 'self';
+          font-src 'self';
+          frame-ancestors 'none';
+          form-action 'self' {{ env "AUTH_BASE_URL" }};
+          base-uri 'self';
+          object-src 'none'
+
+    # Per-client-IP rate limits (token bucket).
+    ratelimit-default:
+      rateLimit:
+        average: 50
+        burst: 100
+        period: 1s
+    ratelimit-auth:
+      rateLimit:
+        average: 10
+        burst: 20
+        period: 1s
+
+    compress:
+      compress:
+        excludedContentTypes: ['text/event-stream']
+
+    # Token-handler: identity-bff turns the session cookie into a short-lived
+    # access token (or passes through a mobile bearer token). Every service still
+    # validates the JWT itself (zero trust).
+    forward-auth:
+      forwardAuth:
+        address: http://identity-bff:4000/auth/forward
+        trustForwardHeader: false
+        maxResponseBodySize: 4096
+        authResponseHeaders:
+          - Authorization
+        authRequestHeaders:
+          - Cookie
+          - Authorization
+          - Origin
+          - Sec-Fetch-Site
+          - X-Forwarded-Method
+          - X-Forwarded-Uri
+          - X-Forwarded-Host
+          - X-Forwarded-Proto
+
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true

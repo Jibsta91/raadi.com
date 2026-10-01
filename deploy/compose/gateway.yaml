@@ -1,0 +1,50 @@
+# Edge gateway: Traefik (TLS, routing, rate limits, security headers, forward
+# auth). Runs as non-root with a read-only filesystem and no Docker socket.
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+services:
+  traefik:
+    image: traefik:v3.7.13
+    command: ['--configFile=/etc/traefik/traefik.yml']
+    restart: unless-stopped
+    logging: *logging
+    user: '65532:65532'
+    read_only: true
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    # Non-root Traefik binds 80/443 via an unprivileged-port sysctl (no capabilities).
+    sysctls:
+      net.ipv4.ip_unprivileged_port_start: '0'
+    ports:
+      - '${BIND_ADDRESS}:${HTTP_PORT}:80'
+      - '${BIND_ADDRESS}:${HTTPS_PORT}:443'
+      - '[${BIND_ADDRESS_V6}]:${HTTP_PORT}:80'
+      - '[${BIND_ADDRESS_V6}]:${HTTPS_PORT}:443'
+    environment:
+      # Runs as a UID without a passwd entry; OTel resource detection needs $USER.
+      USER: traefik
+      RAADI_DOMAIN: ${RAADI_DOMAIN}
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      KEYCLOAK_ADMIN_PUBLIC: ${KEYCLOAK_ADMIN_PUBLIC}
+      WEB_DEV_MODE: 'false'
+      TZ: ${TZ}
+    volumes:
+      - ./deploy/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./deploy/traefik/dynamic/common:/etc/traefik/dynamic/common:ro
+      - ./deploy/traefik/dynamic/dev:/etc/traefik/dynamic/dev:ro
+      - certs:/certs:ro
+    depends_on:
+      certs-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD', 'traefik', 'healthcheck', '--configFile=/etc/traefik/traefik.yml']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '1.0' }
+
+volumes:
+  certs: {}

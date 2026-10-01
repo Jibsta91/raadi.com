@@ -1,0 +1,8 @@
+# Checkov configuration (./raadi iac-scan). Each skip is justified.
+skip-check:
+  # Healthchecks are defined in compose (per service), not in Dockerfiles.
+  - CKV_DOCKER_2
+  # Wrapper images (loki/tempo/otel-collector) inherit the upstream non-root USER.
+  - CKV_DOCKER_3
+compact: true
+quiet: true

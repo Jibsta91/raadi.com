@@ -1,0 +1,32 @@
+// Optional VS Code Dev Container. Never required: everything also works with
+// `docker compose run --rm toolbox …` / ./raadi. Opens the toolbox image with
+// the same named node_modules volumes the compose toolbox uses.
+{
+  "name": "Raadi toolbox",
+  "dockerComposeFile": ["../compose.yaml", "docker-compose.devcontainer.yaml"],
+  "service": "devcontainer",
+  "runServices": ["devcontainer"],
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "postCreateCommand": "pnpm install --frozen-lockfile",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-playwright.playwright",
+        "timonwong.shellcheck",
+        "redhat.vscode-yaml",
+        "opentofu.vscode-opentofu",
+        "ms-python.python",
+        "charliermarsh.ruff"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+# Dev Container service: the toolbox, kept running for VS Code to attach to.
+# Paths resolve from the repository root (the compose project directory).
+services:
+  devcontainer:
+    extends:
+      file: deploy/compose/tools.yaml
+      service: toolbox
+    profiles: []
+    entrypoint: ['sleep', 'infinity']
+    command: []

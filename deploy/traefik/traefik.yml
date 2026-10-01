@@ -1,0 +1,91 @@
+# Traefik static configuration. Routes live in the file provider (dynamic/)
+# instead of Docker labels, so Traefik never needs the Docker socket (ADR-0006).
+experimental:
+  otlpLogs: true
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+entryPoints:
+  web:
+    address: ':80'
+    http:
+      aliasHeadersStrategy: delete
+      encodedCharacters:
+        allowEncodedSlash: false
+        allowEncodedBackslash: false
+        allowEncodedNullCharacter: false
+    forwardedHeaders:
+      trustedIPs: ['127.0.0.1/32']
+    transport:
+      respondingTimeouts:
+        readTimeout: 60s
+        writeTimeout: 60s
+        idleTimeout: 180s
+  websecure:
+    address: ':443'
+    http:
+      tls: {}
+      aliasHeadersStrategy: delete
+      encodedCharacters:
+        allowEncodedSlash: false
+        allowEncodedBackslash: false
+        allowEncodedNullCharacter: false
+    transport:
+      respondingTimeouts:
+        readTimeout: 60s
+        writeTimeout: 60s
+        idleTimeout: 180s
+  metrics:
+    address: ':8082'
+    http:
+      aliasHeadersStrategy: delete
+  ping:
+    address: ':8081'
+    http:
+      aliasHeadersStrategy: delete
+
+ping:
+  entryPoint: ping
+
+api:
+  dashboard: true
+  insecure: false
+
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+log:
+  level: INFO
+  format: json
+
+accessLog:
+  format: json
+  bufferingSize: 50
+  fields:
+    defaultMode: keep
+    headers:
+      defaultMode: drop
+      names:
+        User-Agent: keep
+        Referer: keep
+        X-Request-Id: keep
+  otlp:
+    http:
+      endpoint: http://otel-collector:4318/v1/logs
+
+metrics:
+  prometheus:
+    entryPoint: metrics
+    addRoutersLabels: true
+    addServicesLabels: true
+
+tracing:
+  serviceName: traefik
+  sampleRate: 1.0
+  otlp:
+    http:
+      endpoint: http://otel-collector:4318/v1/traces

@@ -1,0 +1,228 @@
+# Observability: OpenTelemetry Collector -> Prometheus (metrics), Loki (logs),
+# Tempo (traces); Grafana with provisioned datasources, dashboards and alerts.
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+x-hardening: &hardening
+  restart: unless-stopped
+  logging: *logging
+  security_opt: ['no-new-privileges:true']
+  cap_drop: [ALL]
+
+services:
+  otel-collector:
+    <<: *hardening
+    image: ${RAADI_IMAGE_PREFIX}/otel-collector:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/images/otel-collector
+    command: ['--config=/etc/otelcol/config.yaml']
+    environment:
+      RAADI_ENV: ${RAADI_ENV}
+      GOMEMLIMIT: 300MiB
+    volumes:
+      - ./deploy/otel/collector.yaml:/etc/otelcol/config.yaml:ro
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: otel-collector }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          '/usr/local/bin/busybox',
+          'wget',
+          '-q',
+          '-O',
+          '/dev/null',
+          'http://127.0.0.1:13133/',
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits: { memory: 384M, cpus: '1.0' }
+
+  prometheus:
+    <<: *hardening
+    image: prom/prometheus:v3.15.0
+    environment:
+      GOMEMLIMIT: 400MiB
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION}
+      - --storage.tsdb.retention.size=2GB
+      - --web.enable-otlp-receiver
+      - --web.enable-remote-write-receiver
+      - --web.external-url=${PUBLIC_SCHEME}://prometheus.${RAADI_DOMAIN}${PUBLIC_PORT_SUFFIX}
+      - --web.route-prefix=/
+    volumes:
+      - ./deploy/observability/prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:9090/-/ready']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits: { memory: 512M, cpus: '1.0' }
+
+  alertmanager:
+    <<: *hardening
+    image: prom/alertmanager:v0.34.1
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./deploy/observability/alertmanager:/etc/alertmanager:ro
+      - alertmanager-data:/alertmanager
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:9093/-/ready']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits: { memory: 64M, cpus: '0.25' }
+
+  loki:
+    <<: *hardening
+    image: ${RAADI_IMAGE_PREFIX}/loki:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/images/loki
+    command: ['-config.file=/etc/loki/loki.yaml']
+    environment:
+      GOMEMLIMIT: 300MiB
+    volumes:
+      - ./deploy/observability/loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki-data:/loki
+    healthcheck:
+      test:
+        [
+          'CMD',
+          '/usr/local/bin/busybox',
+          'wget',
+          '-q',
+          '-O',
+          '/dev/null',
+          'http://127.0.0.1:3100/ready',
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    deploy:
+      resources:
+        limits: { memory: 384M, cpus: '1.0' }
+
+  tempo:
+    <<: *hardening
+    image: ${RAADI_IMAGE_PREFIX}/tempo:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/images/tempo
+    command: ['-config.file=/etc/tempo/tempo.yaml']
+    environment:
+      GOMEMLIMIT: 300MiB
+    volumes:
+      - ./deploy/observability/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    healthcheck:
+      test:
+        [
+          'CMD',
+          '/usr/local/bin/busybox',
+          'wget',
+          '-q',
+          '-O',
+          '/dev/null',
+          'http://127.0.0.1:3200/ready',
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    deploy:
+      resources:
+        limits: { memory: 384M, cpus: '1.0' }
+
+  grafana:
+    <<: *hardening
+    image: grafana/grafana:13.2.3
+    environment:
+      GF_SERVER_ROOT_URL: ${GRAFANA_BASE_URL}
+      GF_SERVER_ENABLE_GZIP: 'true'
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/raadi/grafana_admin_password
+      GF_SECURITY_DISABLE_GRAVATAR: 'true'
+      GF_SECURITY_COOKIE_SAMESITE: lax
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+      GF_ANALYTICS_CHECK_FOR_UPDATES: 'false'
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: 'false'
+      GF_PLUGINS_PREINSTALL_DISABLED: 'true'
+      GF_NEWS_NEWS_FEED_ENABLED: 'false'
+      GF_LOG_MODE: console
+      GF_LOG_CONSOLE_FORMAT: json
+      GF_TRACING_OPENTELEMETRY_OTLP_ADDRESS: otel-collector:4317
+      GF_TRACING_OPENTELEMETRY_CUSTOM_ATTRIBUTES: service.namespace:raadi,deployment.environment.name:${RAADI_ENV}
+      GF_SMTP_ENABLED: 'true'
+      GF_SMTP_HOST: mailpit:1025
+      GF_SMTP_FROM_ADDRESS: grafana@${RAADI_DOMAIN}
+      # Single sign-on through Keycloak. Only platform admins (Admin) and
+      # moderators (Viewer) may sign in; everyone else is rejected.
+      GF_AUTH_GENERIC_OAUTH_ENABLED: 'true'
+      GF_AUTH_GENERIC_OAUTH_NAME: Raadi SSO
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET__FILE: /run/secrets/raadi/grafana_oidc_client_secret
+      GF_AUTH_GENERIC_OAUTH_SCOPES: openid email profile
+      GF_AUTH_GENERIC_OAUTH_USE_PKCE: 'true'
+      GF_AUTH_GENERIC_OAUTH_AUTH_URL: ${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth
+      GF_AUTH_GENERIC_OAUTH_TOKEN_URL: http://keycloak:8080/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token
+      GF_AUTH_GENERIC_OAUTH_API_URL: http://keycloak:8080/realms/${KEYCLOAK_REALM}/protocol/openid-connect/userinfo
+      GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_PATH: email
+      GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: preferred_username
+      GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH: name
+      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "contains(roles[*], 'platform-admin') && 'Admin' || contains(roles[*], 'moderator') && 'Viewer'"
+      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_STRICT: 'true'
+      GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN: 'true'
+      GF_AUTH_SIGNOUT_REDIRECT_URL: ${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=${GRAFANA_BASE_URL}/login
+      TZ: ${TZ}
+    volumes:
+      - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: grafana }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+      prometheus: { condition: service_started }
+      loki: { condition: service_started }
+      tempo: { condition: service_started }
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/api/health']
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '1.0' }
+
+volumes:
+  prometheus-data: {}
+  alertmanager-data: {}
+  loki-data: {}
+  tempo-data: {}
+  grafana-data: {}
+  secrets: {}

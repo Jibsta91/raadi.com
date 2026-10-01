@@ -1,0 +1,17 @@
+# Raadi — the whole platform with one command:  docker compose up
+#
+# Each file under deploy/compose/ owns one slice of the stack. Paths inside them
+# are relative to the repository root (project_directory: .).
+#   Development hot reload:  docker compose -f compose.yaml -f compose.dev.yaml up
+#   Production:              docker compose -f compose.yaml -f compose.prod.yaml up -d
+#   Dev/ops toolbox:         docker compose run --rm toolbox <command>
+name: raadi
+
+include:
+  - { path: deploy/compose/init.yaml, project_directory: . }
+  - { path: deploy/compose/core.yaml, project_directory: . }
+  - { path: deploy/compose/identity.yaml, project_directory: . }
+  - { path: deploy/compose/gateway.yaml, project_directory: . }
+  - { path: deploy/compose/observability.yaml, project_directory: . }
+  - { path: deploy/compose/apps.yaml, project_directory: . }
+  - { path: deploy/compose/tools.yaml, project_directory: . }

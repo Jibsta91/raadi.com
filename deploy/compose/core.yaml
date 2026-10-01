@@ -1,0 +1,128 @@
+# Stateful core: PostgreSQL, Valkey, OpenBao, Mailpit (dev mail catcher).
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+services:
+  postgres:
+    image: ${RAADI_IMAGE_PREFIX}/postgres:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/postgres
+    restart: unless-stopped
+    logging: *logging
+    shm_size: 128mb
+    stop_grace_period: 60s
+    security_opt: ['no-new-privileges:true']
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/raadi/postgres_superuser_password
+      TZ: ${TZ}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: postgres }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres', '-d', 'postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+    deploy:
+      resources:
+        limits: { memory: 512M, cpus: '2.0' }
+
+  valkey:
+    image: valkey/valkey:9.0.6-alpine3.24
+    restart: unless-stopped
+    logging: *logging
+    user: '999:1000'
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    # The password is written to a tmpfs config file so it never appears in the
+    # process list or the container's environment.
+    command:
+      - sh
+      - -c
+      - |
+        printf 'requirepass %s\n' "$$(cat /run/secrets/raadi/valkey_password)" > /tmp/valkey.conf
+        exec valkey-server /tmp/valkey.conf --appendonly yes --maxmemory 96mb \
+          --maxmemory-policy volatile-lru --protected-mode no
+    tmpfs: [/tmp]
+    volumes:
+      - valkey-data:/data
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: valkey }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'VALKEYCLI_AUTH="$$(cat /run/secrets/raadi/valkey_password)" valkey-cli ping | grep -q PONG',
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '0.5' }
+
+  openbao:
+    image: openbao/openbao:2.7.0
+    command: ['server']
+    restart: unless-stopped
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    environment:
+      BAO_ADDR: http://127.0.0.1:8200
+      SKIP_CHOWN: 'true'
+    volumes:
+      - openbao-data:/openbao/file
+      - ./deploy/openbao/config.hcl:/openbao/config/config.hcl:ro
+    # Healthy == initialised AND unsealed (openbao-unsealer takes care of both).
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8200/v1/sys/health']
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 10s
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '0.5' }
+
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    restart: unless-stopped
+    logging: *logging
+    user: '65532:65532'
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    environment:
+      MP_MAX_MESSAGES: '5000'
+      MP_SMTP_AUTH_ACCEPT_ANY: 'true'
+      MP_SMTP_AUTH_ALLOW_INSECURE: 'true'
+      TZ: ${TZ}
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits: { memory: 64M, cpus: '0.25' }
+
+volumes:
+  pgdata: {}
+  valkey-data: {}
+  openbao-data: {}
+  secrets: {}

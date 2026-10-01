@@ -1,0 +1,9 @@
+# Accepted Trivy findings. Each entry is scoped to specific paths and justified.
+misconfigurations:
+  - id: DS-0002
+    paths:
+      - deploy/toolbox/Dockerfile
+      - deploy/images/node-dev/Dockerfile
+    statement: >-
+      Developer-only images (never deployed). They run as root to use the Docker
+      socket (Testcontainers, compose) and to write build output into bind mounts.

@@ -1,0 +1,10 @@
+**/dist
+**/.next
+deploy/observability/grafana/provisioning/dashboards/json
+packages/api-client/src/generated
+pnpm-lock.yaml
+**/playwright-report
+deploy/traefik/dynamic
+**/.build
+**/next-env.d.ts
+**/test-results

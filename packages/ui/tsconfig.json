@@ -1,0 +1,5 @@
+{
+  "extends": "@raadi/config/tsconfig.next.json",
+  "compilerOptions": { "incremental": false },
+  "include": ["src"]
+}

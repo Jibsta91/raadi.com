@@ -1,0 +1,42 @@
+{
+  "$comment": "Single source of truth for generated secrets, who may read them, per-service databases and OpenBao paths. Consumed by the init scripts in this image.",
+  "secrets": [
+    "postgres_superuser_password",
+    "postgres_monitor_password",
+    "valkey_password",
+    "keycloak_db_password",
+    "keycloak_admin_password",
+    "grafana_admin_password",
+    "grafana_oidc_client_secret",
+    "identity_db_password",
+    "bff_oidc_client_secret",
+    "bff_session_key"
+  ],
+  "fileConsumers": {
+    "postgres": { "uid": 999, "secrets": ["postgres_superuser_password"] },
+    "valkey": { "uid": 999, "secrets": ["valkey_password"] },
+    "keycloak": { "uid": 1000, "secrets": ["keycloak_db_password", "keycloak_admin_password"] },
+    "grafana": { "uid": 472, "secrets": ["grafana_admin_password", "grafana_oidc_client_secret"] },
+    "otel-collector": { "uid": 10001, "secrets": ["postgres_monitor_password", "valkey_password"] }
+  },
+  "infraDatabases": {
+    "keycloak": { "owner": "keycloak", "password": "keycloak_db_password", "extensions": [] }
+  },
+  "services": {
+    "identity-bff": {
+      "uid": 65532,
+      "database": "identity",
+      "extensions": ["pgcrypto"],
+      "migrations": "identity-bff",
+      "openbao": {
+        "db_password": "identity_db_password",
+        "oidc_client_secret": "bff_oidc_client_secret",
+        "session_key": "bff_session_key"
+      },
+      "shared": ["valkey"]
+    }
+  },
+  "shared": {
+    "valkey": { "password": "valkey_password" }
+  }
+}

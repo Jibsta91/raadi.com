@@ -1,0 +1,107 @@
+# Hot-reload development overlay:
+#   docker compose -f compose.yaml -f compose.dev.yaml up      (or ./raadi dev)
+# Source is bind-mounted; node_modules and the pnpm store live in named volumes
+# (never on the host). Edit code on the host and the services reload.
+x-dev: &dev
+  image: ${RAADI_IMAGE_PREFIX}/node-dev:${RAADI_VERSION}
+  pull_policy: build
+  build: !override
+    context: .
+    dockerfile: deploy/images/node-dev/Dockerfile
+  entrypoint: !reset null
+  read_only: false
+  # Dev containers run as root to write build output into the bind mount; keep
+  # default capabilities so root can read the per-service secret files.
+  cap_drop: !reset []
+  working_dir: /workspace
+  environment:
+    NODE_ENV: development
+    # Bind mounts from macOS/Windows/Docker Desktop do not always deliver file
+    # events into the VM; poll instead.
+    CHOKIDAR_USEPOLLING: 'true'
+    WATCHPACK_POLLING: 'true'
+    TSC_WATCHFILE: DynamicPriorityPolling
+    TSC_WATCHDIRECTORY: DynamicPriorityPolling
+  volumes: &dev-volumes
+    - .:/workspace
+    - nm-root:/workspace/node_modules
+    - nm-web:/workspace/apps/web/node_modules
+    - nm-identity-bff:/workspace/services/identity-bff/node_modules
+    - nm-service-kit:/workspace/packages/service-kit/node_modules
+    - nm-ui:/workspace/packages/ui/node_modules
+    - nm-api-client:/workspace/packages/api-client/node_modules
+    - nm-config:/workspace/packages/config/node_modules
+    - nm-e2e:/workspace/tests/e2e/node_modules
+    - pnpm-store:/pnpm/store
+
+services:
+  # Installs dependencies once into the shared volumes and builds the shared
+  # service kit, before the dev servers start.
+  dev-deps:
+    <<: *dev
+    command:
+      [
+        'sh',
+        '-c',
+        'pnpm install --frozen-lockfile --prefer-offline && pnpm turbo run build --filter=@raadi/service-kit',
+      ]
+    restart: 'no'
+
+  identity-bff:
+    <<: *dev
+    command: ['pnpm', 'turbo', 'run', 'dev', '--filter=identity-bff...', '--ui=stream']
+    depends_on:
+      dev-deps: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/readyz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      start_period: 90s
+    deploy:
+      resources:
+        limits: { memory: 768M }
+
+  web:
+    <<: *dev
+    command: ['pnpm', '--filter', 'web', 'dev']
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: 'true'
+      WATCHPACK_POLLING: 'true'
+      RAADI_DOMAIN: ${RAADI_DOMAIN}
+      NODE_OPTIONS: --import /workspace/packages/service-kit/dist/preload.js
+    tmpfs: !reset []
+    depends_on:
+      dev-deps: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      timeout: 30s
+      start_period: 120s
+    deploy:
+      resources:
+        limits: { memory: 1536M }
+
+  traefik:
+    environment:
+      WEB_DEV_MODE: 'true'
+
+volumes:
+  nm-root: {}
+  nm-web: {}
+  nm-identity-bff: {}
+  nm-service-kit: {}
+  nm-ui: {}
+  nm-api-client: {}
+  nm-config: {}
+  nm-e2e: {}
+  pnpm-store: {}

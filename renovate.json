@@ -1,0 +1,59 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits", "helpers:pinGitHubActionDigests"],
+  "timezone": "Europe/Oslo",
+  "schedule": ["before 7am on monday"],
+  "dependencyDashboard": true,
+  "rangeStrategy": "pin",
+  "docker-compose": { "enabled": true },
+  "dockerfile": { "enabled": true },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Toolbox CLI versions (ARG <TOOL>_VERSION=x.y.z)",
+      "managerFilePatterns": ["/^deploy/toolbox/Dockerfile$/"],
+      "matchStrings": [
+        "ARG TOFU_VERSION=(?<currentValue>.+)\\n",
+        "ARG TFLINT_VERSION=(?<currentValue>.+)\\n",
+        "ARG TRIVY_VERSION=(?<currentValue>.+)\\n",
+        "ARG GITLEAKS_VERSION=(?<currentValue>.+)\\n",
+        "ARG OSV_SCANNER_VERSION=(?<currentValue>.+)\\n",
+        "ARG SYFT_VERSION=(?<currentValue>.+)\\n"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "{{#if (containsString matchString 'TOFU')}}opentofu/opentofu{{else if (containsString matchString 'TFLINT')}}terraform-linters/tflint{{else if (containsString matchString 'TRIVY')}}aquasecurity/trivy{{else if (containsString matchString 'GITLEAKS')}}gitleaks/gitleaks{{else if (containsString matchString 'OSV')}}google/osv-scanner{{else}}anchore/syft{{/if}}",
+      "extractVersionTemplate": "^v?(?<version>.*)$"
+    }
+  ],
+  "packageRules": [
+    { "groupName": "OpenTelemetry (JS)", "matchPackageNames": ["@opentelemetry/**"] },
+    { "groupName": "NestJS", "matchPackageNames": ["@nestjs/**"] },
+    {
+      "groupName": "Next.js + React",
+      "matchPackageNames": [
+        "next",
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom",
+        "eslint-config-next"
+      ]
+    },
+    {
+      "groupName": "Grafana LGTM stack",
+      "matchPackageNames": ["grafana/**", "prom/**", "otel/**"]
+    },
+    {
+      "description": "Keep TypeScript on 6.x until typescript-eslint supports 7 (ADR-0010)",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<6.1"
+    },
+    {
+      "description": "Stay on the Node.js 24 LTS line",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["node"],
+      "allowedVersions": "<25"
+    },
+    { "matchUpdateTypes": ["major"], "dependencyDashboardApproval": true }
+  ]
+}

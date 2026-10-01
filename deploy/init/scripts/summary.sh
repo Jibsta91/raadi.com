@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Runs once every service is healthy: verifies the public routes through the
+# gateway, prints the URLs and demo logins, then stays up (healthy) as the
+# platform's readiness sentinel.
+# shellcheck source=lib.sh
+source /opt/raadi/bin/lib.sh
+TASK="summary"
+
+GW="${GATEWAY_INTERNAL:-traefik:80}"
+# up <url> — true when the URL answers 2xx/3xx through the gateway (public Host header).
+up() {
+  [[ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 --connect-to "::${GW}" "$1")" =~ ^[23][0-9][0-9]$ ]]
+}
+
+declare -A urls=(
+  [web]="${PUBLIC_BASE_URL}/"
+  [auth]="${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM:-raadi}/.well-known/openid-configuration"
+  [grafana]="${GRAFANA_BASE_URL}/api/health"
+)
+for name in "${!urls[@]}"; do
+  retry 20 up "${urls[$name]}" || warn "${name} did not answer through the gateway: ${urls[$name]}"
+done
+
+S="${PUBLIC_SCHEME:-http}"; D="${RAADI_DOMAIN}"; P="${PUBLIC_PORT_SUFFIX:-}"
+cat <<BANNER
+
+  ┌────────────────────────────────────────────────────────────────────┐
+  │  Raadi is up  ·  environment: ${RAADI_ENV:-development}
+  └────────────────────────────────────────────────────────────────────┘
+
+  App & APIs
+    Web app ............ ${PUBLIC_BASE_URL}
+    API (via gateway) .. ${PUBLIC_BASE_URL}/api/v1/
+    Login (Keycloak) ... ${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM:-raadi}/account
+    Status page ........ ${PUBLIC_BASE_URL}/en/status
+
+  Operations
+    Grafana ............ ${GRAFANA_BASE_URL}   (log in with a platform admin below)
+    Keycloak admin ..... ${AUTH_BASE_URL}/admin/   (user: admin, password: ./raadi secret keycloak_admin_password)
+    OpenBao UI ......... ${S}://bao.${D}${P}/ui/   (token: ./raadi secret openbao_root_token)
+    Traefik dashboard .. ${S}://traefik.${D}${P}/dashboard/
+    Prometheus ......... ${S}://prometheus.${D}${P}
+    Mailpit (emails) ... ${S}://mail.${D}${P}
+
+  Demo logins (password for all: ${DEMO_USER_PASSWORD:-<seed disabled>})
+    kari.nordmann@${D}   buyer/seller (nb)
+    ola.nordmann@${D}    buyer/seller (nb)
+    amina.hassan@${D}    buyer/seller (en)
+    moderator@${D}       content moderator
+    admin@${D}           platform admin (Grafana, admin APIs)
+
+  HTTPS works too (https://${D}) with a locally generated dev CA:
+  trust it optionally with ./raadi ca-cert. Plain HTTP needs nothing.
+
+BANNER
+
+# Stay up as a readiness sentinel: healthy == platform verified, so
+# `docker compose up --wait` returns only when everything above is true.
+touch /tmp/ready
+trap 'exit 0' TERM INT
+sleep infinity &
+wait

@@ -1,0 +1,16 @@
+# Grafana-managed alerting: contact point used for dashboards' alert rules
+# (Prometheus-evaluated rules route through Alertmanager instead).
+apiVersion: 1
+contactPoints:
+  - orgId: 1
+    name: platform-team-email
+    receivers:
+      - uid: platform-team-email
+        type: email
+        settings:
+          addresses: platform-team@raadi.localhost
+          singleEmail: true
+policies:
+  - orgId: 1
+    receiver: platform-team-email
+    group_by: [grafana_folder, alertname]

@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "title": "Raadi — iibso oo iibi meel kuu dhow",
+    "description": "Raadi waa suuq furan oo lagu iibsado laguna iibiyo Noorweey: alaab, baabuur, guryo, shaqo iyo safar."
+  },
+  "nav": {
+    "main": "Liiska ugu muhiimsan",
+    "skip": "U gudub nuxurka",
+    "status": "Xaaladda",
+    "language": "Luqadda",
+    "login": "Gal",
+    "logout": "Ka bax"
+  },
+  "home": {
+    "heroTitle": "Raadi. Hel. Iibi.",
+    "heroSubtitle": "Suuq furan oo ammaan ah oo wax walba laga helo, laga bilaabo alaab la isticmaalay ilaa gurigaaga ama shaqadaada xigta.",
+    "categoriesTitle": "Qaybaha",
+    "categories": {
+      "torget": {
+        "name": "Suuqa",
+        "description": "Alaabta guriga, elektaroonig, dhar iyo wax kale."
+      },
+      "bil": {
+        "name": "Baabuur",
+        "description": "Baabuur, mooto, doonyo iyo gaadiid kale."
+      },
+      "eiendom": {
+        "name": "Guryo",
+        "description": "Guryo iib ah iyo kuwo kiro ah."
+      },
+      "jobb": {
+        "name": "Shaqo",
+        "description": "Shaqooyin ka socda loo-shaqeeyayaal Noorweey oo dhan."
+      },
+      "reise": {
+        "name": "Safar",
+        "description": "Guryo fasax, safarro iyo dalabyo safar."
+      }
+    },
+    "trustTitle": "Maxaa Raadi",
+    "trust": {
+      "verified": {
+        "title": "Dad la xaqiijiyay",
+        "body": "Qiimeyn iyo xaqiijin aqoonsi ayaa kaa caawinaya inaad ogaato cidda aad la macaamilayso."
+      },
+      "ai": {
+        "title": "Ka ilaalin khiyaano",
+        "body": "Xayeysiisyada iyo fariimaha waxaa laga baaraa khiyaano, kiisaska aan la hubin waxaa eegaya dad."
+      },
+      "privacy": {
+        "title": "Xogtaada, xuquuqdaada",
+        "body": "Ilaalinta xogta waa aasaas: soo dejiso ama tirtir xogtaada wakhti kasta."
+      }
+    }
+  },
+  "account": {
+    "title": "Akoonkayga",
+    "signedInAs": "Waxaad ku gashay {email}",
+    "email": "E-mayl",
+    "locale": "Luqadda",
+    "roles": "Doorarka",
+    "memberSince": "Xubin tan iyo",
+    "lastLogin": "Galitaankii ugu dambeeyay",
+    "locales": {
+      "nb": "Norsk",
+      "en": "English",
+      "so": "Soomaali"
+    },
+    "securityTitle": "Amniga",
+    "securityHint": "Beddel furahaaga sirta ah, dami xaqiijinta laba-tallaabo ama ku dar furaha gelitaanka (passkey).",
+    "manageSecurity": "Maamul galitaanka iyo amniga",
+    "logout": "Ka bax"
+  },
+  "status": {
+    "title": "Xaaladda nidaamka",
+    "subtitle": "Xaaladda tooska ah ee adeegyada Raadi.",
+    "allOk": "Dhammaan nidaamyadu way shaqeynayaan",
+    "degraded": "Qaar ka mid ah qaybaha ayaa dhibaato qaba",
+    "groups": {
+      "app": "Codsiga",
+      "platform": "Madal",
+      "observability": "La socodka"
+    },
+    "latency": "{ms} ms",
+    "down": "Ma shaqeynayo"
+  },
+  "privacy": {
+    "title": "Asturnaanta",
+    "intro": "Sida Raadi u maamusho xogta shakhsiga ah sida uu dhigayo GDPR iyo sharciga Noorweey.",
+    "controller": {
+      "title": "Mas'uulka xogta",
+      "body": "Hawlwadeenka rakibaaddan Raadi ayaa mas'uul ka ah xogta shakhsiga ah ee madasha lagu maamulo."
+    },
+    "data": {
+      "title": "Waxa aan maamulno",
+      "body": "Xogta akoonka (e-mayl, magac, luqad), xayeysiisyada iyo fariimaha aad sameyso, iyo diiwaanka amniga. Waxaan ururinaa oo keliya waxa loo baahan yahay."
+    },
+    "cookies": {
+      "title": "Kukiyada",
+      "body": "Waxaan isticmaalnaa hal kuki oo lagama maarmaan ah si aad u ahaato mid galay. Ma isticmaalno kukiyo raadraac ama xayeysiis."
+    },
+    "ai": {
+      "title": "Go'aamada otomaatiga ah",
+      "body": "AI waxay caawisaa ogaanshaha khiyaanada iyo kala soocidda xayeysiisyada. Xogta shakhsiga waa la qariyaa ka hor inta aysan gaarin model luqadeed, go'aan kasta waa la diiwaangeliyaa, kuwa aan la hubinna waxaa eega qof."
+    },
+    "rights": {
+      "title": "Xuquuqdaada",
+      "body": "Waxaad codsan kartaa inaad aragto, saxdo, soo dejiso ama tirtirto xogtaada. Waxaad sidoo kale cabasho u gudbin kartaa Datatilsynet."
+    },
+    "retention": {
+      "title": "Muddada kaydinta",
+      "body": "Xogta waxaa la kaydiyaa inta loo baahan yahay oo keliya; xayeysiisyada dhacay iyo diiwaanka amniga si otomaatig ah ayaa loo tirtiraa."
+    },
+    "contact": {
+      "title": "La xiriir",
+      "body": "La xiriir hawlwadeenka rakibaaddan su'aalaha asturnaanta."
+    }
+  },
+  "footer": {
+    "tagline": "Raadi — suuq il-furan",
+    "privacy": "Asturnaanta",
+    "status": "Xaaladda",
+    "openSource": "Apache-2.0"
+  },
+  "notFound": {
+    "title": "Bogga lama helin",
+    "body": "Bogga aad raadinayso ma jiro.",
+    "home": "Ku noqo bogga hore"
+  },
+  "auth": {
+    "error": {
+      "expired": "Galitaanka wuu dheeraaday ama horey ayaa loo isticmaalay. Fadlan isku day mar kale.",
+      "cancelled": "Galitaanka waa la joojiyay.",
+      "login_failed": "Kuma aanan gelin karin. Fadlan isku day mar kale.",
+      "idp_error": "Adeegga galitaanka ayaa khalad sheegay. Fadlan isku day mar dambe."
+    }
+  }
+}

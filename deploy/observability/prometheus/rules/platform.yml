@@ -1,0 +1,67 @@
+groups:
+  - name: platform-availability
+    rules:
+      - alert: ScrapeTargetDown
+        expr: up == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: '{{ $labels.job }} is down'
+          description: 'Prometheus could not scrape {{ $labels.instance }} for 2 minutes.'
+          runbook_url: docs/runbooks/service-down.md
+      - alert: ServiceStoppedReportingTelemetry
+        expr: |
+          (max by (service_name) (max_over_time(target_info{service_namespace="raadi"}[1h])))
+            unless (max by (service_name) (target_info{service_namespace="raadi"}))
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $labels.service_name }} stopped sending OpenTelemetry metrics'
+          runbook_url: docs/runbooks/service-down.md
+      - alert: OpenBaoSealed
+        expr: max(vault_core_unsealed or openbao_core_unsealed) == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: OpenBao is sealed — services cannot start or refresh secrets
+          runbook_url: docs/runbooks/openbao.md
+
+  - name: gateway-slo
+    rules:
+      - record: raadi:gateway_requests:rate5m
+        expr: sum by (service) (rate(traefik_service_requests_total[5m]))
+      - record: raadi:gateway_errors:ratio5m
+        expr: |
+          sum by (service) (rate(traefik_service_requests_total{code=~"5.."}[5m]))
+            / clamp_min(sum by (service) (rate(traefik_service_requests_total[5m])), 1e-9)
+      - alert: GatewayHighErrorRate
+        expr: raadi:gateway_errors:ratio5m > 0.05 and raadi:gateway_requests:rate5m > 0.1
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $labels.service }} returns >5% 5xx responses'
+          runbook_url: docs/runbooks/high-error-rate.md
+      - alert: GatewayHighLatency
+        expr: |
+          histogram_quantile(0.95, sum by (service, le) (rate(traefik_service_request_duration_seconds_bucket[5m]))) > 1
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $labels.service }} p95 latency above 1s'
+          runbook_url: docs/runbooks/high-error-rate.md
+
+  - name: security
+    rules:
+      - alert: AuthLoginFailuresSpike
+        expr: sum(rate(raadi_auth_login_total{outcome="failure"}[5m])) > 1
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: Elevated failed logins (possible credential stuffing)
+          runbook_url: docs/runbooks/auth-anomalies.md
+      - alert: GatewayRateLimited
+        expr: sum(rate(traefik_service_requests_total{code="429"}[5m])) > 5
+        for: 5m
+        labels: { severity: info }
+        annotations:
+          summary: Many requests are being rate limited at the edge

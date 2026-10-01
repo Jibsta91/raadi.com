@@ -1,0 +1,294 @@
+{
+  "realm": "${REALM}",
+  "displayName": "Raadi",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "rememberMe": true,
+  "verifyEmail": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 10,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "passwordPolicy": "length(12) and maxLength(128) and notUsername and notEmail",
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["en", "no"],
+  "defaultLocale": "en",
+  "eventsEnabled": true,
+  "eventsExpiration": 2592000,
+  "eventsListeners": ["jboss-logging"],
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": false,
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA256",
+  "otpPolicyDigits": 6,
+  "otpPolicyPeriod": 30,
+  "webAuthnPolicyRpEntityName": "Raadi",
+  "webAuthnPolicyRpId": "${RAADI_DOMAIN}",
+  "webAuthnPolicyUserVerificationRequirement": "preferred",
+  "webAuthnPolicyPasswordlessRpEntityName": "Raadi",
+  "webAuthnPolicyPasswordlessRpId": "${RAADI_DOMAIN}",
+  "webAuthnPolicyPasswordlessRequireResidentKey": "Yes",
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "required",
+  "smtpServer": {
+    "host": "${SMTP_HOST}",
+    "port": "${SMTP_PORT}",
+    "from": "${SMTP_FROM}",
+    "fromDisplayName": "Raadi",
+    "auth": "false",
+    "ssl": "false",
+    "starttls": "false"
+  },
+  "attributes": {
+    "frontendUrl": "",
+    "userProfileEnabled": "true"
+  },
+  "roles": {
+    "realm": [
+      {
+        "name": "user",
+        "description": "Registered marketplace user"
+      },
+      {
+        "name": "moderator",
+        "description": "Reviews flagged listings, messages and AI decisions"
+      },
+      {
+        "name": "platform-admin",
+        "description": "Operates the platform (Grafana admin, admin APIs)"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "raadi-bff",
+      "name": "Raadi web (identity-bff)",
+      "description": "Confidential client used by identity-bff (token-handler pattern). Browsers never see tokens.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${BFF_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": false,
+      "rootUrl": "${PUBLIC_BASE_URL}",
+      "baseUrl": "/",
+      "redirectUris": ["${PUBLIC_BASE_URL}/auth/callback", "https://${RAADI_DOMAIN}/auth/callback"],
+      "webOrigins": ["${PUBLIC_BASE_URL}", "https://${RAADI_DOMAIN}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${PUBLIC_BASE_URL}/*##https://${RAADI_DOMAIN}/*",
+        "access.token.lifespan": "300",
+        "use.refresh.tokens": "true"
+      },
+      "defaultClientScopes": ["web-origins", "acr", "basic", "profile", "roles", "email"],
+      "optionalClientScopes": ["offline_access"],
+      "protocolMappers": [
+        {
+          "name": "audience-raadi-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "raadi-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "locale",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "locale",
+            "claim.name": "locale",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "raadi-mobile",
+      "name": "Raadi mobile app",
+      "description": "Public client for the Expo app (Authorization Code + PKCE, no client secret).",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["raadi://*", "exp://*"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "raadi://*##exp://*"
+      },
+      "defaultClientScopes": ["web-origins", "acr", "basic", "profile", "roles", "email"],
+      "optionalClientScopes": ["offline_access"],
+      "protocolMappers": [
+        {
+          "name": "audience-raadi-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "raadi-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "grafana",
+      "name": "Grafana",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${GRAFANA_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "rootUrl": "${GRAFANA_BASE_URL}",
+      "redirectUris": ["${GRAFANA_BASE_URL}/login/generic_oauth"],
+      "webOrigins": ["${GRAFANA_BASE_URL}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${GRAFANA_BASE_URL}/*"
+      },
+      "defaultClientScopes": ["web-origins", "acr", "basic", "profile", "roles", "email"],
+      "protocolMappers": [
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "kari.nordmann@${RAADI_DOMAIN}",
+      "email": "kari.nordmann@${RAADI_DOMAIN}",
+      "firstName": "Kari",
+      "lastName": "Nordmann",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "locale": ["no"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    },
+    {
+      "username": "ola.nordmann@${RAADI_DOMAIN}",
+      "email": "ola.nordmann@${RAADI_DOMAIN}",
+      "firstName": "Ola",
+      "lastName": "Nordmann",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "locale": ["no"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    },
+    {
+      "username": "amina.hassan@${RAADI_DOMAIN}",
+      "email": "amina.hassan@${RAADI_DOMAIN}",
+      "firstName": "Amina",
+      "lastName": "Hassan",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "locale": ["en"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    },
+    {
+      "username": "moderator@${RAADI_DOMAIN}",
+      "email": "moderator@${RAADI_DOMAIN}",
+      "firstName": "Mona",
+      "lastName": "Moderator",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "locale": ["en"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user", "moderator"]
+    },
+    {
+      "username": "admin@${RAADI_DOMAIN}",
+      "email": "admin@${RAADI_DOMAIN}",
+      "firstName": "Ada",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "locale": ["en"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user", "moderator", "platform-admin"]
+    }
+  ]
+}

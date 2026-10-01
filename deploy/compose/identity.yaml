@@ -1,0 +1,51 @@
+# Identity provider: Keycloak (OIDC, MFA, passkeys). The realm is applied by
+# keycloak-init (deploy/compose/init.yaml).
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+services:
+  keycloak:
+    image: ${RAADI_IMAGE_PREFIX}/keycloak:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: deploy/keycloak
+    restart: unless-stopped
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    environment:
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_HOSTNAME: ${AUTH_BASE_URL}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: 'true'
+      KC_HTTP_ENABLED: 'true'
+      KC_PROXY_HEADERS: xforwarded
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_LOG_CONSOLE_OUTPUT: json
+      KC_LOG_LEVEL: info
+      KC_TRACING_ENDPOINT: http://otel-collector:4317
+      KC_TRACING_SAMPLER_RATIO: ${OTEL_TRACES_SAMPLER_ARG}
+      KC_TRACING_RESOURCE_ATTRIBUTES: deployment.environment.name=${RAADI_ENV},service.namespace=raadi
+      JAVA_OPTS_KC_HEAP: -XX:MaxRAMPercentage=65 -XX:InitialRAMPercentage=25
+      TZ: ${TZ}
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: keycloak }
+    depends_on:
+      db-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD', '/opt/raadi/healthcheck.sh']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { memory: 1G, cpus: '2.0' }
+
+volumes:
+  secrets: {}

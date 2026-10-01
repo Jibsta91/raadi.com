@@ -1,0 +1,179 @@
+openapi: 3.1.0
+info:
+  title: Raadi identity-bff
+  version: 1.0.0
+  description: |
+    Backend-for-frontend for authentication. Browser flows live under `/auth/*`
+    (session cookie, no tokens exposed). The user API is published by the gateway
+    under `/api/v1/identity` and requires a bearer token — for browsers the gateway
+    injects it from the session (token-handler pattern); mobile apps send their own.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: http://raadi.localhost
+    description: Local development through the gateway
+tags:
+  - name: auth
+  - name: me
+  - name: health
+paths:
+  /auth/login:
+    get:
+      tags: [auth]
+      operationId: login
+      summary: Start login (redirects to Keycloak)
+      parameters:
+        - {
+            name: returnTo,
+            in: query,
+            schema: { type: string, maxLength: 512 },
+            description: Relative path to return to after login,
+          }
+        - { name: locale, in: query, schema: { $ref: '#/components/schemas/Locale' } }
+      responses:
+        '302': { description: Redirect to the identity provider }
+        '429': { $ref: '#/components/responses/Problem' }
+  /auth/callback:
+    get:
+      tags: [auth]
+      operationId: callback
+      summary: OIDC redirect URI (sets the session cookie)
+      parameters:
+        - { name: code, in: query, schema: { type: string } }
+        - { name: state, in: query, required: true, schema: { type: string } }
+        - { name: error, in: query, schema: { type: string } }
+      responses:
+        '302': { description: Redirect to returnTo (or to / with authError) }
+  /auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: End the session and sign out of Keycloak
+      responses:
+        '303': { description: Redirect to the identity provider's end-session endpoint }
+        '403': { $ref: '#/components/responses/Problem' }
+  /auth/session:
+    get:
+      tags: [auth]
+      operationId: getSession
+      summary: Current browser session (never contains tokens)
+      responses:
+        '200':
+          description: Session status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+  /api/v1/identity/me:
+    get:
+      tags: [me]
+      operationId: getMe
+      summary: The authenticated user's profile
+      security: [{ bearer: [] }, { session: [] }]
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [me]
+      operationId: updateMe
+      summary: Update profile preferences
+      security: [{ bearer: [] }, { session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateMe' }
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      tags: [health]
+      operationId: liveness
+      responses:
+        '200': { description: Process is alive }
+  /readyz:
+    get:
+      tags: [health]
+      operationId: readiness
+      responses:
+        '200': { description: Ready }
+        '503': { description: Not ready or draining }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    session: { type: apiKey, in: cookie, name: raadi_sid }
+  responses:
+    Problem:
+      description: RFC 9457 problem details
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Locale:
+      type: string
+      enum: [nb, en, so]
+    SessionUser:
+      type: object
+      additionalProperties: false
+      required: [id, email, locale, roles]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        name: { type: string }
+        locale: { $ref: '#/components/schemas/Locale' }
+        roles: { type: array, items: { type: string } }
+    Session:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [authenticated]
+          properties:
+            authenticated: { const: false }
+        - type: object
+          additionalProperties: false
+          required: [authenticated, user]
+          properties:
+            authenticated: { const: true }
+            user: { $ref: '#/components/schemas/SessionUser' }
+    Me:
+      type: object
+      additionalProperties: false
+      required: [id, email, displayName, locale, createdAt, lastLoginAt, roles]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        displayName: { type: [string, 'null'] }
+        locale: { $ref: '#/components/schemas/Locale' }
+        createdAt: { type: string, format: date-time }
+        lastLoginAt: { type: [string, 'null'], format: date-time }
+        roles: { type: array, items: { type: string } }
+    UpdateMe:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        locale: { $ref: '#/components/schemas/Locale' }
+        displayName: { type: string, minLength: 1, maxLength: 80 }
+    Problem:
+      type: object
+      required: [status, title]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: {}
+        instance: { type: string }
+        traceId: { type: string }
+        errors: { type: array, items: { type: object } }

@@ -1,0 +1,137 @@
+# One-shot bootstrap containers (raadi-init image). All are idempotent and run
+# on every `up`; dependants wait via service_completed_successfully.
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+x-init: &init
+  image: ${RAADI_IMAGE_PREFIX}/init:${RAADI_VERSION}
+  pull_policy: build
+  build:
+    context: .
+    dockerfile: deploy/init/Dockerfile
+  restart: 'no'
+  logging: *logging
+  # Bootstrap tasks own the secrets volume; summary/smoke override this to 65532.
+  user: '0:0'
+  security_opt: ['no-new-privileges:true']
+  deploy:
+    resources:
+      # The bao and dbmate CLIs are large Go binaries; below ~256M they thrash.
+      limits: { memory: 256M, cpus: '0.5' }
+  environment: &init-env
+    RAADI_ENV: ${RAADI_ENV}
+    RAADI_DOMAIN: ${RAADI_DOMAIN}
+    PUBLIC_SCHEME: ${PUBLIC_SCHEME}
+    PUBLIC_PORT_SUFFIX: ${PUBLIC_PORT_SUFFIX}
+    PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+    AUTH_BASE_URL: ${AUTH_BASE_URL}
+    GRAFANA_BASE_URL: ${GRAFANA_BASE_URL}
+    KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+    SEED_DEMO_DATA: ${SEED_DEMO_DATA}
+    DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD}
+    TZ: ${TZ}
+
+services:
+  secrets-init:
+    <<: *init
+    command: ['/opt/raadi/bin/secrets-init.sh']
+    volumes:
+      - secrets:/secrets
+
+  certs-init:
+    <<: *init
+    command: ['/opt/raadi/bin/certs-init.sh']
+    volumes:
+      - certs:/certs
+
+  openbao-unsealer:
+    <<: *init
+    command: ['/opt/raadi/bin/openbao-unsealer.sh']
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { memory: 32M, cpus: '0.25' }
+    volumes:
+      - secrets:/secrets
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+      openbao: { condition: service_started }
+    healthcheck:
+      # 200 only when OpenBao is initialised, unsealed and active.
+      test:
+        - CMD
+        - curl
+        - -fsS
+        - --max-time
+        - '2'
+        - -o
+        - /dev/null
+        - http://openbao:8200/v1/sys/health
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+  openbao-bootstrap:
+    <<: *init
+    command: ['/opt/raadi/bin/openbao-bootstrap.sh']
+    volumes:
+      - secrets:/secrets
+    depends_on:
+      openbao-unsealer: { condition: service_healthy }
+
+  db-init:
+    <<: *init
+    command: ['/opt/raadi/bin/db-init.sh']
+    volumes:
+      - secrets:/secrets
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  keycloak-init:
+    <<: *init
+    command: ['/opt/raadi/bin/keycloak-init.sh']
+    volumes:
+      - secrets:/secrets
+    depends_on:
+      keycloak: { condition: service_healthy }
+
+  # Prints every URL and the demo logins once the platform is healthy.
+  summary:
+    <<: *init
+    command: ['/opt/raadi/bin/summary.sh']
+    user: '65532:65532'
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'test', '-f', '/tmp/ready']
+      interval: 5s
+      timeout: 2s
+      retries: 3
+      start_period: 600s
+      start_interval: 2s
+    depends_on:
+      traefik: { condition: service_healthy }
+      web: { condition: service_healthy }
+      identity-bff: { condition: service_healthy }
+      keycloak-init: { condition: service_completed_successfully }
+      grafana: { condition: service_healthy }
+      prometheus: { condition: service_healthy }
+      alertmanager: { condition: service_healthy }
+      loki: { condition: service_healthy }
+      tempo: { condition: service_healthy }
+      otel-collector: { condition: service_healthy }
+      mailpit: { condition: service_healthy }
+
+  # End-to-end smoke test against the running stack (CI and `./raadi smoke`).
+  smoke:
+    <<: *init
+    profiles: [test]
+    command: ['/opt/raadi/bin/smoke.sh']
+    user: '65532:65532'
+    depends_on:
+      summary: { condition: service_healthy }
+
+volumes:
+  secrets: {}
+  certs: {}

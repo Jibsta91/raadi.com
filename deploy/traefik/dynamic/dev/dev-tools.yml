@@ -1,0 +1,33 @@
+# Development-only tools. Not mounted by compose.prod.yaml.
+{{ $d := env "RAADI_DOMAIN" }}
+http:
+  routers:
+    traefik-dashboard:
+      rule: Host(`traefik.{{ $d }}`)
+      entryPoints: [web, websecure]
+      service: api@internal
+      middlewares: [security-headers]
+    mailpit:
+      rule: Host(`mail.{{ $d }}`)
+      entryPoints: [web, websecure]
+      service: mailpit
+    openbao:
+      rule: Host(`bao.{{ $d }}`)
+      entryPoints: [web, websecure]
+      service: openbao
+      middlewares: [security-headers]
+    prometheus:
+      rule: Host(`prometheus.{{ $d }}`)
+      entryPoints: [web, websecure]
+      service: prometheus
+      middlewares: [security-headers]
+  services:
+    mailpit:
+      loadBalancer:
+        servers: [{ url: "http://mailpit:8025" }]
+    openbao:
+      loadBalancer:
+        servers: [{ url: "http://openbao:8200" }]
+    prometheus:
+      loadBalancer:
+        servers: [{ url: "http://prometheus:9090" }]

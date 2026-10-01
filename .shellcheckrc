@@ -1,0 +1,6 @@
+# Resolve `source` directives relative to the script being checked.
+source-path=SCRIPTDIR
+external-sources=true
+# The smoke test's ok()/fail() helpers always return 0, so `test && ok || fail`
+# is a safe if/else there.
+disable=SC2015

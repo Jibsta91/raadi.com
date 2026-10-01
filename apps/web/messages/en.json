@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "title": "Raadi — buy and sell locally",
+    "description": "Raadi is an open-source marketplace for buying and selling in Norway: goods, cars, property, jobs and travel."
+  },
+  "nav": {
+    "main": "Main navigation",
+    "skip": "Skip to content",
+    "status": "Status",
+    "language": "Language",
+    "login": "Log in",
+    "logout": "Log out"
+  },
+  "home": {
+    "heroTitle": "Find it. Sell it. Raadi.",
+    "heroSubtitle": "A safe, open marketplace for everything from second-hand furniture to your next home or job.",
+    "categoriesTitle": "Categories",
+    "categories": {
+      "torget": {
+        "name": "Marketplace",
+        "description": "Furniture, electronics, clothes and everything in between."
+      },
+      "bil": {
+        "name": "Cars",
+        "description": "Cars, motorcycles, boats and other vehicles."
+      },
+      "eiendom": {
+        "name": "Property",
+        "description": "Homes for sale and for rent."
+      },
+      "jobb": {
+        "name": "Jobs",
+        "description": "Positions from employers across Norway."
+      },
+      "reise": {
+        "name": "Travel",
+        "description": "Holiday homes, trips and travel deals."
+      }
+    },
+    "trustTitle": "Why Raadi",
+    "trust": {
+      "verified": {
+        "title": "Verified people",
+        "body": "Ratings and identity verification help you know who you are dealing with."
+      },
+      "ai": {
+        "title": "Scam protection",
+        "body": "Listings and messages are screened for fraud, with humans reviewing uncertain cases."
+      },
+      "privacy": {
+        "title": "Your data, your rights",
+        "body": "GDPR by design: export or delete your data at any time."
+      }
+    }
+  },
+  "account": {
+    "title": "My account",
+    "signedInAs": "Signed in as {email}",
+    "email": "E-mail",
+    "locale": "Language",
+    "roles": "Roles",
+    "memberSince": "Member since",
+    "lastLogin": "Last login",
+    "locales": {
+      "nb": "Norsk",
+      "en": "English",
+      "so": "Soomaali"
+    },
+    "securityTitle": "Security",
+    "securityHint": "Change your password, set up two-factor authentication or add a passkey.",
+    "manageSecurity": "Manage sign-in & security",
+    "logout": "Log out"
+  },
+  "status": {
+    "title": "Platform status",
+    "subtitle": "Live health of Raadi's services.",
+    "allOk": "All systems operational",
+    "degraded": "Some components are degraded",
+    "groups": {
+      "app": "Application",
+      "platform": "Platform",
+      "observability": "Observability"
+    },
+    "latency": "{ms} ms",
+    "down": "Down"
+  },
+  "privacy": {
+    "title": "Privacy",
+    "intro": "How Raadi processes personal data under the GDPR and the Norwegian Personal Data Act.",
+    "controller": {
+      "title": "Data controller",
+      "body": "The operator of this Raadi installation is the data controller for the personal data processed on the platform."
+    },
+    "data": {
+      "title": "What we process",
+      "body": "Account data (e-mail, name, language), listings and messages you create, and security logs. We only collect what is needed to run the marketplace."
+    },
+    "cookies": {
+      "title": "Cookies",
+      "body": "We use one strictly necessary session cookie to keep you signed in. No tracking or advertising cookies are used, so no consent banner is needed."
+    },
+    "ai": {
+      "title": "Automated decisions",
+      "body": "AI helps detect fraud and categorise listings. Personal data is redacted before it reaches a language model, every AI decision is logged, and uncertain decisions are reviewed by a human."
+    },
+    "rights": {
+      "title": "Your rights",
+      "body": "You may request access to, correction, export or deletion of your data, and object to processing. You can also complain to Datatilsynet."
+    },
+    "retention": {
+      "title": "Retention",
+      "body": "Data is kept only as long as needed: expired listings and security logs are deleted automatically according to our retention policies."
+    },
+    "contact": {
+      "title": "Contact",
+      "body": "Contact the operator of this installation for privacy questions."
+    }
+  },
+  "footer": {
+    "tagline": "Raadi — open-source classifieds",
+    "privacy": "Privacy",
+    "status": "Status",
+    "openSource": "Apache-2.0"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The page you are looking for does not exist.",
+    "home": "Back to the front page"
+  },
+  "auth": {
+    "error": {
+      "expired": "Your login took too long or was already used. Please try again.",
+      "cancelled": "Login was cancelled.",
+      "login_failed": "We could not log you in. Please try again.",
+      "idp_error": "The login service reported an error. Please try again later."
+    }
+  }
+}

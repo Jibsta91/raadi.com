@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Raadi command-line helper. Needs only Docker (with Compose v2) and Bash.
+# The Makefile offers the same commands:  make <command>
+set -euo pipefail
+cd "$(dirname "$0")"
+
+DC=(docker compose)
+DEV=(docker compose -f compose.yaml -f compose.dev.yaml)
+TOOL=(docker compose --progress quiet run --rm toolbox)
+
+usage() {
+  cat <<'USAGE'
+Usage: ./raadi <command> [args]
+
+Platform
+  up                 start everything (detached), wait until healthy, print URLs
+  down               stop the platform (keeps data)
+  dev                hot-reload mode (source bind-mounted; Ctrl-C to stop)
+  logs [svc...]      follow logs
+  ps                 show services and health
+  summary            print URLs and demo logins again
+  restart <svc...>   restart services (e.g. after editing deploy/traefik/*)
+  migrate            run database migrations
+  clean              stop and DELETE all data volumes (asks first)
+
+Quality (run in the toolbox container)
+  lint | format | typecheck | test | test-integration | build | generate
+  smoke              smoke test against the running stack
+  e2e                Playwright end-to-end tests against the running stack
+  security           Trivy, Gitleaks, OSV-Scanner
+  iac-scan           Checkov + Trivy config + TFLint
+  licenses           fail on non-OSI dependency licenses
+  sbom               write SBOMs to ./sbom
+  toolbox [cmd...]   shell (or command) in the toolbox
+
+Secrets & TLS
+  secret <name>      print a generated secret (e.g. keycloak_admin_password,
+                     grafana_admin_password, openbao_root_token)
+  ca-cert            export the dev CA to deploy/certs/raadi-dev-ca.crt
+USAGE
+}
+
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+  help|-h|--help) usage ;;
+  up)
+    "${DC[@]}" up -d --wait "$@"
+    "${DC[@]}" logs --no-log-prefix summary | sed -n '/┌/,$p'
+    ;;
+  down) "${DC[@]}" down "$@" ;;
+  dev) "${DEV[@]}" up --build "$@" ;;
+  logs) "${DC[@]}" logs -f --tail=200 "$@" ;;
+  ps) "${DC[@]}" ps -a ;;
+  summary) "${DC[@]}" logs --no-log-prefix summary | sed -n '/┌/,$p' ;;
+  restart) "${DC[@]}" restart "$@" ;;
+  migrate) "${DC[@]}" run --rm db-init ;;
+  clean)
+    read -r -p "This deletes ALL Raadi data volumes (databases, secrets, certificates). Type 'delete' to continue: " answer
+    [[ "$answer" == "delete" ]] && "${DC[@]}" --profile tools --profile test down -v --remove-orphans
+    ;;
+  smoke) "${DC[@]}" --progress quiet --profile test run --rm smoke ;;
+  e2e) "${DC[@]}" --progress quiet --profile test run --rm e2e "$@" ;;
+  lint|format|typecheck|test|test-integration|build|generate|security|iac-scan|licenses|sbom)
+    "${TOOL[@]}" "$cmd" "$@" ;;
+  toolbox)
+    if (( $# )); then "${TOOL[@]}" "$@"; else "${TOOL[@]}" bash; fi ;;
+  secret)
+    name="${1:?usage: ./raadi secret <name>}"
+    [[ "$name" =~ ^[a-z0-9_]+$ ]] || { echo "invalid secret name" >&2; exit 2; }
+    path="/secrets/_master/${name}"
+    [[ "$name" == openbao_root_token ]] && path=/secrets/_openbao/root_token
+    "${DC[@]}" run --rm --no-deps -T --entrypoint cat secrets-init "$path"; echo
+    ;;
+  ca-cert)
+    mkdir -p deploy/certs
+    "${DC[@]}" run --rm --no-deps -T --entrypoint cat certs-init /certs/ca.crt > deploy/certs/raadi-dev-ca.crt
+    cat <<'TRUST'
+Wrote deploy/certs/raadi-dev-ca.crt — trusting it is optional (plain HTTP works).
+  macOS:   sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain deploy/certs/raadi-dev-ca.crt
+  Linux:   sudo cp deploy/certs/raadi-dev-ca.crt /usr/local/share/ca-certificates/ && sudo update-ca-certificates
+  Windows: certutil -addstore -f ROOT deploy\certs\raadi-dev-ca.crt
+  Firefox: Settings → Privacy & Security → Certificates → Import
+TRUST
+    ;;
+  *) echo "unknown command: $cmd" >&2; usage; exit 2 ;;
+esac
