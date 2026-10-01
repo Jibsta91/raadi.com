@@ -29,6 +29,7 @@ connector_config() { # <database>
     "snapshot.mode": "initial",
     "tombstones.on.delete": "false",
     "heartbeat.interval.ms": "60000",
+    "topic.heartbeat.prefix": "raadi.connect.heartbeat",
     "heartbeat.action.query": "UPDATE public.cdc_heartbeat SET beat_at = now() WHERE id = 1",
     "topic.creation.default.replication.factor": "1",
     "topic.creation.default.partitions": "1",

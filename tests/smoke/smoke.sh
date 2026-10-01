@@ -56,7 +56,7 @@ login_as() {
   [[ "$status" == "302" ]]
 }
 json() { jq -r "$1" "$BODY" 2>/dev/null; }
-expect_status() { [[ "$status" == "$1" ]] && ok "$2" || fail "$2" "expected HTTP $1, got $status"; }
+expect_status() { [[ "$status" == "$1" ]] && ok "$2" || fail "$2" "expected HTTP $1, got $status: $(head -c 400 "$BODY")"; }
 eventually() { # <description> <seconds> <command...>
   local desc="$1" secs="$2"; shift 2
   local end=$((SECONDS + secs))
@@ -188,11 +188,14 @@ req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/opt/raadi/fixtur
 expect_status 201 "image upload accepted (scanned, re-encoded)"
 image="$(json '.id')"
 [[ "$(json '.contentType')" == "image/jpeg" && "$(json '.width')" == "800" ]] && ok "stored image is a sanitized JPEG" || fail "stored image" "$(cat "$BODY")"
+printf '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>' > /tmp/not-an-image.jpg
+req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/tmp/not-an-image.jpg;type=image/jpeg"
+[[ "$status" == "422" && "$(json '.errors[0].code')" == "unsupported_type" ]] \
+  && ok "non-images are refused by content sniffing" || fail "content sniffing" "HTTP $status $(cat "$BODY")"
+# ClamAV's EICAR signature is anchored at offset 0, so the file is sent as is
+# (every upload is scanned before its type is checked).
 printf 'X5O!P%%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > /tmp/eicar.jpg
 req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/tmp/eicar.jpg;type=image/jpeg"
-[[ "$status" == "422" ]] && ok "non-images are refused by content sniffing" || fail "content sniffing" "HTTP $status"
-{ printf '\xff\xd8\xff\xe0'; cat /tmp/eicar.jpg; } > /tmp/eicar-jpeg.jpg
-req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/tmp/eicar-jpeg.jpg;type=image/jpeg"
 [[ "$status" == "422" && "$(json '.errors[0].code')" == "malware" ]] && ok "ClamAV rejects the EICAR test virus" || fail "malware scan" "HTTP $status $(cat "$BODY")"
 
 title="Smoke test $(date +%s%N | tail -c 7) Langrennsski"

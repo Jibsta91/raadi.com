@@ -5,13 +5,13 @@ stopped. Delete it when Phase 2 is done.
 
 ## State of `main`
 
-| Commit    | What                                                                                     |
-| --------- | ---------------------------------------------------------------------------------------- |
-| `a3d3165` | Phase 1 baseline                                                                         |
-| `b567173` | Repo tidy (deploy/docker/, community files)                                              |
-| `9528740` | Kafka KRaft (SCRAM + ACLs), Debezium outbox CDC, `@raadi/catalog`                        |
-| `48a91d9` | SeaweedFS, imgproxy, ClamAV, OpenSearch, OpenFGA, OPA, Apicurio, template rendering      |
-| `adf7cd8` | `@raadi/events`, service-kit building blocks, listings service                           |
+| Commit    | What                                                                                                        |
+| --------- | ----------------------------------------------------------------------------------------------------------- |
+| `a3d3165` | Phase 1 baseline                                                                                            |
+| `b567173` | Repo tidy (deploy/docker/, community files)                                                                 |
+| `9528740` | Kafka KRaft (SCRAM + ACLs), Debezium outbox CDC, `@raadi/catalog`                                           |
+| `48a91d9` | SeaweedFS, imgproxy, ClamAV, OpenSearch, OpenFGA, OPA, Apicurio, template rendering                         |
+| `adf7cd8` | `@raadi/events`, service-kit building blocks, listings service                                              |
 | `4ad7d3b` | media and search services, seeders, gateway routes. **Last verified commit** (cold `up` green, smoke 39/39) |
 
 ## Uncommitted work (on disk, not yet verified end to end)

@@ -4,13 +4,14 @@
  * JPEG through imgproxy), stores it attached to its listing and writes the
  * owner tuple. Idempotent: images that already exist are skipped.
  */
-import { demoListings } from '@raadi/catalog/demo';
+import { type DemoImage, type DemoListing, demoListings } from '@raadi/catalog/demo';
 import {
   createPgPool,
   FgaClient,
   imgproxySigner,
   loadEnv,
   loggerOptions,
+  retry,
 } from '@raadi/service-kit';
 import { shutdownTelemetry } from '@raadi/service-kit/telemetry';
 import { pino } from 'pino';
@@ -41,41 +42,47 @@ async function main(): Promise<void> {
   const jobs = demoListings().flatMap((l) => l.images.map((image) => ({ listing: l, image })));
   let created = 0;
   let next = 0;
+  const seedImage = async (listing: DemoListing, image: DemoImage) => {
+    const staging = `seed-${image.id}.svg`;
+    await storage.put(storage.uploadBucket, staging, Buffer.from(demoSvg(image)), 'image/svg+xml');
+    const jpeg = await sanitizer.sanitize(`s3://${storage.uploadBucket}/${staging}`, 1280);
+    await storage.delete(storage.uploadBucket, staging);
+    await storage.put(storage.mediaBucket, image.id, jpeg.data, 'image/jpeg');
+    const row = await repo.createReady(
+      {
+        id: image.id,
+        ownerId: listing.ownerId,
+        contentType: 'image/jpeg',
+        bytes: jpeg.data.length,
+        width: jpeg.width,
+        height: jpeg.height,
+        sha256: 'demo',
+        listingId: listing.id,
+      },
+      () =>
+        fga.write([
+          { user: `user:${listing.ownerId}`, relation: 'owner', object: `media:${image.id}` },
+        ]),
+    );
+    if (row) created++;
+  };
   const worker = async () => {
     for (let job = jobs[next++]; job; job = jobs[next++]) {
       const { listing, image } = job;
       if (await repo.findById(image.id)) continue;
-      const staging = `seed-${image.id}.svg`;
-      await storage.put(
-        storage.uploadBucket,
-        staging,
-        Buffer.from(demoSvg(image)),
-        'image/svg+xml',
-      );
-      const jpeg = await sanitizer.sanitize(`s3://${storage.uploadBucket}/${staging}`, 1280);
-      await storage.delete(storage.uploadBucket, staging);
-      await storage.put(storage.mediaBucket, image.id, jpeg.data, 'image/jpeg');
-      const row = await repo.createReady(
-        {
-          id: image.id,
-          ownerId: listing.ownerId,
-          contentType: 'image/jpeg',
-          bytes: jpeg.data.length,
-          width: jpeg.width,
-          height: jpeg.height,
-          sha256: 'demo',
-          listingId: listing.id,
-        },
-        () =>
-          fga.write([
-            { user: `user:${listing.ownerId}`, relation: 'owner', object: `media:${image.id}` },
-          ]),
-      );
-      if (row) created++;
+      // On a cold start imgproxy shares the machine with every JVM booting at
+      // once and can time out; each image is idempotent, so retry patiently.
+      await retry(() => seedImage(listing, image), {
+        retries: 6,
+        baseDelayMs: 1_000,
+        maxDelayMs: 15_000,
+        onRetry: (err, attempt, delayMs) =>
+          log.warn({ err, imageId: image.id, attempt, delayMs }, 'retrying demo image'),
+      });
     }
   };
   try {
-    await Promise.all(Array.from({ length: 4 }, worker));
+    await Promise.all(Array.from({ length: 3 }, worker));
     log.info({ created, total: jobs.length }, 'demo images seeded');
   } finally {
     storage.close();

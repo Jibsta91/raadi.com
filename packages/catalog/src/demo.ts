@@ -18,6 +18,62 @@ export const DEMO_USERS = [
 
 export const DEMO_LISTING_COUNT = 500;
 
+/**
+ * Listings owned by each demo user. Kept well under the OPA quota of 50 active
+ * listings (deploy/opa/policies/raadi/listings.rego), so the demo users can
+ * still create listings. The rest belong to seed-only sellers without a login.
+ */
+export const DEMO_LISTINGS_PER_USER = 12;
+
+const SELLER_NAMES = [
+  'Ingrid',
+  'Lars',
+  'Fatima',
+  'Magnus',
+  'Sigrid',
+  'Ahmed',
+  'Nora',
+  'Henrik',
+  'Leila',
+  'Erik',
+  'Hanna',
+  'Jonas',
+  'Maryam',
+  'Sander',
+  'Thea',
+  'Omar',
+  'Silje',
+  'Kristian',
+  'Hodan',
+  'Martin',
+  'Ida',
+  'Emil',
+  'Zainab',
+  'Tobias',
+  'Marte',
+  'Yusuf',
+  'Ragnhild',
+  'Anders',
+  'Sara',
+  'Petter',
+  'Eva',
+  'Mohamed',
+  'Live',
+  'Sindre',
+  'Ayaan',
+  'Kristine',
+  'Øystein',
+  'Astrid',
+  'Ali',
+  'Vilde',
+];
+
+/** Seed-only sellers: listings and images only, no Keycloak account. */
+export const DEMO_SELLERS = SELLER_NAMES.map((name, n) => ({
+  id: demoUuid(`seller-${n}`),
+  sellerName: `${name} ${String.fromCharCode(65 + ((n * 7) % 26))}.`,
+}));
+
 /** RFC 4122 version-5 (name-based, SHA-1) UUID in the Raadi demo namespace. */
 export function demoUuid(name: string): string {
   const ns = Buffer.from('6d9a2c1e4b7f4e0a9c3d5b8e1f2a7c64', 'hex');
@@ -356,7 +412,10 @@ export function demoListings(count = DEMO_LISTING_COUNT): DemoListing[] {
     const subcategory = pick(rng, SUBCATEGORIES[category]);
     const template = TEMPLATES[subcategory];
     const title = pick(rng, template.titles);
-    const owner = DEMO_USERS[i % DEMO_USERS.length]!;
+    const owner =
+      i < DEMO_USERS.length * DEMO_LISTINGS_PER_USER
+        ? DEMO_USERS[i % DEMO_USERS.length]!
+        : DEMO_SELLERS[i % DEMO_SELLERS.length]!;
     const place = pick(rng, PLACES);
     const [min, max, step] = template.price;
     const id = demoUuid(`listing-${i}`);

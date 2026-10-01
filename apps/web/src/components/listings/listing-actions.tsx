@@ -23,7 +23,11 @@ export function ListingActions({ listing }: { listing: Listing }) {
       setError(false);
       const res = await fetch(`/api/v1/listings/${listing.id}`, {
         method,
-        headers: { 'content-type': 'application/json', 'if-match': `"${listing.version}"` },
+        // No content-type without a body: Fastify rejects an empty JSON body.
+        headers: {
+          'if-match': `"${listing.version}"`,
+          ...(body ? { 'content-type': 'application/json' } : {}),
+        },
         body: body ? JSON.stringify(body) : undefined,
       });
       if (!res.ok) return setError(true);

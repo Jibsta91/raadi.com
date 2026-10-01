@@ -1,0 +1,84 @@
+import { fileURLToPath } from 'node:url';
+import { expect, test } from '@playwright/test';
+import { domain, login } from './support.js';
+
+const fixture = fileURLToPath(new URL('../../fixtures/images/listing.jpg', import.meta.url));
+
+test.describe.configure({ mode: 'serial' });
+
+test('a seller creates a listing with an image, marks it sold and deletes it', async ({ page }) => {
+  const title = `Racersykkel e2e ${Date.now().toString(36)}`;
+  await login(page, `amina.hassan@${domain}`);
+
+  await page.getByTestId('nav-new-listing').click();
+  await expect(page).toHaveURL(/\/en\/listings\/new$/);
+  const form = page.getByTestId('listing-form');
+  await form.getByTestId('field-category').selectOption('torget');
+  await form.getByTestId('field-subcategory').selectOption('sport');
+  await form.getByTestId('field-title').fill(title);
+  await form
+    .getByTestId('field-description')
+    .fill('Lett racersykkel, nylig service. Laget av e2e-testen.');
+  await form.getByTestId('field-attr-condition').selectOption('good');
+  await form.getByTestId('field-price').fill('4500');
+  await form.getByTestId('field-place').selectOption('trondheim');
+
+  // Upload: virus scan and re-encode happen server-side before the thumbnail appears.
+  await form.getByTestId('field-images').setInputFiles(fixture);
+  await expect(form.getByTestId('uploaded-images').locator('img')).toHaveCount(1, {
+    timeout: 30_000,
+  });
+  await expect(form.getByTestId('image-error')).toHaveCount(0);
+
+  await form.getByTestId('submit-listing').click();
+  await expect(page).toHaveURL(/\/en\/listings\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('listing-title')).toHaveText(title);
+  await expect(page.getByTestId('gallery-main')).toBeVisible();
+  const actions = page.getByTestId('listing-actions');
+  await expect(actions).toContainText('Your listing');
+  const detailUrl = page.url();
+
+  // The listing reaches search through the outbox → Debezium → Kafka pipeline.
+  await expect(async () => {
+    await page.goto(`/en/search?q=${encodeURIComponent(title)}`);
+    await expect(page.getByTestId('listing-card-title').first()).toHaveText(title, {
+      timeout: 1_000,
+    });
+  }).toPass({ timeout: 90_000 });
+
+  await page.getByTestId('nav-my-listings').click();
+  const mine = page.getByTestId('my-listings').getByRole('link', { name: title });
+  await expect(mine).toContainText('Active');
+
+  await page.goto(detailUrl);
+  await actions.getByTestId('toggle-sold').click();
+  await expect(actions.getByTestId('toggle-sold')).toHaveText('Relist');
+  await expect(page.getByText('Sold', { exact: true })).toBeVisible();
+
+  page.once('dialog', (dialog) => void dialog.accept());
+  await actions.getByTestId('delete-listing').click();
+  await expect(page).toHaveURL(/\/en\/my\/listings$/);
+  await expect(page.getByRole('link', { name: title })).toHaveCount(0);
+});
+
+test('another user sees no owner actions', async ({ browser }) => {
+  const owner = await browser.newPage();
+  await login(owner, `ola.nordmann@${domain}`);
+  await owner.goto('/en/my/listings');
+  const href = await owner
+    .getByTestId('my-listings')
+    .getByRole('link')
+    .first()
+    .getAttribute('href');
+  expect(href).toBeTruthy();
+  await owner.goto(href!);
+  await expect(owner.getByTestId('listing-actions')).toContainText('Your listing');
+  await owner.close();
+
+  const other = await browser.newPage();
+  await login(other, `kari.nordmann@${domain}`);
+  await other.goto(href!);
+  await expect(other.getByTestId('listing-title')).toBeVisible();
+  await expect(other.getByTestId('listing-actions')).toHaveCount(0);
+  await other.close();
+});

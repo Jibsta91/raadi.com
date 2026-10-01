@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { DEMO_LISTING_COUNT, demoListings, demoUuid } from '../src/demo.js';
+import {
+  DEMO_LISTING_COUNT,
+  DEMO_LISTINGS_PER_USER,
+  DEMO_USERS,
+  demoListings,
+  demoUuid,
+} from '../src/demo.js';
 import { distanceKm, findPlace, PLACES } from '../src/places.js';
 import { attributeSchemas, CATEGORIES, isSubcategoryOf, priceRequired } from '../src/taxonomy.js';
 
@@ -40,6 +46,13 @@ describe('demo dataset', () => {
       assert.equal(l.priceNok === null, !priceRequired(l.category));
       assert.ok(l.images.length >= 1 && l.images.length <= 3);
     }
+  });
+
+  it('keeps every seller under the active-listing quota (OPA: 50)', () => {
+    const perOwner = new Map<string, number>();
+    for (const l of listings) perOwner.set(l.ownerId, (perOwner.get(l.ownerId) ?? 0) + 1);
+    for (const [owner, n] of perOwner) assert.ok(n < 50, `${owner} owns ${n}`);
+    for (const u of DEMO_USERS) assert.equal(perOwner.get(u.id), DEMO_LISTINGS_PER_USER);
   });
 
   it('covers every category and has unique image ids', () => {

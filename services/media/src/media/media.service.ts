@@ -73,7 +73,8 @@ export class MediaService {
   }
 
   /**
-   * Upload pipeline: sniff the real type → ClamAV → stage the raw bytes →
+   * Upload pipeline: ClamAV (every upload, so detections are recorded
+   * whatever the file type) → sniff the real type → stage the raw bytes →
    * imgproxy re-encode (proves it decodes, strips metadata, bounds size) →
    * store the result → record it with an event and an OpenFGA owner tuple.
    * The raw upload never becomes publicly reachable.
@@ -84,17 +85,6 @@ export class MediaService {
     trace
       .getActiveSpan()
       ?.setAttributes({ 'raadi.media.id': id, 'raadi.media.bytes': data.length });
-
-    const type = sniffImageType(data);
-    if (!type)
-      return this.reject(
-        principal,
-        id,
-        data,
-        sha256,
-        'application/octet-stream',
-        'unsupported_type',
-      );
 
     let verdict;
     try {
@@ -108,8 +98,26 @@ export class MediaService {
       }
       throw error;
     }
+    const type = sniffImageType(data);
     if (!verdict.clean)
-      return this.reject(principal, id, data, sha256, type, 'malware', verdict.signature);
+      return this.reject(
+        principal,
+        id,
+        data,
+        sha256,
+        type ?? 'application/octet-stream',
+        'malware',
+        verdict.signature,
+      );
+    if (!type)
+      return this.reject(
+        principal,
+        id,
+        data,
+        sha256,
+        'application/octet-stream',
+        'unsupported_type',
+      );
 
     await this.storage.put(this.storage.uploadBucket, id, data, type);
     let sanitized;

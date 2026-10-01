@@ -30,13 +30,16 @@ export async function ListingCard({ hit }: { hit: SearchHit }) {
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <p className="text-lg font-bold">
+        <p className="text-lg font-bold" data-testid="listing-card-price">
           {hit.priceNok === null ? t('listing.noPrice') : formatPrice(hit.priceNok, locale)}
         </p>
         <h3 className="line-clamp-2 text-sm font-medium" data-testid="listing-card-title">
           {hit.title}
         </h3>
-        <p className="mt-auto flex items-center gap-1 pt-1 text-xs text-muted-foreground">
+        <p
+          className="mt-auto flex items-center gap-1 pt-1 text-xs text-muted-foreground"
+          data-testid="listing-card-location"
+        >
           <MapPin aria-hidden className="size-3" />
           {hit.location.name}
           {hit.distanceKm !== undefined
