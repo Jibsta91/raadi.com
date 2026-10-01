@@ -1,4 +1,5 @@
 import { Button } from '@raadi/ui';
+import { Plus, Search } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { getSession } from '@/lib/session';
@@ -20,11 +21,25 @@ export async function Header({ locale }: { locale: string }) {
         </Link>
         <nav className="flex items-center gap-2" aria-label={t('main')}>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/status">{t('status')}</Link>
+            <Link href="/search" data-testid="nav-search">
+              <Search aria-hidden />
+              <span className="hidden sm:inline">{t('search')}</span>
+            </Link>
           </Button>
           <LocaleSwitcher label={t('language')} />
+          <Button asChild size="sm">
+            <Link href="/listings/new" data-testid="nav-new-listing">
+              <Plus aria-hidden />
+              <span className="hidden sm:inline">{t('newListing')}</span>
+            </Link>
+          </Button>
           {session.authenticated ? (
             <>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/my/listings" data-testid="nav-my-listings">
+                  {t('myListings')}
+                </Link>
+              </Button>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/account" data-testid="nav-account">
                   {session.user.name ?? session.user.email}
@@ -37,7 +52,7 @@ export async function Header({ locale }: { locale: string }) {
               </form>
             </>
           ) : (
-            <Button asChild size="sm">
+            <Button asChild variant="outline" size="sm">
               <a href={loginHref} data-testid="nav-login">
                 {t('login')}
               </a>

@@ -31,6 +31,7 @@ COPY deploy/openfga/model.json /opt/raadi/openfga/model.json
 COPY packages/events/schemas/ /opt/raadi/events/schemas/
 COPY deploy/init/scripts/ /opt/raadi/bin/
 COPY tests/smoke/smoke.sh /opt/raadi/bin/smoke.sh
+COPY tests/fixtures/ /opt/raadi/fixtures/
 RUN chmod 0755 /opt/raadi/bin/*.sh
 ENV PATH="/opt/raadi/bin:${PATH}" \
     SECRETS_DIR=/secrets

@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: Raadi media
+  version: 1.0.0
+  description: |
+    Image uploads for listings. Every upload is checked by content (not by file
+    name), scanned for malware and re-encoded without metadata (EXIF, GPS) before
+    it is stored. Attach images to a listing by passing their ids to the listings
+    API; unattached uploads are deleted after 24 hours.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: http://raadi.localhost
+    description: Local development through the gateway
+tags:
+  - name: media
+paths:
+  /api/v1/media:
+    post:
+      tags: [media]
+      operationId: uploadImage
+      summary: Upload an image (JPEG, PNG or WebP, at most 10 MB)
+      security: [{ bearer: [] }, { session: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '201':
+          description: Stored and ready to attach
+          headers:
+            Location: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Media' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+        '422':
+          description: Rejected (unsupported type, unreadable image or malware); errors[0].code says which
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /api/v1/media/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [media]
+      operationId: getImage
+      summary: One of your images
+      security: [{ bearer: [] }, { session: [] }]
+      responses:
+        '200':
+          description: The image
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Media' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [media]
+      operationId: deleteImage
+      summary: Delete one of your images that is not attached to a listing
+      security: [{ bearer: [] }, { session: [] }]
+      responses:
+        '204': { description: Deleted }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      operationId: liveness
+      responses: { '200': { description: Process is alive } }
+  /readyz:
+    get:
+      operationId: readiness
+      responses:
+        '200': { description: Ready }
+        '503': { description: A dependency is unavailable or the service is draining }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    session: { type: apiKey, in: cookie, name: raadi_sid }
+  responses:
+    Problem:
+      description: RFC 9457 problem details
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Media:
+      type: object
+      required: [id, status, contentType, bytes, width, height, listingId, createdAt, urls]
+      additionalProperties: false
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [ready] }
+        contentType: { type: string }
+        bytes: { type: integer }
+        width: { type: integer }
+        height: { type: integer }
+        listingId: { type: [string, 'null'], format: uuid }
+        createdAt: { type: string, format: date-time }
+        urls:
+          type: object
+          required: [thumb, card, large]
+          properties:
+            thumb: { type: string }
+            card: { type: string }
+            large: { type: string }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        traceId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path: { type: string }
+              message: { type: string }
+              code: { type: string }

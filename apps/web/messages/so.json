@@ -9,7 +9,10 @@
     "status": "Xaaladda",
     "language": "Luqadda",
     "login": "Gal",
-    "logout": "Ka bax"
+    "logout": "Ka bax",
+    "search": "Raadi",
+    "newListing": "Xayeysiis cusub",
+    "myListings": "Xayeysiisyadayda"
   },
   "home": {
     "heroTitle": "Raadi. Hel. Iibi.",
@@ -51,7 +54,11 @@
         "title": "Xogtaada, xuquuqdaada",
         "body": "Ilaalinta xogta waa aasaas: soo dejiso ama tirtir xogtaada wakhti kasta."
       }
-    }
+    },
+    "latestTitle": "Xayeysiisyadii ugu dambeeyay",
+    "seeAll": "Dhammaan arag",
+    "searchPlaceholder": "Maxaad raadinaysaa?",
+    "searchSubmit": "Raadi"
   },
   "account": {
     "title": "Akoonkayga",
@@ -133,6 +140,210 @@
       "cancelled": "Galitaanka waa la joojiyay.",
       "login_failed": "Kuma aanan gelin karin. Fadlan isku day mar kale.",
       "idp_error": "Adeegga galitaanka ayaa khalad sheegay. Fadlan isku day mar dambe."
+    }
+  },
+  "taxonomy": {
+    "categories": {
+      "torget": "Suuqa",
+      "bil": "Baabuur",
+      "eiendom": "Hanti ma-guurto ah",
+      "jobb": "Shaqo",
+      "reise": "Safar"
+    },
+    "subcategories": {
+      "elektronikk": "Elektaroonig",
+      "mobler": "Alaab guri",
+      "klaer": "Dhar",
+      "sport": "Ciyaaraha iyo banaanka",
+      "barn": "Carruurta",
+      "hobby": "Hiwaayad iyo muusig",
+      "personbil": "Baabuur",
+      "varebil": "Baabuur xamuul yar",
+      "motorsykkel": "Mootooyin",
+      "bobil": "Baabuur guri",
+      "salg": "Guryo iib ah",
+      "utleie": "Guryo kiro ah",
+      "fritid": "Guryo fasax",
+      "tomt": "Dhul",
+      "it": "IT",
+      "helse": "Caafimaad",
+      "bygg": "Dhismo",
+      "undervisning": "Waxbarasho",
+      "handel": "Ganacsi",
+      "transport": "Gaadiid",
+      "hytteutleie": "Kirada aqallada",
+      "leilighet": "Abaartamano",
+      "pakkereise": "Safarro xirmo ah"
+    },
+    "attributes": {
+      "condition": "Xaaladda",
+      "make": "Sumadda",
+      "model": "Nooca",
+      "year": "Sanadka",
+      "mileageKm": "Masaafada (km)",
+      "fuel": "Shidaalka",
+      "gearbox": "Gearka",
+      "propertyType": "Nooca guriga",
+      "areaM2": "Bedka (m²)",
+      "bedrooms": "Qolalka jiifka",
+      "employer": "Loo-shaqeeyaha",
+      "employmentType": "Nooca shaqada",
+      "guests": "Martida"
+    },
+    "values": {
+      "condition": {
+        "new": "Cusub",
+        "like_new": "Sida cusub",
+        "good": "Wanaagsan",
+        "fair": "La isticmaalay"
+      },
+      "fuel": {
+        "petrol": "Baansiin",
+        "diesel": "Naafto",
+        "electric": "Koronto",
+        "hybrid": "Isku-dhaf"
+      },
+      "gearbox": {
+        "manual": "Gacan",
+        "automatic": "Toos"
+      },
+      "propertyType": {
+        "apartment": "Abaartamaan",
+        "house": "Guri",
+        "townhouse": "Guri saf ah",
+        "cabin": "Aqal",
+        "plot": "Dhul"
+      },
+      "employmentType": {
+        "full_time": "Waqti buuxa",
+        "part_time": "Waqti dhiman",
+        "temporary": "Ku meel gaar",
+        "internship": "Tababar shaqo"
+      }
+    }
+  },
+  "search": {
+    "title": "Raadi",
+    "placeholder": "Raadi wax kasta",
+    "submit": "Raadi",
+    "results": "{total, plural, =0 {Wax natiijo ah ma jiraan} one {# natiijo} other {# natiijo}}",
+    "noResults": "Wax xayeysiis ah oo raadintaada la jaanqaada lama helin.",
+    "noResultsHint": "Isku day erayo yar ama ka saar shaandhooyinka qaarkood.",
+    "filters": "Shaandhooyin",
+    "clearFilters": "Tirtir shaandhooyinka",
+    "price": "Qiimaha",
+    "priceMin": "Laga bilaabo (kr)",
+    "priceMax": "Ilaa (kr)",
+    "apply": "Codso",
+    "location": "Goobta",
+    "near": "Meel u dhow",
+    "anywhere": "Noorweey oo dhan",
+    "radius": "Gudaha",
+    "radiusKm": "{km} km",
+    "sortLabel": "U kala saar",
+    "sort": {
+      "relevance": "Kuwa ugu habboon",
+      "newest": "Kuwa ugu cusub",
+      "price_asc": "Qiimaha ugu hooseeya",
+      "price_desc": "Qiimaha ugu sarreeya",
+      "distance": "Kuwa ugu dhow"
+    },
+    "pageOf": "Bogga {page} ee {pages}",
+    "previous": "Hore",
+    "next": "Xiga",
+    "facets": {
+      "category": "Qaybta",
+      "subcategory": "Nooca",
+      "county": "Gobolka",
+      "condition": "Xaaladda",
+      "fuel": "Shidaalka",
+      "propertyType": "Nooca guriga",
+      "employmentType": "Nooca shaqada",
+      "price": "Qiimaha"
+    },
+    "priceRanges": {
+      "0-999": "Ka yar 1 000 kr",
+      "1000-9999": "1 000–9 999 kr",
+      "10000-99999": "10 000–99 999 kr",
+      "100000-999999": "100 000–999 999 kr",
+      "1000000+": "1 milyan kr ama ka badan"
+    },
+    "distance": "{km} km u jira",
+    "unavailable": "Raadintu hadda ma shaqaynayso. Fadlan dib isku day dhowaan.",
+    "nearMe": "Meel ii dhow"
+  },
+  "listing": {
+    "noPrice": "Mushahar heshiis ah",
+    "sold": "La iibiyay",
+    "details": "Faahfaahin",
+    "description": "Sharaxaad",
+    "location": "Goobta",
+    "seller": "Iibiyaha",
+    "published": "La daabacay {date}",
+    "updated": "La cusboonaysiiyay {date}",
+    "images": "{count, plural, one {# sawir} other {# sawirro}}",
+    "imageAlt": "Sawirka {n} ee {count}: {title}",
+    "yours": "Xayeysiiskaaga",
+    "edit": "Wax ka beddel",
+    "markSold": "U calaamadee la iibiyay",
+    "markActive": "Dib u soo bandhig",
+    "delete": "Tirtir",
+    "deleteConfirm": "Ma tirtiraysaa xayeysiiskan? Lagama noqon karo.",
+    "deleted": "Xayeysiiska waa la tirtiray.",
+    "actionFailed": "Ma shaqayn. Fadlan dib isku day.",
+    "back": "Ku noqo raadinta",
+    "notFound": "Xayeysiiskan ma jiro ama waa laga saaray."
+  },
+  "form": {
+    "newTitle": "Xayeysiis cusub",
+    "editTitle": "Wax ka beddel xayeysiiska",
+    "category": "Qaybta",
+    "subcategory": "Nooca",
+    "chooseCategory": "Dooro qayb",
+    "chooseSubcategory": "Dooro nooc",
+    "title": "Cinwaanka",
+    "titleHint": "3–120 xaraf",
+    "description": "Sharaxaad",
+    "price": "Qiimaha (kr)",
+    "place": "Goobta",
+    "choosePlace": "Dooro goob",
+    "images": "Sawirro",
+    "imagesHint": "Ilaa 10 sawir (JPEG, PNG ama WebP, mid kasta ugu badnaan 10 MB). Xogta goobta iyo kamaradda waa la saarayaa.",
+    "addImages": "Ku dar sawirro",
+    "uploading": "Waa la soo gelinayaa …",
+    "removeImage": "Ka saar sawirka",
+    "submitCreate": "Daabac",
+    "submitSave": "Kaydi isbeddellada",
+    "saving": "Waa la kaydinayaa …",
+    "loginRequired": "Gal si aad u sameyso xayeysiis.",
+    "errors": {
+      "generic": "Wax baa khaldamay. Fadlan dib isku day.",
+      "validation": "Fadlan hubi meelaha la calaamadeeyay.",
+      "conflict": "Xayeysiiska meel kale ayaa laga beddelay. Dib u soo deji bogga oo isku day mar kale.",
+      "unavailable": "Adeeg ayaa hadda la heli waayay. Fadlan dib isku day dhowaan.",
+      "policy": {
+        "quota_exceeded": "Waxaad gaartay xadka xayeysiisyada firfircoon.",
+        "price_above_ceiling": "Qiimuhu wuu ka sarreeyaa inta qaybtan loo oggol yahay.",
+        "prohibited_item": "Alaabtan laguma oggola Raadi.",
+        "too_many_images": "Isticmaal ugu badnaan 10 sawir.",
+        "policy_undefined": "Xayeysiiska lama hubin karin. Fadlan dib isku day."
+      },
+      "image": {
+        "malware": "Faylka waxaa diiday baaraha fayraska.",
+        "unsupported_type": "Sawirrada JPEG, PNG iyo WebP oo keliya ayaa la aqbalaa.",
+        "invalid_image": "Faylka looma akhrin karo sawir ahaan.",
+        "too_large": "Sawirku wuu ka weyn yahay 10 MB.",
+        "generic": "Sawirka lama soo gelin karin."
+      }
+    }
+  },
+  "my": {
+    "title": "Xayeysiisyadayda",
+    "empty": "Weli ma lihid xayeysiis.",
+    "create": "Samee xayeysiiskaagii ugu horreeyay",
+    "status": {
+      "active": "Firfircoon",
+      "sold": "La iibiyay"
     }
   }
 }

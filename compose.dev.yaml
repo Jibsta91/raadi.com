@@ -48,7 +48,7 @@ services:
       [
         'sh',
         '-c',
-        'pnpm install --frozen-lockfile --prefer-offline && pnpm turbo run build --filter=@raadi/service-kit',
+        'pnpm install --frozen-lockfile --prefer-offline && pnpm turbo run build --filter=@raadi/service-kit --filter=@raadi/catalog --filter=@raadi/events',
       ]
     restart: 'no'
 

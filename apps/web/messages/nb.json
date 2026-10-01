@@ -9,7 +9,10 @@
     "status": "Status",
     "language": "Språk",
     "login": "Logg inn",
-    "logout": "Logg ut"
+    "logout": "Logg ut",
+    "search": "Søk",
+    "newListing": "Ny annonse",
+    "myListings": "Mine annonser"
   },
   "home": {
     "heroTitle": "Finn det. Selg det. Raadi.",
@@ -51,7 +54,11 @@
         "title": "Dine data, dine rettigheter",
         "body": "Personvern innebygd: eksporter eller slett dataene dine når du vil."
       }
-    }
+    },
+    "latestTitle": "Nyeste annonser",
+    "seeAll": "Se alle",
+    "searchPlaceholder": "Hva leter du etter?",
+    "searchSubmit": "Søk"
   },
   "account": {
     "title": "Min konto",
@@ -133,6 +140,210 @@
       "cancelled": "Innloggingen ble avbrutt.",
       "login_failed": "Vi kunne ikke logge deg inn. Prøv igjen.",
       "idp_error": "Innloggingstjenesten meldte en feil. Prøv igjen senere."
+    }
+  },
+  "taxonomy": {
+    "categories": {
+      "torget": "Torget",
+      "bil": "Bil",
+      "eiendom": "Eiendom",
+      "jobb": "Jobb",
+      "reise": "Reise"
+    },
+    "subcategories": {
+      "elektronikk": "Elektronikk",
+      "mobler": "Møbler",
+      "klaer": "Klær",
+      "sport": "Sport og friluft",
+      "barn": "Barn",
+      "hobby": "Hobby og musikk",
+      "personbil": "Personbiler",
+      "varebil": "Varebiler",
+      "motorsykkel": "Motorsykler",
+      "bobil": "Bobiler",
+      "salg": "Boliger til salgs",
+      "utleie": "Boliger til leie",
+      "fritid": "Fritidsboliger",
+      "tomt": "Tomter",
+      "it": "IT",
+      "helse": "Helse",
+      "bygg": "Bygg og anlegg",
+      "undervisning": "Undervisning",
+      "handel": "Handel",
+      "transport": "Transport",
+      "hytteutleie": "Hytteutleie",
+      "leilighet": "Leiligheter",
+      "pakkereise": "Pakkereiser"
+    },
+    "attributes": {
+      "condition": "Tilstand",
+      "make": "Merke",
+      "model": "Modell",
+      "year": "Årsmodell",
+      "mileageKm": "Kilometerstand",
+      "fuel": "Drivstoff",
+      "gearbox": "Girkasse",
+      "propertyType": "Boligtype",
+      "areaM2": "Areal (m²)",
+      "bedrooms": "Soverom",
+      "employer": "Arbeidsgiver",
+      "employmentType": "Stillingstype",
+      "guests": "Gjester"
+    },
+    "values": {
+      "condition": {
+        "new": "Ny",
+        "like_new": "Som ny",
+        "good": "Pent brukt",
+        "fair": "Brukt"
+      },
+      "fuel": {
+        "petrol": "Bensin",
+        "diesel": "Diesel",
+        "electric": "Elektrisk",
+        "hybrid": "Hybrid"
+      },
+      "gearbox": {
+        "manual": "Manuell",
+        "automatic": "Automat"
+      },
+      "propertyType": {
+        "apartment": "Leilighet",
+        "house": "Enebolig",
+        "townhouse": "Rekkehus",
+        "cabin": "Hytte",
+        "plot": "Tomt"
+      },
+      "employmentType": {
+        "full_time": "Fast heltid",
+        "part_time": "Deltid",
+        "temporary": "Vikariat",
+        "internship": "Praksisplass"
+      }
+    }
+  },
+  "search": {
+    "title": "Søk",
+    "placeholder": "Søk etter hva som helst",
+    "submit": "Søk",
+    "results": "{total, plural, =0 {Ingen treff} one {# treff} other {# treff}}",
+    "noResults": "Ingen annonser passet til søket.",
+    "noResultsHint": "Prøv færre ord eller fjern noen filtre.",
+    "filters": "Filtre",
+    "clearFilters": "Fjern filtre",
+    "price": "Pris",
+    "priceMin": "Fra (kr)",
+    "priceMax": "Til (kr)",
+    "apply": "Bruk",
+    "location": "Sted",
+    "near": "I nærheten av",
+    "anywhere": "Hele Norge",
+    "radius": "Innenfor",
+    "radiusKm": "{km} km",
+    "sortLabel": "Sorter etter",
+    "sort": {
+      "relevance": "Mest relevant",
+      "newest": "Nyeste",
+      "price_asc": "Lavest pris",
+      "price_desc": "Høyest pris",
+      "distance": "Nærmest"
+    },
+    "pageOf": "Side {page} av {pages}",
+    "previous": "Forrige",
+    "next": "Neste",
+    "facets": {
+      "category": "Kategori",
+      "subcategory": "Type",
+      "county": "Fylke",
+      "condition": "Tilstand",
+      "fuel": "Drivstoff",
+      "propertyType": "Boligtype",
+      "employmentType": "Stillingstype",
+      "price": "Pris"
+    },
+    "priceRanges": {
+      "0-999": "Under 1 000 kr",
+      "1000-9999": "1 000–9 999 kr",
+      "10000-99999": "10 000–99 999 kr",
+      "100000-999999": "100 000–999 999 kr",
+      "1000000+": "1 million kr eller mer"
+    },
+    "distance": "{km} km unna",
+    "unavailable": "Søket er midlertidig utilgjengelig. Prøv igjen om litt.",
+    "nearMe": "Nær meg"
+  },
+  "listing": {
+    "noPrice": "Lønn etter avtale",
+    "sold": "Solgt",
+    "details": "Detaljer",
+    "description": "Beskrivelse",
+    "location": "Sted",
+    "seller": "Selger",
+    "published": "Publisert {date}",
+    "updated": "Oppdatert {date}",
+    "images": "{count, plural, one {# bilde} other {# bilder}}",
+    "imageAlt": "Bilde {n} av {count}: {title}",
+    "yours": "Din annonse",
+    "edit": "Rediger",
+    "markSold": "Marker som solgt",
+    "markActive": "Legg ut igjen",
+    "delete": "Slett",
+    "deleteConfirm": "Vil du slette annonsen? Dette kan ikke angres.",
+    "deleted": "Annonsen er slettet.",
+    "actionFailed": "Det gikk ikke. Prøv igjen.",
+    "back": "Tilbake til søket",
+    "notFound": "Annonsen finnes ikke eller er fjernet."
+  },
+  "form": {
+    "newTitle": "Ny annonse",
+    "editTitle": "Rediger annonse",
+    "category": "Kategori",
+    "subcategory": "Type",
+    "chooseCategory": "Velg kategori",
+    "chooseSubcategory": "Velg type",
+    "title": "Tittel",
+    "titleHint": "3–120 tegn",
+    "description": "Beskrivelse",
+    "price": "Pris (kr)",
+    "place": "Sted",
+    "choosePlace": "Velg sted",
+    "images": "Bilder",
+    "imagesHint": "Opptil 10 bilder (JPEG, PNG eller WebP, maks 10 MB hver). Posisjons- og kameradata fjernes.",
+    "addImages": "Legg til bilder",
+    "uploading": "Laster opp …",
+    "removeImage": "Fjern bilde",
+    "submitCreate": "Publiser",
+    "submitSave": "Lagre endringer",
+    "saving": "Lagrer …",
+    "loginRequired": "Logg inn for å lage en annonse.",
+    "errors": {
+      "generic": "Noe gikk galt. Prøv igjen.",
+      "validation": "Sjekk feltene som er markert.",
+      "conflict": "Annonsen er endret et annet sted. Last inn siden på nytt og prøv igjen.",
+      "unavailable": "En tjeneste er midlertidig utilgjengelig. Prøv igjen om litt.",
+      "policy": {
+        "quota_exceeded": "Du har nådd grensen for aktive annonser.",
+        "price_above_ceiling": "Prisen er høyere enn tillatt i denne kategorien.",
+        "prohibited_item": "Denne varen er ikke tillatt på Raadi.",
+        "too_many_images": "Bruk maks 10 bilder.",
+        "policy_undefined": "Annonsen kunne ikke kontrolleres. Prøv igjen."
+      },
+      "image": {
+        "malware": "Filen ble stoppet av virusskanneren.",
+        "unsupported_type": "Bare JPEG-, PNG- og WebP-bilder er tillatt.",
+        "invalid_image": "Filen kunne ikke leses som et bilde.",
+        "too_large": "Bildet er større enn 10 MB.",
+        "generic": "Bildet kunne ikke lastes opp."
+      }
+    }
+  },
+  "my": {
+    "title": "Mine annonser",
+    "empty": "Du har ingen annonser ennå.",
+    "create": "Lag din første annonse",
+    "status": {
+      "active": "Aktiv",
+      "sold": "Solgt"
     }
   }
 }

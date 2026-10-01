@@ -3,6 +3,12 @@ export const env = {
   get identityBffUrl() {
     return process.env.IDENTITY_BFF_URL ?? 'http://identity-bff:4000';
   },
+  get listingsUrl() {
+    return process.env.LISTINGS_URL ?? 'http://listings:4000';
+  },
+  get searchUrl() {
+    return process.env.SEARCH_URL ?? 'http://search:4000';
+  },
   get publicBaseUrl() {
     return process.env.PUBLIC_BASE_URL ?? 'http://raadi.localhost';
   },

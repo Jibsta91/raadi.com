@@ -39,6 +39,23 @@ req() {
   fi
 }
 header() { grep -i "^$1:" "$HDRS" | head -1 | cut -d' ' -f2- | tr -d '\r'; }
+# login_as <email> — full Authorization Code + PKCE login through the gateway,
+# starting from a fresh cookie jar. Returns non-zero on any failed step.
+login_as() {
+  : > "$JAR"
+  req GET "$PUBLIC/auth/login?returnTo=/en&locale=en"
+  local loc; loc="$(header location)"
+  req GET "$loc"
+  local action; action=$(grep -o '<form[^>]*id="kc-form-login"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 \
+    | sed -e 's/^action="//' -e 's/"$//' -e 's/&amp;/\&/g')
+  [[ -n "$action" ]] || return 1
+  req POST "$action" --data-urlencode "username=$1" --data-urlencode "password=$PASSWORD" --data-urlencode "credentialId="
+  local cb; cb="$(header location)"
+  [[ "$cb" == "$PUBLIC/auth/callback?"* ]] || return 1
+  req GET "$cb"
+  [[ "$status" == "302" ]]
+}
+json() { jq -r "$1" "$BODY" 2>/dev/null; }
 expect_status() { [[ "$status" == "$1" ]] && ok "$2" || fail "$2" "expected HTTP $1, got $status"; }
 eventually() { # <description> <seconds> <command...>
   local desc="$1" secs="$2"; shift 2
@@ -125,6 +142,96 @@ req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
   && ok "logout ends the Keycloak session (RP-initiated logout)" || fail "logout" "HTTP $status → $(header location)"
 req GET "$PUBLIC/auth/session"
 [[ "$(jq -r .authenticated "$BODY" 2>/dev/null)" == "false" ]] && ok "session is gone after logout" || fail "session after logout"
+
+section "Event backbone (Kafka, Debezium, Apicurio)"
+connectors=$(curl -sf --max-time 10 http://kafka-connect:8083/connectors?expand=status \
+  | jq '[.[] | select(.status.connector.state == "RUNNING" and all(.status.tasks[]; .state == "RUNNING"))] | length' 2>/dev/null)
+[[ "$connectors" -ge 3 ]] && ok "Debezium outbox connectors running ($connectors)" || fail "Debezium connectors" "running: $connectors"
+artifacts=$(curl -sf --max-time 10 'http://apicurio:8080/apis/registry/v3/groups/no.raadi.events/artifacts?limit=100' | jq '.count' 2>/dev/null)
+[[ "$artifacts" -ge 8 ]] && ok "event schemas registered in Apicurio ($artifacts)" || fail "Apicurio artifacts" "count: $artifacts"
+code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' \
+  http://apicurio:8080/apis/registry/v3/groups -d '{"groupId":"smoke"}')
+[[ "$code" == "401" || "$code" == "403" ]] && ok "schema registry refuses anonymous writes" || fail "registry anonymous write" "HTTP $code"
+
+section "Search (OpenSearch via Kafka)"
+eventually "all demo listings are searchable" 180 \
+  bash -c "curl -sf --connect-to ::$GW '$PUBLIC/api/v1/search/listings?pageSize=1' | jq -e '.total >= 500'"
+req GET "$PUBLIC/api/v1/search/listings?category=bil&pageSize=5"
+expect_status 200 "faceted search answers"
+[[ "$(json '[.items[].category] | unique | join(",")')" == "bil" ]] && ok "category filter applies" || fail "category filter"
+[[ "$(json '.facets.category | length')" -gt 1 ]] && ok "facets keep counts for other categories" || fail "facet counts"
+req GET "$PUBLIC/api/v1/search/listings?near=bergen&radiusKm=100&sort=distance&pageSize=48"
+json '.items | length > 0 and all(.[]; .distanceKm <= 100)' | grep -q true \
+  && ok "geo radius search (100 km around Bergen) with distances" || fail "geo radius search" "$(head -c 300 "$BODY")"
+req GET "$PUBLIC/api/v1/search/listings?q=langrennski"
+[[ "$(json '.total')" -gt 0 ]] && ok "full-text search tolerates typos (langrennski)" || fail "fuzzy search"
+req GET "$PUBLIC/api/v1/search/listings?category=boats"
+expect_status 400 "invalid search parameters are rejected"
+req GET "$PUBLIC/api/v1/search/suggest?q=Lan"
+[[ "$(json '.suggestions | length')" -gt 0 ]] && ok "search-as-you-type suggestions" || fail "suggestions"
+
+section "Listings, media and authorization"
+req GET "$PUBLIC/api/v1/search/listings?pageSize=1&sort=newest"
+seeded="$(json '.items[0].id')"; card="$(json '.items[0].image.card')"
+req GET "$PUBLIC/api/v1/listings/$seeded"
+expect_status 200 "public listing detail"
+[[ -n "$(header etag)" ]] && ok "listing has an ETag (optimistic concurrency)" || fail "ETag header"
+req GET "$PUBLIC$card"
+[[ "$status" == "200" && "$(header content-type)" == image/webp* ]] && ok "listing image served by imgproxy (WebP)" || fail "listing image" "HTTP $status"
+req GET "$PUBLIC${card/pr:card/pr:large}"
+expect_status 403 "imgproxy refuses tampered URLs (signature)"
+req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{}'
+expect_status 401 "anonymous users cannot create listings"
+
+login_as "$USER_EMAIL" && ok "logged in as $USER_EMAIL" || fail "login as $USER_EMAIL"
+req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/opt/raadi/fixtures/images/listing.jpg;type=image/jpeg"
+expect_status 201 "image upload accepted (scanned, re-encoded)"
+image="$(json '.id')"
+[[ "$(json '.contentType')" == "image/jpeg" && "$(json '.width')" == "800" ]] && ok "stored image is a sanitized JPEG" || fail "stored image" "$(cat "$BODY")"
+printf 'X5O!P%%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > /tmp/eicar.jpg
+req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/tmp/eicar.jpg;type=image/jpeg"
+[[ "$status" == "422" ]] && ok "non-images are refused by content sniffing" || fail "content sniffing" "HTTP $status"
+{ printf '\xff\xd8\xff\xe0'; cat /tmp/eicar.jpg; } > /tmp/eicar-jpeg.jpg
+req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/tmp/eicar-jpeg.jpg;type=image/jpeg"
+[[ "$status" == "422" && "$(json '.errors[0].code')" == "malware" ]] && ok "ClamAV rejects the EICAR test virus" || fail "malware scan" "HTTP $status $(cat "$BODY")"
+
+title="Smoke test $(date +%s%N | tail -c 7) Langrennsski"
+listing_body() {
+  jq -nc --arg t "$1" --arg img "$image" '{category: "torget", subcategory: "sport", title: $t,
+    description: "Created by the smoke test.", priceNok: 1500, attributes: {condition: "good"},
+    placeId: "tromso", imageIds: [$img]}'
+}
+req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H 'origin: https://evil.example' --data "$(listing_body "$title")"
+expect_status 403 "cross-site listing creation is rejected (CSRF)"
+req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(listing_body "$title")"
+expect_status 201 "listing created with an uploaded image"
+listing="$(json '.id')"
+[[ "$(json '.viewer.isOwner')" == "true" ]] && ok "creator is the owner (OpenFGA)" || fail "owner tuple"
+req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" \
+  --data "$(listing_body "Selger våpen billig")"
+[[ "$status" == "422" && "$(json '.errors[0].code')" == "prohibited_item" ]] && ok "OPA policy blocks prohibited items" || fail "OPA policy" "HTTP $status"
+eventually "new listing reaches search via outbox -> Debezium -> Kafka" 90 \
+  bash -c "curl -sf --connect-to ::$GW -G '$PUBLIC/api/v1/search/listings' --data-urlencode 'q=$title' | jq -e '.items[] | select(.id == \"$listing\")'"
+req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" -H 'if-match: "99"' --data '{"priceNok": 1200}'
+expect_status 412 "stale If-Match is refused"
+req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" -H 'if-match: "1"' --data '{"priceNok": 1200}'
+[[ "$status" == "200" && "$(json '.version')" == "2" ]] && ok "owner can edit (version 2)" || fail "owner edit" "HTTP $status"
+req DELETE "$PUBLIC/api/v1/media/$image" -H "origin: $ORIGIN"
+eventually "media learns the image is attached (listing events)" 60 \
+  bash -c "curl -s -o /dev/null -w '%{http_code}' --connect-to ::$GW -b '$JAR' -X DELETE -H 'origin: $ORIGIN' '$PUBLIC/api/v1/media/$image' | grep -q 409"
+
+login_as "ola.nordmann@${RAADI_DOMAIN}" || fail "login as ola"
+req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"priceNok": 1}'
+expect_status 403 "another user cannot edit the listing (OpenFGA)"
+req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(listing_body "Stolen image")"
+[[ "$status" == "422" ]] && ok "another user cannot attach someone else's image" || fail "image ownership" "HTTP $status"
+
+login_as "moderator@${RAADI_DOMAIN}" || fail "login as moderator"
+req DELETE "$PUBLIC/api/v1/listings/$listing" -H "origin: $ORIGIN"
+expect_status 204 "a moderator can remove the listing (role as contextual tuple)"
+eventually "removed listing disappears from search" 90 \
+  bash -c "! curl -sf --connect-to ::$GW -G '$PUBLIC/api/v1/search/listings' --data-urlencode 'q=$title' | jq -e '.items[] | select(.id == \"$listing\")'"
+req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
 section "Operations"
 req GET "$GRAFANA/api/health"

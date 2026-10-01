@@ -32,7 +32,7 @@ export const getSession = cache(async (): Promise<Session> => {
  * access token at identity-bff (the same call Traefik's forwardAuth makes),
  * then call the API with it. Tokens never reach the browser.
  */
-async function accessToken(): Promise<string | null> {
+export async function accessToken(): Promise<string | null> {
   const cookie = await cookieHeader();
   if (!cookie) return null;
   const res = await fetch(`${env.identityBffUrl}/auth/forward`, {

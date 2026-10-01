@@ -1,0 +1,135 @@
+import { COUNTIES, type County } from '@raadi/catalog';
+import { Badge } from '@raadi/ui';
+import { MapPin, User } from 'lucide-react';
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
+import { ImageGallery } from '@/components/listings/image-gallery';
+import { ListingActions } from '@/components/listings/listing-actions';
+import { Link } from '@/i18n/navigation';
+import { getListing } from '@/lib/api';
+import { formatPrice } from '@/lib/format';
+
+export const dynamic = 'force-dynamic';
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ENUM_ATTRIBUTES = new Set(['condition', 'fuel', 'gearbox', 'propertyType', 'employmentType']);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const listing = UUID.test(id) ? await getListing(id) : null;
+  return listing
+    ? { title: listing.title, description: listing.description.slice(0, 160) }
+    : { title: 'Raadi' };
+}
+
+export default async function ListingPage({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}) {
+  const { locale, id } = await params;
+  setRequestLocale(locale);
+  if (!UUID.test(id)) notFound();
+  const listing = await getListing(id);
+  if (!listing) notFound();
+  const [t, format] = await Promise.all([getTranslations(), getFormatter()]);
+
+  const attributeValue = (key: string, value: string | number | boolean) => {
+    if (ENUM_ATTRIBUTES.has(key)) return t(`taxonomy.values.${key}.${value}` as never);
+    if (key === 'mileageKm' || key === 'areaM2') return format.number(Number(value));
+    return String(value);
+  };
+
+  return (
+    <article className="space-y-6" data-testid="listing-detail">
+      <nav className="text-sm text-muted-foreground" aria-label="breadcrumb">
+        <Link href={`/search?category=${listing.category}`} className="hover:underline">
+          {t(`taxonomy.categories.${listing.category}` as never)}
+        </Link>
+        {' / '}
+        <Link
+          href={`/search?category=${listing.category}&subcategory=${listing.subcategory}`}
+          className="hover:underline"
+        >
+          {t(`taxonomy.subcategories.${listing.subcategory}` as never)}
+        </Link>
+      </nav>
+      <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
+        <div className="space-y-6">
+          <ImageGallery images={listing.images} title={listing.title} />
+          <section aria-labelledby="desc" className="space-y-2">
+            <h2 id="desc" className="text-lg font-semibold">
+              {t('listing.description')}
+            </h2>
+            <p className="whitespace-pre-line" data-testid="listing-description">
+              {listing.description}
+            </p>
+          </section>
+          {Object.keys(listing.attributes).length > 0 ? (
+            <section aria-labelledby="details" className="space-y-2">
+              <h2 id="details" className="text-lg font-semibold">
+                {t('listing.details')}
+              </h2>
+              <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
+                {Object.entries(listing.attributes).map(([key, value]) => (
+                  <div key={key} className="contents">
+                    <dt className="text-muted-foreground">
+                      {t(`taxonomy.attributes.${key}` as never)}
+                    </dt>
+                    <dd>{attributeValue(key, value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
+        </div>
+
+        <aside className="space-y-4">
+          <div className="space-y-2">
+            {listing.status === 'sold' ? (
+              <Badge variant="secondary">{t('listing.sold')}</Badge>
+            ) : null}
+            <h1 className="text-2xl font-bold" data-testid="listing-title">
+              {listing.title}
+            </h1>
+            <p className="text-3xl font-bold" data-testid="listing-price">
+              {listing.priceNok === null
+                ? t('listing.noPrice')
+                : formatPrice(listing.priceNok, locale)}
+            </p>
+          </div>
+          <dl className="space-y-3 rounded-lg border p-4 text-sm">
+            <div className="flex items-start gap-2">
+              <MapPin aria-hidden className="mt-0.5 size-4 text-muted-foreground" />
+              <div>
+                <dt className="sr-only">{t('listing.location')}</dt>
+                <dd>
+                  {listing.location.name},{' '}
+                  {COUNTIES[listing.location.county as County] ?? listing.location.county}
+                </dd>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <User aria-hidden className="mt-0.5 size-4 text-muted-foreground" />
+              <div>
+                <dt className="sr-only">{t('listing.seller')}</dt>
+                <dd>{listing.seller.name}</dd>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t('listing.published', {
+                date: format.dateTime(new Date(listing.publishedAt), { dateStyle: 'medium' }),
+              })}
+            </p>
+          </dl>
+          <ListingActions listing={listing} />
+        </aside>
+      </div>
+    </article>
+  );
+}
