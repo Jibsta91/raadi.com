@@ -2,7 +2,8 @@ import type { Conversation } from '@raadi/api-client';
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Status } from '../../components/ui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Body, Button, LargeTitle, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { useAuth } from '../../lib/auth/context';
@@ -10,7 +11,7 @@ import { config } from '../../lib/config';
 import { formatAge } from '../../lib/format';
 import { useRealtime } from '../../lib/realtime';
 import { absoluteUrl } from '../../lib/urls';
-import { space, useTheme } from '../../theme';
+import { fonts, radius, space, tabBarSpace, useTheme } from '../../theme';
 
 function Row({ conversation }: { conversation: Conversation }) {
   const { locale } = useI18n();
@@ -18,31 +19,40 @@ function Row({ conversation }: { conversation: Conversation }) {
   const unread = conversation.unread > 0;
   return (
     <Link href={`/messages/${conversation.id}`} asChild>
-      {/* Link asChild merges props by spreading: a style array would reach the DOM as {0: …}. */}
-      <Pressable testID="conversation" style={{ ...styles.row, borderColor: theme.border }}>
+      {/* Link asChild spreads props: one style object, not an array (see listing-card.tsx). */}
+      <Pressable
+        testID="conversation"
+        style={{ ...styles.row, backgroundColor: theme.surface, borderColor: theme.border }}
+      >
         {conversation.listing.image ? (
           <Image
             source={{ uri: absoluteUrl(conversation.listing.image.thumb, config.apiBaseUrl) }}
-            // expo-image hands styles to the DOM on the web: pass one object, not an array.
-            style={{ ...styles.thumb, backgroundColor: theme.surface }}
+            style={{ ...styles.thumb, backgroundColor: theme.placeholder }}
           />
         ) : (
-          <View style={[styles.thumb, { backgroundColor: theme.surface }]} />
+          <View style={{ ...styles.thumb, backgroundColor: theme.placeholder }} />
         )}
         <View style={styles.text}>
-          <Text numberOfLines={1} style={[styles.title, { color: theme.text }]}>
+          <View style={styles.line}>
+            <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
+              {conversation.counterpart.name}
+            </Text>
+            {conversation.lastMessage ? (
+              <Text style={[styles.time, { color: theme.muted }]}>
+                {formatAge(conversation.lastMessage.sentAt, locale)}
+              </Text>
+            ) : null}
+          </View>
+          <Text numberOfLines={1} style={[styles.listing, { color: theme.muted }]}>
             {conversation.listing.title}
-          </Text>
-          <Text numberOfLines={1} style={{ color: theme.muted }}>
-            {conversation.counterpart.name}
-            {conversation.lastMessage
-              ? ` · ${formatAge(conversation.lastMessage.sentAt, locale)}`
-              : ''}
           </Text>
           {conversation.lastMessage ? (
             <Text
               numberOfLines={1}
-              style={{ color: theme.text, fontWeight: unread ? '700' : '400' }}
+              style={[
+                styles.preview,
+                { color: theme.text, fontFamily: unread ? fonts.semibold : fonts.body },
+              ]}
             >
               {conversation.lastMessage.body}
             </Text>
@@ -58,7 +68,7 @@ function Row({ conversation }: { conversation: Conversation }) {
   );
 }
 
-function Inbox() {
+function Inbox({ top }: { top: number }) {
   const { m } = useI18n();
   const api = useApi();
   const inbox = useLoad(
@@ -69,12 +79,13 @@ function Inbox() {
 
   return (
     <FlatList
-      contentContainerStyle={styles.list}
+      contentContainerStyle={[styles.list, { paddingTop: top, paddingBottom: tabBarSpace }]}
       data={inbox.data?.items ?? []}
       keyExtractor={(c) => c.id}
       renderItem={({ item }) => <Row conversation={item} />}
       onRefresh={inbox.reload}
       refreshing={false}
+      ListHeaderComponent={<LargeTitle>{m.messages.title}</LargeTitle>}
       ListEmptyComponent={
         <Status
           loading={inbox.loading && !inbox.data}
@@ -90,38 +101,51 @@ function Inbox() {
 export default function Messages() {
   const { m } = useI18n();
   const auth = useAuth();
+  const insets = useSafeAreaInsets();
+  const top = insets.top + space.lg;
   if (auth.status === 'loading') return <Status loading />;
   if (auth.status === 'signedOut') {
     return (
-      <View style={styles.signedOut}>
-        <Text style={{ textAlign: 'center' }}>{m.messages.login}</Text>
-        <Button testID="login" label={m.auth.login} onPress={() => void auth.signIn()} />
+      <View style={[styles.signedOut, { paddingTop: top }]}>
+        <LargeTitle>{m.messages.title}</LargeTitle>
+        <View style={styles.signedOutBody}>
+          <Body muted style={{ textAlign: 'center' }}>
+            {m.messages.login}
+          </Body>
+          <Button testID="login" label={m.auth.login} onPress={() => void auth.signIn()} />
+        </View>
       </View>
     );
   }
-  return <Inbox />;
+  return <Inbox top={top} />;
 }
 
 const styles = StyleSheet.create({
-  list: { padding: space.lg, flexGrow: 1 },
+  list: { paddingHorizontal: space.xl - 4, gap: space.sm + 2, flexGrow: 1 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
-    paddingVertical: space.md,
-    borderBottomWidth: 1,
+    padding: space.md,
+    borderRadius: radius.lg - 2,
+    borderWidth: 1,
   },
-  thumb: { width: 56, height: 56, borderRadius: 8 },
-  text: { flex: 1, gap: 2 },
-  title: { fontSize: 16, fontWeight: '600' },
+  thumb: { width: 60, height: 60, borderRadius: radius.md - 4 },
+  text: { flex: 1, gap: 1 },
+  line: { flexDirection: 'row', alignItems: 'baseline', gap: space.sm },
+  name: { flex: 1, fontFamily: fonts.semibold, fontSize: 16 },
+  time: { fontFamily: fonts.body, fontSize: 12 },
+  listing: { fontFamily: fonts.body, fontSize: 13 },
+  preview: { fontSize: 15 },
   dot: {
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
   },
-  dotText: { fontSize: 12, fontWeight: '700' },
-  signedOut: { flex: 1, justifyContent: 'center', padding: space.xl, gap: space.lg },
+  dotText: { fontFamily: fonts.bold, fontSize: 12 },
+  signedOut: { flex: 1, paddingHorizontal: space.xl - 4 },
+  signedOutBody: { flex: 1, justifyContent: 'center', gap: space.lg, paddingBottom: tabBarSpace },
 });

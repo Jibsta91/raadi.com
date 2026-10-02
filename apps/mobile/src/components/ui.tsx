@@ -1,3 +1,4 @@
+import { BlurView } from 'expo-blur';
 import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -6,16 +7,38 @@ import {
   Text,
   TextInput,
   View,
+  type StyleProp,
   type TextInputProps,
   type TextStyle,
+  type ViewStyle,
 } from 'react-native';
 import { useI18n } from '../i18n';
-import { space, useTheme } from '../theme';
+import { fonts, radius, space, useTheme } from '../theme';
+
+/** Screen-level title in the display face ("Discover"-style large title). */
+export function LargeTitle({ children, testID }: { children: ReactNode; testID?: string }) {
+  const theme = useTheme();
+  return (
+    <Text
+      role="heading"
+      aria-level={1}
+      testID={testID}
+      style={[styles.large, { color: theme.text }]}
+    >
+      {children}
+    </Text>
+  );
+}
 
 export function Title({ children, testID }: { children: ReactNode; testID?: string }) {
   const theme = useTheme();
   return (
-    <Text role="heading" testID={testID} style={[styles.title, { color: theme.text }]}>
+    <Text
+      role="heading"
+      aria-level={2}
+      testID={testID}
+      style={[styles.title, { color: theme.text }]}
+    >
       {children}
     </Text>
   );
@@ -29,7 +52,7 @@ export function Body({
 }: {
   children: ReactNode;
   muted?: boolean;
-  style?: TextStyle;
+  style?: StyleProp<TextStyle>;
   testID?: string;
 }) {
   const theme = useTheme();
@@ -45,16 +68,22 @@ export function Button({
   onPress,
   variant = 'primary',
   disabled,
+  icon,
   testID,
 }: {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'ink';
   disabled?: boolean;
+  icon?: ReactNode;
   testID?: string;
 }) {
   const theme = useTheme();
-  const primary = variant === 'primary';
+  const colours = {
+    primary: { bg: theme.accent, fg: theme.accentText, border: theme.accent },
+    ink: { bg: theme.ink, fg: theme.inkText, border: theme.ink },
+    secondary: { bg: theme.surface, fg: theme.text, border: theme.border },
+  }[variant];
   return (
     <Pressable
       role="button"
@@ -64,31 +93,99 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor: primary ? theme.accent : 'transparent',
-          borderColor: theme.accent,
-          opacity: disabled ? 0.5 : pressed ? 0.8 : 1,
+          backgroundColor: colours.bg,
+          borderColor: colours.border,
+          opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
         },
       ]}
     >
-      <Text style={[styles.buttonText, { color: primary ? theme.accentText : theme.accent }]}>
+      {icon}
+      <Text style={[styles.buttonText, { color: colours.fg }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** Pill-shaped filter chip; the selected one is filled with the ink colour. */
+export function Chip({
+  label,
+  selected,
+  onPress,
+  testID,
+}: {
+  label: string;
+  selected?: boolean;
+  onPress: () => void;
+  testID?: string;
+}) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      role="button"
+      aria-selected={selected}
+      testID={testID}
+      onPress={onPress}
+      style={[
+        styles.chip,
+        selected
+          ? { backgroundColor: theme.ink, borderColor: theme.ink }
+          : { backgroundColor: theme.surface, borderColor: theme.border },
+      ]}
+    >
+      <Text style={[styles.chipText, { color: selected ? theme.inkText : theme.text }]}>
         {label}
       </Text>
     </Pressable>
   );
 }
 
-export function Field(props: TextInputProps) {
+export function Field(props: TextInputProps & { icon?: ReactNode }) {
   const theme = useTheme();
+  const { icon, style, ...input } = props;
   return (
-    <TextInput
-      placeholderTextColor={theme.muted}
-      {...props}
+    <View
       style={[
         styles.field,
-        { color: theme.text, borderColor: theme.border, backgroundColor: theme.surface },
-        props.style,
+        { borderColor: theme.border, backgroundColor: theme.surface, shadowColor: theme.shadow },
       ]}
-    />
+    >
+      {icon}
+      <TextInput
+        placeholderTextColor={theme.muted}
+        {...input}
+        style={[styles.fieldInput, { color: theme.text }, style]}
+      />
+    </View>
+  );
+}
+
+/**
+ * Frosted "glass" surface (expo-blur; backdrop-filter on the web) with a hairline border and a
+ * translucent fill, for floating bars and chips over content.
+ */
+export function Glass({
+  children,
+  style,
+  testID,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  testID?: string;
+}) {
+  const theme = useTheme();
+  return (
+    <View
+      testID={testID}
+      style={[styles.glass, { borderColor: theme.glassBorder, shadowColor: theme.shadow }, style]}
+    >
+      <BlurView
+        intensity={60}
+        tint={theme.scheme === 'dark' ? 'systemChromeMaterialDark' : 'systemChromeMaterialLight'}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.glass }]} />
+      {children}
+    </View>
   );
 }
 
@@ -126,39 +223,80 @@ export function Status({
   if (empty) {
     return (
       <View style={styles.centred} testID={testID ?? 'empty'}>
-        <Body muted>{empty}</Body>
+        <Body muted style={{ textAlign: 'center' }}>
+          {empty}
+        </Body>
       </View>
     );
   }
   return null;
 }
 
-export function Badge({ label, testID }: { label: string; testID?: string }) {
+export function Badge({
+  label,
+  tone = 'promoted',
+  testID,
+}: {
+  label: string;
+  tone?: 'promoted' | 'neutral';
+  testID?: string;
+}) {
   const theme = useTheme();
+  const neutral = tone === 'neutral';
   return (
-    <View testID={testID} style={[styles.badge, { backgroundColor: theme.badge }]}>
-      <Text style={[styles.badgeText, { color: theme.badgeText }]}>{label}</Text>
+    <View
+      testID={testID}
+      style={[styles.badge, { backgroundColor: neutral ? theme.surfaceAlt : theme.badge }]}
+    >
+      <Text style={[styles.badgeText, { color: neutral ? theme.subtle : theme.badgeText }]}>
+        {label}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: '700', marginBottom: space.sm },
-  body: { fontSize: 16, lineHeight: 22 },
+  large: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 40, letterSpacing: -1.4 },
+  title: { fontFamily: fonts.display, fontSize: 22, lineHeight: 28, letterSpacing: -0.6 },
+  body: { fontFamily: fonts.body, fontSize: 16, lineHeight: 23 },
   button: {
+    minHeight: 52,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: space.md,
-    paddingHorizontal: space.lg,
+    borderRadius: radius.md,
+    paddingHorizontal: space.xl,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: space.sm,
   },
-  buttonText: { fontSize: 16, fontWeight: '600' },
-  field: {
+  buttonText: { fontFamily: fonts.semibold, fontSize: 16 },
+  chip: {
+    minHeight: 40,
+    justifyContent: 'center',
+    paddingHorizontal: space.lg,
+    borderRadius: radius.pill,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: space.md,
-    paddingHorizontal: space.md,
-    fontSize: 16,
+  },
+  chipText: { fontFamily: fonts.medium, fontSize: 14 },
+  field: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    minHeight: 52,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: space.lg,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+  },
+  fieldInput: { flex: 1, minHeight: 48, fontFamily: fonts.body, fontSize: 16 },
+  glass: {
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.25,
+    shadowRadius: 28,
   },
   centred: {
     flex: 1,
@@ -169,9 +307,9 @@ const styles = StyleSheet.create({
   },
   badge: {
     alignSelf: 'flex-start',
-    borderRadius: 6,
-    paddingHorizontal: space.sm,
-    paddingVertical: 2,
+    borderRadius: radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
   },
-  badgeText: { fontSize: 12, fontWeight: '600' },
+  badgeText: { fontFamily: fonts.bold, fontSize: 12 },
 });

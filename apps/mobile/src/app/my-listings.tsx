@@ -9,7 +9,7 @@ import { useAuth } from '../lib/auth/context';
 import { config } from '../lib/config';
 import { formatPrice } from '../lib/format';
 import { absoluteUrl } from '../lib/urls';
-import { space, useTheme } from '../theme';
+import { fonts, radius, space, useTheme } from '../theme';
 
 function Row({ listing }: { listing: Listing }) {
   const { m, locale } = useI18n();
@@ -18,24 +18,27 @@ function Row({ listing }: { listing: Listing }) {
   return (
     <Link href={`/listings/${listing.id}`} asChild>
       {/* Link asChild merges props by spreading: a style array would reach the DOM as {0: …}. */}
-      <Pressable testID="my-listing" style={{ ...styles.row, borderColor: theme.border }}>
+      <Pressable
+        testID="my-listing"
+        style={{ ...styles.row, backgroundColor: theme.surface, borderColor: theme.border }}
+      >
         {image ? (
           <Image
             source={{ uri: absoluteUrl(image.urls.thumb, config.apiBaseUrl) }}
             // expo-image hands styles to the DOM on the web: pass one object, not an array.
-            style={{ ...styles.thumb, backgroundColor: theme.surface }}
+            style={{ ...styles.thumb, backgroundColor: theme.placeholder }}
           />
         ) : (
-          <View style={[styles.thumb, { backgroundColor: theme.surface }]} />
+          <View style={[styles.thumb, { backgroundColor: theme.placeholder }]} />
         )}
         <View style={styles.text}>
           <Text numberOfLines={1} style={[styles.title, { color: theme.text }]}>
             {listing.title}
           </Text>
-          <Text style={{ color: theme.muted }}>
+          <Text style={[styles.price, { color: theme.muted }]}>
             {formatPrice(listing.priceNok, locale, m.common.noPrice)}
           </Text>
-          {listing.status === 'sold' ? <Badge label={m.listing.sold} /> : null}
+          {listing.status === 'sold' ? <Badge label={m.listing.sold} tone="neutral" /> : null}
         </View>
       </Pressable>
     </Link>
@@ -75,15 +78,17 @@ export default function MyListings() {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: space.lg, flexGrow: 1 },
+  list: { padding: space.lg, gap: space.sm + 2, flexGrow: 1 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
-    paddingVertical: space.md,
-    borderBottomWidth: 1,
+    padding: space.md,
+    borderRadius: radius.lg - 2,
+    borderWidth: 1,
   },
-  thumb: { width: 56, height: 56, borderRadius: 8 },
+  thumb: { width: 60, height: 60, borderRadius: radius.md - 4 },
   text: { flex: 1, gap: 2 },
-  title: { fontSize: 16, fontWeight: '600' },
+  title: { fontFamily: fonts.semibold, fontSize: 16 },
+  price: { fontFamily: fonts.medium, fontSize: 14, fontVariant: ['tabular-nums'] },
 });

@@ -9,6 +9,7 @@ const en = {
     retry: 'Try again',
     loading: 'Loading…',
     back: 'Back',
+    share: 'Share',
     noPrice: 'No price',
   },
   auth: {
@@ -17,7 +18,18 @@ const en = {
     signedInAs: 'Signed in as {email}',
     failed: 'We could not log you in. Please try again.',
   },
-  home: { latest: 'Latest listings', searchPlaceholder: 'Search for anything' },
+  home: {
+    latest: 'Latest listings',
+    searchPlaceholder: 'What are you looking for?',
+    all: 'All',
+  },
+  categories: {
+    torget: 'Marketplace',
+    bil: 'Cars',
+    eiendom: 'Property',
+    jobb: 'Jobs',
+    reise: 'Travel',
+  },
   search: {
     placeholder: 'Search for anything',
     submit: 'Search',
@@ -63,6 +75,10 @@ const en = {
     myListings: 'My listings',
     myListingsEmpty: 'You have no listings yet.',
     language: 'Language',
+    appearance: 'Appearance',
+    themeSystem: 'System',
+    themeLight: 'Light',
+    themeDark: 'Dark',
   },
 };
 
@@ -75,6 +91,7 @@ const nb: Messages = {
     retry: 'Prøv igjen',
     loading: 'Laster …',
     back: 'Tilbake',
+    share: 'Del',
     noPrice: 'Pris ikke oppgitt',
   },
   auth: {
@@ -83,7 +100,12 @@ const nb: Messages = {
     signedInAs: 'Innlogget som {email}',
     failed: 'Vi kunne ikke logge deg inn. Prøv igjen.',
   },
-  home: { latest: 'Nyeste annonser', searchPlaceholder: 'Søk etter hva som helst' },
+  home: {
+    latest: 'Nyeste annonser',
+    searchPlaceholder: 'Hva leter du etter?',
+    all: 'Alle',
+  },
+  categories: { torget: 'Torget', bil: 'Bil', eiendom: 'Eiendom', jobb: 'Jobb', reise: 'Reise' },
   search: {
     placeholder: 'Søk etter hva som helst',
     submit: 'Søk',
@@ -129,6 +151,10 @@ const nb: Messages = {
     myListings: 'Mine annonser',
     myListingsEmpty: 'Du har ingen annonser ennå.',
     language: 'Språk',
+    appearance: 'Utseende',
+    themeSystem: 'System',
+    themeLight: 'Lys',
+    themeDark: 'Mørk',
   },
 };
 
@@ -139,6 +165,7 @@ const so: Messages = {
     retry: 'Isku day mar kale',
     loading: 'Fadlan sug…',
     back: 'Dib u noqo',
+    share: 'La wadaag',
     noPrice: 'Qiime lama sheegin',
   },
   auth: {
@@ -147,7 +174,18 @@ const so: Messages = {
     signedInAs: 'Waxaad ku gashay {email}',
     failed: 'Kuma aanan gelin karin. Fadlan isku day mar kale.',
   },
-  home: { latest: 'Xayeysiisyadii ugu dambeeyay', searchPlaceholder: 'Raadi wax kasta' },
+  home: {
+    latest: 'Xayeysiisyadii ugu dambeeyay',
+    searchPlaceholder: 'Maxaad raadinaysaa?',
+    all: 'Dhammaan',
+  },
+  categories: {
+    torget: 'Suuqa',
+    bil: 'Baabuur',
+    eiendom: 'Hanti ma-guurto ah',
+    jobb: 'Shaqo',
+    reise: 'Safar',
+  },
   search: {
     placeholder: 'Raadi wax kasta',
     submit: 'Raadi',
@@ -193,6 +231,10 @@ const so: Messages = {
     myListings: 'Xayeysiisyadayda',
     myListingsEmpty: 'Weli ma lihid xayeysiis.',
     language: 'Luqadda',
+    appearance: 'Muuqaalka',
+    themeSystem: 'Nidaamka',
+    themeLight: 'Iftiin',
+    themeDark: 'Mugdi',
   },
 };
 

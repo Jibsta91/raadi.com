@@ -1,20 +1,26 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { SearchHit } from '@raadi/api-client';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
-import { ListingCard } from '../../components/listing-card';
-import { Body, Field, Status } from '../../components/ui';
+import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ListingTile } from '../../components/listing-card';
+import { Body, Chip, Field, LargeTitle, Status } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
 import { unwrap, useApi } from '../../lib/api';
-import { space } from '../../theme';
+import { CATEGORIES, isCategory } from '../../lib/categories';
+import { space, tabBarSpace, useTheme } from '../../theme';
 
 const PAGE_SIZE = 24;
 
 export default function Search() {
   const { m } = useI18n();
   const api = useApi();
-  const params = useLocalSearchParams<{ q?: string }>();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ q?: string; category?: string }>();
   const query = params.q ?? '';
+  const category = isCategory(params.category) ? params.category : undefined;
   const [text, setText] = useState(query);
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [total, setTotal] = useState<number>();
@@ -25,12 +31,12 @@ export default function Search() {
 
   useEffect(() => setText(query), [query]);
 
-  // A new query starts again at page 1.
+  // A new query or category starts again at page 1.
   useEffect(() => {
     setHits([]);
     setTotal(undefined);
     setPage(1);
-  }, [query, nonce]);
+  }, [query, category, nonce]);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,7 +44,7 @@ export default function Search() {
     setError(false);
     api.search
       .GET('/api/v1/search/listings', {
-        params: { query: { q: query || undefined, page, pageSize: PAGE_SIZE } },
+        params: { query: { q: query || undefined, category, page, pageSize: PAGE_SIZE } },
       })
       .then((res) => {
         const result = unwrap(res);
@@ -51,7 +57,7 @@ export default function Search() {
     return () => {
       cancelled = true;
     };
-  }, [api, query, page, nonce]);
+  }, [api, query, category, page, nonce]);
 
   const more = () => {
     if (!loading && total !== undefined && hits.length < total) setPage((p) => p + 1);
@@ -59,14 +65,20 @@ export default function Search() {
 
   return (
     <FlatList
-      contentContainerStyle={styles.list}
+      contentContainerStyle={[
+        styles.list,
+        { paddingTop: insets.top + space.lg, paddingBottom: tabBarSpace + insets.bottom },
+      ]}
       data={hits}
+      numColumns={2}
+      columnWrapperStyle={styles.row}
       keyExtractor={(hit) => hit.id}
-      renderItem={({ item }) => <ListingCard hit={item} />}
+      renderItem={({ item }) => <ListingTile hit={item} />}
       onEndReached={more}
       onEndReachedThreshold={0.5}
       ListHeaderComponent={
         <View style={styles.header}>
+          <LargeTitle>{m.tabs.search}</LargeTitle>
           <Field
             testID="search-input"
             value={text}
@@ -75,7 +87,29 @@ export default function Search() {
             accessibilityLabel={m.search.placeholder}
             returnKeyType="search"
             onSubmitEditing={() => router.setParams({ q: text.trim() })}
+            icon={<Ionicons name="search" size={20} color={theme.muted} />}
           />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chips}
+            style={styles.bleed}
+          >
+            <Chip
+              label={m.home.all}
+              selected={!category}
+              onPress={() => router.setParams({ category: '' })}
+            />
+            {CATEGORIES.map((id) => (
+              <Chip
+                key={id}
+                testID={`filter-${id}`}
+                label={m.categories[id]}
+                selected={category === id}
+                onPress={() => router.setParams({ category: id })}
+              />
+            ))}
+          </ScrollView>
           {total !== undefined ? (
             <Body muted testID="search-total">
               {fill(m.search.results, { count: total })}
@@ -97,6 +131,9 @@ export default function Search() {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: space.lg, flexGrow: 1 },
-  header: { gap: space.md, marginBottom: space.sm },
+  list: { paddingHorizontal: space.xl - 4, flexGrow: 1 },
+  row: { gap: space.md + 2, marginBottom: space.lg },
+  header: { gap: space.lg, marginBottom: space.md },
+  bleed: { marginHorizontal: -(space.xl - 4) },
+  chips: { gap: space.sm, paddingHorizontal: space.xl - 4 },
 });

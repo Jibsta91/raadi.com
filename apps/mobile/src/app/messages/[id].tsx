@@ -1,13 +1,27 @@
 import type { Message } from '@raadi/api-client';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
+import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
-import { Body, Button, Field, Status } from '../../components/ui';
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Body, Button, Glass, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import { unwrap, useApi, useLoad } from '../../lib/api';
+import { config } from '../../lib/config';
 import { formatAge } from '../../lib/format';
 import { useRealtime } from '../../lib/realtime';
-import { space, useTheme } from '../../theme';
+import { absoluteUrl } from '../../lib/urls';
+import { fonts, radius, space, useTheme } from '../../theme';
 
 function Bubble({ message }: { message: Message }) {
   const { locale } = useI18n();
@@ -19,11 +33,11 @@ function Bubble({ message }: { message: Message }) {
       style={[
         styles.bubble,
         mine
-          ? { alignSelf: 'flex-end', backgroundColor: theme.accent }
-          : { alignSelf: 'flex-start', backgroundColor: theme.surface },
+          ? { alignSelf: 'flex-end', backgroundColor: theme.accent, borderBottomRightRadius: 6 }
+          : { alignSelf: 'flex-start', backgroundColor: theme.surface, borderBottomLeftRadius: 6 },
       ]}
     >
-      <Text style={{ color: mine ? theme.accentText : theme.text, fontSize: 16 }}>
+      <Text style={[styles.bubbleText, { color: mine ? theme.accentText : theme.text }]}>
         {message.body}
       </Text>
       <Text style={[styles.time, { color: mine ? theme.accentText : theme.muted }]}>
@@ -38,6 +52,7 @@ export default function ConversationScreen() {
   const { m } = useI18n();
   const api = useApi();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const list = useRef<FlatList<Message>>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -133,14 +148,30 @@ export default function ConversationScreen() {
       keyboardVerticalOffset={90}
     >
       <Stack.Screen options={{ title: conversation.counterpart.name }} />
-      <View style={[styles.header, { borderColor: theme.border }]}>
-        <Body style={styles.listingTitle} testID="conversation-listing">
-          {conversation.listing.title}
-        </Body>
-        <Body muted>
-          {conversation.role === 'buyer' ? m.messages.roleBuyer : m.messages.roleSeller}
-        </Body>
-      </View>
+      <Link href={`/listings/${conversation.listing.id}`} asChild>
+        {/* Link asChild spreads props: one style object, not an array (see listing-card.tsx). */}
+        <Pressable
+          style={{ ...styles.header, backgroundColor: theme.surface, borderColor: theme.border }}
+        >
+          {conversation.listing.image ? (
+            <Image
+              source={{ uri: absoluteUrl(conversation.listing.image.thumb, config.apiBaseUrl) }}
+              style={{ ...styles.headerThumb, backgroundColor: theme.placeholder }}
+            />
+          ) : (
+            <View style={{ ...styles.headerThumb, backgroundColor: theme.placeholder }} />
+          )}
+          <View style={styles.headerText}>
+            <Body style={styles.listingTitle} testID="conversation-listing">
+              {conversation.listing.title}
+            </Body>
+            <Body muted style={styles.small}>
+              {conversation.role === 'buyer' ? m.messages.roleBuyer : m.messages.roleSeller}
+            </Body>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={theme.muted} />
+        </Pressable>
+      </Link>
       <FlatList
         ref={list}
         testID="thread"
@@ -160,48 +191,84 @@ export default function ConversationScreen() {
           {m.messages.errors.generic}
         </Body>
       ) : null}
-      <View style={[styles.composer, { borderColor: theme.border }]}>
-        <View style={styles.composerField}>
-          <Field
-            testID="compose"
-            value={draft}
-            onChangeText={setDraft}
-            placeholder={m.messages.compose}
-            accessibilityLabel={m.messages.compose}
-            multiline
-            maxLength={2000}
-          />
-        </View>
-        <Button
+      <Glass style={[styles.composer, { marginBottom: Math.max(insets.bottom, space.md) }]}>
+        <TextInput
+          testID="compose"
+          value={draft}
+          onChangeText={setDraft}
+          placeholder={m.messages.compose}
+          placeholderTextColor={theme.muted}
+          accessibilityLabel={m.messages.compose}
+          multiline
+          maxLength={2000}
+          style={[styles.composerInput, { color: theme.text }]}
+        />
+        <Pressable
+          role="button"
           testID="send"
-          label={sending ? m.messages.sending : m.messages.send}
+          aria-label={sending ? m.messages.sending : m.messages.send}
           disabled={sending || draft.trim().length === 0}
           onPress={() => void send()}
-        />
-      </View>
+          style={[
+            styles.sendButton,
+            { backgroundColor: theme.accent, opacity: sending || !draft.trim() ? 0.5 : 1 },
+          ]}
+        >
+          <Ionicons name="arrow-up" size={22} color={theme.accentText} />
+        </Pressable>
+      </Glass>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   page: { flex: 1 },
-  header: { padding: space.lg, gap: space.xs, borderBottomWidth: 1 },
-  listingTitle: { fontWeight: '600' },
-  thread: { padding: space.lg, gap: space.sm, flexGrow: 1 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    marginHorizontal: space.lg,
+    marginTop: space.sm,
+    padding: space.sm + 2,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  headerThumb: { width: 44, height: 44, borderRadius: radius.sm - 2 },
+  headerText: { flex: 1 },
+  listingTitle: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 20 },
+  small: { fontSize: 13, lineHeight: 18 },
+  thread: { padding: space.lg, gap: space.sm, flexGrow: 1, justifyContent: 'flex-end' },
   bubble: {
     maxWidth: '80%',
-    borderRadius: 14,
-    paddingVertical: space.sm,
-    paddingHorizontal: space.md,
+    borderRadius: 20,
+    paddingVertical: space.sm + 2,
+    paddingHorizontal: space.md + 2,
     gap: 2,
   },
-  time: { fontSize: 11, opacity: 0.8 },
+  bubbleText: { fontFamily: fonts.body, fontSize: 16, lineHeight: 22 },
+  time: { fontFamily: fonts.body, fontSize: 11, opacity: 0.75 },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: space.sm,
-    padding: space.md,
-    borderTopWidth: 1,
+    marginHorizontal: space.md,
+    padding: space.sm,
+    borderRadius: 28,
   },
-  composerField: { flex: 1 },
+  composerInput: {
+    flex: 1,
+    minHeight: 44,
+    maxHeight: 120,
+    paddingHorizontal: space.md,
+    paddingTop: 12,
+    fontFamily: fonts.body,
+    fontSize: 16,
+  },
+  sendButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
