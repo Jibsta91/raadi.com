@@ -37,8 +37,8 @@ receivers:
         password: ${file:/run/secrets/raadi/kafka_monitor_password}
         mechanism: SCRAM-SHA-512
     scrapers: [brokers, topics, consumers]
-    topic_match: ^raadi\.(user|listing|media|conversation)\.events$|^raadi\.dlq$
-    group_match: ^(search-|media-|notifications$)
+    topic_match: ^raadi\.(user|listing|media|conversation|review)\.events$|^raadi\.dlq$
+    group_match: ^(search-|media-|notifications$|trust$)
     collection_interval: 30s
 
 processors:

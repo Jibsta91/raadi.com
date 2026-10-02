@@ -37,6 +37,7 @@ cat <<BANNER
     Sell something ..... ${PUBLIC_BASE_URL}/en/listings/new   (log in as a demo user)
     Messages ........... ${PUBLIC_BASE_URL}/en/messages
     Notifications ...... ${PUBLIC_BASE_URL}/en/notifications   (e-mails land in Mailpit below)
+    Verify with BankID . ${PUBLIC_BASE_URL}/en/account   (test person 01897000011, demo password)
     Status page ........ ${PUBLIC_BASE_URL}/en/status
 
   Operations

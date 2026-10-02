@@ -192,6 +192,24 @@ services:
       resources:
         limits: { memory: 640M }
 
+  trust:
+    <<: *dev
+    command: ['pnpm', '--filter', 'trust', 'dev']
+    depends_on:
+      dev-packages: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/readyz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      start_period: 90s
+    deploy:
+      resources:
+        limits: { memory: 640M }
+
   web:
     <<: *dev
     command: ['pnpm', '--filter', 'web', 'dev']

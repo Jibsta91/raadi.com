@@ -69,6 +69,16 @@ http:
       middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
       priority: 100
 
+    # Reviews and BankID verification. The verification start/callback are
+    # top-level browser navigations; forward-auth turns the session cookie
+    # into the bearer token that binds the flow to the signed-in user.
+    api-trust:
+      rule: Host(`{{ $d }}`) && PathPrefix(`/api/v1/trust/`)
+      entryPoints: [web, websecure]
+      service: trust
+      middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
+      priority: 100
+
     # Live delivery (WebSocket, push only). No body buffering or compression on
     # an upgrade; forward-auth turns the session cookie into a bearer token and
     # messaging checks the Origin itself.
@@ -142,6 +152,10 @@ http:
     notifications:
       loadBalancer:
         servers: [{ url: "http://notifications:4000" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
+    trust:
+      loadBalancer:
+        servers: [{ url: "http://trust:4000" }]
         healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
     imgproxy:
       loadBalancer:

@@ -37,7 +37,11 @@
     "valkey_messaging_password",
     "notifications_db_password",
     "kafka_notifications_password",
-    "notifications_kc_client_secret"
+    "notifications_kc_client_secret",
+    "trust_db_password",
+    "kafka_trust_password",
+    "trust_bankid_client_secret",
+    "trust_identity_pepper"
   ],
   "fileConsumers": {
     "postgres": {
@@ -77,7 +81,8 @@
         "kafka_search_password",
         "kafka_media_password",
         "kafka_monitor_password",
-        "kafka_notifications_password"
+        "kafka_notifications_password",
+        "kafka_trust_password"
       ]
     },
     "kafka-connect": {
@@ -226,6 +231,18 @@
         "db_password": "notifications_db_password",
         "kafka_password": "kafka_notifications_password",
         "keycloak_client_secret": "notifications_kc_client_secret"
+      }
+    },
+    "trust": {
+      "uid": 65532,
+      "database": "trust",
+      "migrations": "trust",
+      "outbox": true,
+      "openbao": {
+        "db_password": "trust_db_password",
+        "kafka_password": "kafka_trust_password",
+        "bankid_client_secret": "trust_bankid_client_secret",
+        "identity_pepper": "trust_identity_pepper"
       }
     }
   },
