@@ -24,3 +24,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0017](0017-notifications.md)                     | Notifications: events in, queued e-mail out, addresses looked up at send time | Accepted |
 | [0018](0018-reviews-and-trust.md)                 | Reviews only after a real deal; BankID over OIDC, no national ID stored       | Accepted |
 | [0019](0019-sign-up.md)                           | Sign-up: Keycloak's hosted registration with a Raadi theme                    | Accepted |
+| [0021](0021-ci-build-cache.md)                    | CI: cached image builds, weekly build from scratch                            | Accepted |
