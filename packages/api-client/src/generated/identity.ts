@@ -11,7 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Start login (redirects to Keycloak) */
+        /**
+         * Start login or sign-up (redirects to Keycloak)
+         * @description After a user's first login, the callback redirects to `/{locale}/welcome?next=<returnTo>`.
+         */
         get: operations["login"];
         put?: never;
         post?: never;
@@ -191,6 +194,8 @@ export interface operations {
     login: {
         parameters: {
             query?: {
+                /** @description Open the registration form directly (OIDC prompt=create) */
+                signup?: "1" | "true";
                 /** @description Relative path to return to after login */
                 returnTo?: string;
                 locale?: components["schemas"]["Locale"];

@@ -17,6 +17,10 @@ import type {
   paths as NotificationsPaths,
 } from './generated/notifications';
 import type { components as SearchComponents, paths as SearchPaths } from './generated/search';
+import type {
+  components as PaymentsComponents,
+  paths as PaymentsPaths,
+} from './generated/payments';
 import type { components as TrustComponents, paths as TrustPaths } from './generated/trust';
 
 export type {
@@ -25,6 +29,7 @@ export type {
   MediaPaths,
   MessagingPaths,
   NotificationsPaths,
+  PaymentsPaths,
   SearchPaths,
   TrustPaths,
 };
@@ -74,6 +79,11 @@ export type ReviewInput = TrustComponents['schemas']['ReviewInput'];
 export type RatingSummary = TrustComponents['schemas']['RatingSummary'];
 export type Eligibility = TrustComponents['schemas']['Eligibility'];
 
+// Payments (promoted listings)
+export type PaymentProduct = PaymentsComponents['schemas']['Product'];
+export type PaymentOrder = PaymentsComponents['schemas']['Order'];
+export type PaymentOrderInput = PaymentsComponents['schemas']['OrderInput'];
+
 /*
  * Typed clients shared by web and mobile:
  *   - web (server side): baseUrl = the service (internal) or the gateway
@@ -90,3 +100,5 @@ export const createMessagingClient = (options: ClientOptions) =>
 export const createNotificationsClient = (options: ClientOptions) =>
   createClient<NotificationsPaths>(options);
 export const createTrustClient = (options: ClientOptions) => createClient<TrustPaths>(options);
+export const createPaymentsClient = (options: ClientOptions) =>
+  createClient<PaymentsPaths>(options);

@@ -16,6 +16,13 @@ http:
       entryPoints: [web, websecure]
       service: openbao
       middlewares: [security-headers]
+    # The mock payment provider's hosted page (payments-mock, ADR-0020). Only
+    # /pay/ is public; its API is reachable on the internal network only.
+    payments-mock:
+      rule: Host(`pay.{{ $d }}`) && PathPrefix(`/pay/`)
+      entryPoints: [web, websecure]
+      service: payments-mock
+      middlewares: [security-headers, ratelimit-default]
     prometheus:
       rule: Host(`prometheus.{{ $d }}`)
       entryPoints: [web, websecure]
@@ -28,6 +35,9 @@ http:
     openbao:
       loadBalancer:
         servers: [{ url: "http://openbao:8200" }]
+    payments-mock:
+      loadBalancer:
+        servers: [{ url: "http://payments-mock:4000" }]
     prometheus:
       loadBalancer:
         servers: [{ url: "http://prometheus:9090" }]

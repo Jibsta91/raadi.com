@@ -33,6 +33,10 @@ describe('query builder', () => {
     const body = buildSearch(parse({}));
     assert.deepEqual(body.query.bool.filter[0], { term: { status: 'active' } });
     assert.deepEqual(body.query.bool.must, [{ match_all: {} }]);
+    // Relevance ranks running promotions first, without filtering anything out.
+    assert.deepEqual(body.query.bool.should, [
+      { constant_score: { filter: { range: { promotedUntil: { gt: 'now' } } }, boost: 1000 } },
+    ]);
   });
 
   it('full text is fuzzy and boosts titles', () => {
@@ -59,6 +63,7 @@ describe('query builder', () => {
       geo_distance: { distance: '25km', location: { lat: 60.3913, lon: 5.3221 } },
     });
     assert.ok('_geo_distance' in (body.sort[0] as object));
+    assert.equal(body.query.bool.should, undefined, 'explicit sorts ignore promotions');
     assert.ok(body.script_fields?.distance_km);
   });
 

@@ -35,7 +35,7 @@ fi
 # --- Users ------------------------------------------------------------------
 # One SCRAM principal per client. Passwords are re-applied on every run, so a
 # rotated secret takes effect on the next `up`.
-users=(connect search media notifications trust monitor)
+users=(connect search media notifications trust listings monitor)
 for u in "${users[@]}"; do
   "$BIN/kafka-configs.sh" --bootstrap-server "$BOOTSTRAP" --command-config "$ADMIN" --alter \
     --add-config "SCRAM-SHA-512=[iterations=8192,password=$(cat "$S/kafka_${u}_password")]" \
@@ -52,6 +52,8 @@ topics=(
   "raadi.media.events 3 retention.ms=1209600000"
   "raadi.conversation.events 3 retention.ms=1209600000"
   "raadi.review.events 3 retention.ms=1209600000"
+  "raadi.payment.events 3 retention.ms=1209600000"
+  "raadi.promotion.events 3 retention.ms=1209600000"
   "raadi.dlq 1 retention.ms=2592000000"
   "raadi.connect.configs 1 cleanup.policy=compact"
   "raadi.connect.offsets 5 cleanup.policy=compact"
@@ -73,7 +75,8 @@ acl --allow-principal User:connect --operation All --resource-pattern-type prefi
   --topic raadi.connect. --group raadi-connect
 acl --allow-principal User:connect --operation Write --operation Describe \
   --topic raadi.user.events --topic raadi.listing.events --topic raadi.media.events \
-  --topic raadi.conversation.events --topic raadi.review.events
+  --topic raadi.conversation.events --topic raadi.review.events --topic raadi.payment.events \
+  --topic raadi.promotion.events
 acl --allow-principal User:connect --operation Describe --cluster
 # Consumers: read what they subscribe to; dead letters go to raadi.dlq.
 acl --allow-principal User:search --operation Read --operation Describe \
@@ -82,16 +85,19 @@ acl --allow-principal User:media --operation Read --operation Describe \
   --topic raadi.listing.events --group media-listing-sync
 acl --allow-principal User:notifications --operation Read --operation Describe \
   --topic raadi.conversation.events --topic raadi.listing.events --topic raadi.review.events \
-  --group notifications
+  --topic raadi.payment.events --group notifications
 acl --allow-principal User:trust --operation Read --operation Describe \
   --topic raadi.conversation.events --topic raadi.listing.events --group trust
+acl --allow-principal User:listings --operation Read --operation Describe \
+  --topic raadi.promotion.events --group listings-promotions
 acl --allow-principal User:search --allow-principal User:media --allow-principal User:notifications \
-  --allow-principal User:trust --operation Write --operation Describe --topic raadi.dlq
+  --allow-principal User:trust --allow-principal User:listings --operation Write --operation Describe \
+  --topic raadi.dlq
 # OpenTelemetry kafkametrics receiver: describe everything, read nothing.
 acl --allow-principal User:monitor --operation Describe --operation DescribeConfigs \
   --resource-pattern-type prefixed --topic raadi.
 acl --allow-principal User:monitor --operation Describe --resource-pattern-type prefixed \
-  --group search- --group media- --group notifications --group trust
+  --group search- --group media- --group notifications --group trust --group listings-
 acl --allow-principal User:monitor --operation Describe --cluster
 log "ACLs applied"
 

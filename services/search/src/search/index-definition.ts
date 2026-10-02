@@ -4,7 +4,7 @@
  * and moves the alias (SearchIndex.ensureIndex). Fields that are not in the
  * stored documents need a re-read of the topic (docs/runbooks/event-pipeline.md).
  */
-export const INDEX_VERSION = 1;
+export const INDEX_VERSION = 2;
 
 export const indexBody = {
   settings: {
@@ -80,6 +80,7 @@ export const indexBody = {
       imageIds: { type: 'keyword', index: false },
       publishedAt: { type: 'date' },
       updatedAt: { type: 'date' },
+      promotedUntil: { type: 'date' },
     },
   },
 } as const;

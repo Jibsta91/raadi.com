@@ -41,7 +41,12 @@
     "trust_db_password",
     "kafka_trust_password",
     "trust_bankid_client_secret",
-    "trust_identity_pepper"
+    "trust_identity_pepper",
+    "payments_db_password",
+    "payments_vipps_client_secret",
+    "payments_vipps_subscription_key",
+    "payments_vipps_webhook_secret",
+    "kafka_listings_password"
   ],
   "fileConsumers": {
     "postgres": {
@@ -82,7 +87,8 @@
         "kafka_media_password",
         "kafka_monitor_password",
         "kafka_notifications_password",
-        "kafka_trust_password"
+        "kafka_trust_password",
+        "kafka_listings_password"
       ]
     },
     "kafka-connect": {
@@ -186,7 +192,8 @@
       "openbao": {
         "db_password": "listings_db_password",
         "fga_key": "openfga_key_listings",
-        "opa_token": "opa_token_listings"
+        "opa_token": "opa_token_listings",
+        "kafka_password": "kafka_listings_password"
       },
       "shared": ["imgproxy"]
     },
@@ -243,6 +250,26 @@
         "kafka_password": "kafka_trust_password",
         "bankid_client_secret": "trust_bankid_client_secret",
         "identity_pepper": "trust_identity_pepper"
+      }
+    },
+    "payments": {
+      "uid": 65532,
+      "database": "payments",
+      "migrations": "payments",
+      "outbox": true,
+      "openbao": {
+        "db_password": "payments_db_password",
+        "vipps_client_secret": "payments_vipps_client_secret",
+        "vipps_subscription_key": "payments_vipps_subscription_key",
+        "vipps_webhook_secret": "payments_vipps_webhook_secret"
+      }
+    },
+    "payments-mock": {
+      "uid": 65532,
+      "openbao": {
+        "client_secret": "payments_vipps_client_secret",
+        "subscription_key": "payments_vipps_subscription_key",
+        "webhook_secret": "payments_vipps_webhook_secret"
       }
     }
   },

@@ -105,6 +105,8 @@ export interface ListingRow {
   created_at: Date;
   updated_at: Date;
   published_at: Date;
+  /** End of a paid promotion (ADR-0020); in the past or null when not promoted. */
+  promoted_until: Date | null;
 }
 
 export interface ListingImage {
@@ -127,6 +129,8 @@ export interface Listing {
   seller: { name: string };
   publishedAt: string;
   updatedAt: string;
+  /** Set while a paid promotion runs. */
+  promotedUntil: string | null;
   /** Present when the caller is authenticated. */
   viewer?: { isOwner: boolean; canEdit: boolean; canDelete: boolean };
 }
@@ -158,7 +162,13 @@ export function toListing(row: ListingRow, signer: ImgproxySigner): Listing {
     seller: { name: row.seller_name },
     publishedAt: row.published_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
+    promotedUntil: activePromotion(row),
   };
+}
+
+/** The promotion end while it is still running, else null. */
+export function activePromotion(row: ListingRow, now = new Date()): string | null {
+  return row.promoted_until && row.promoted_until > now ? row.promoted_until.toISOString() : null;
 }
 
 /** Event payload: public listing state, no seller name (ids, not personal data). */
@@ -178,5 +188,6 @@ export function toSnapshot(row: ListingRow): ListingSnapshot {
     imageIds: row.image_ids,
     publishedAt: row.published_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
+    promotedUntil: row.promoted_until?.toISOString() ?? null,
   };
 }

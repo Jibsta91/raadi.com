@@ -1,0 +1,260 @@
+openapi: 3.1.0
+info:
+  title: Raadi payments
+  version: 1.0.0
+  description: |
+    Promoted listings, paid through a provider's hosted page (Vipps MobilePay or Stripe; a
+    Vipps-compatible mock in development). ADR-0020. Amounts are integer øre, VAT included.
+    Raadi never sees card or account data.
+
+    Creating an order requires an `Idempotency-Key` header: a retry with the same key
+    returns the same order (200), and the same key with a different request is a conflict
+    (409). The payer approves at `redirectUrl`; the provider then redirects back to
+    `/{locale}/payments/{id}` and confirms with a signed webhook.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: http://raadi.localhost
+    description: Local development through the gateway
+tags:
+  - name: orders
+  - name: webhooks
+security: [{ bearer: [] }, { session: [] }]
+paths:
+  /api/v1/payments/products:
+    get:
+      tags: [orders]
+      operationId: paymentProducts
+      summary: What can be bought, and the active provider
+      security: []
+      responses:
+        '200':
+          description: Products
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductList' }
+  /api/v1/payments/orders:
+    get:
+      tags: [orders]
+      operationId: myOrders
+      summary: The caller's orders, newest first
+      parameters:
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 50, default: 20 },
+          }
+      responses:
+        '200':
+          description: Orders
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderList' }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [orders]
+      operationId: createOrder
+      summary: Buy a promotion for one of your active listings
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Unique per purchase attempt (8–128 URL-safe characters), reused on retries
+          schema: { type: string, pattern: '^[A-Za-z0-9_-]{8,128}$' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderInput' }
+      responses:
+        '200':
+          description: The order created earlier with this Idempotency-Key
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '201':
+          description: Created; send the payer to redirectUrl
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /api/v1/payments/orders/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [orders]
+      operationId: order
+      summary: One of the caller's orders (refreshed from the provider while open)
+      responses:
+        '200':
+          description: Order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /api/v1/payments/orders/{id}/refund:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [orders]
+      operationId: refundOrder
+      summary: Refund a captured order in full and end its promotion (platform admins)
+      responses:
+        '200':
+          description: Refunded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /api/v1/payments/webhooks/{provider}:
+    parameters:
+      - {
+          name: provider,
+          in: path,
+          required: true,
+          schema: { type: string, enum: [vipps, stripe] },
+        }
+    post:
+      tags: [webhooks]
+      operationId: providerWebhook
+      summary: Provider callbacks (authenticated by the provider's HMAC signature)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '204': { description: Accepted (also for duplicates and events Raadi ignores) }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      operationId: liveness
+      security: []
+      responses: { '200': { description: Process is alive } }
+  /readyz:
+    get:
+      operationId: readiness
+      security: []
+      responses:
+        '200': { description: Ready }
+        '503': { description: Not ready }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    session: { type: apiKey, in: cookie, name: raadi_sid }
+  responses:
+    Problem:
+      description: RFC 9457 problem details
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    ProductId:
+      type: string
+      enum: [promote_7d, promote_30d]
+    Product:
+      type: object
+      additionalProperties: false
+      required: [id, days, amountOre, currency]
+      properties:
+        id: { $ref: '#/components/schemas/ProductId' }
+        days: { type: integer, minimum: 1 }
+        amountOre: { type: integer, minimum: 1, description: Price in øre, VAT included }
+        currency: { type: string, const: NOK }
+    ProductList:
+      type: object
+      additionalProperties: false
+      required: [items, provider]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Product' }
+        provider: { type: string, enum: [vipps, stripe] }
+    OrderInput:
+      type: object
+      additionalProperties: false
+      required: [listingId, product]
+      properties:
+        listingId: { type: string, format: uuid }
+        product: { $ref: '#/components/schemas/ProductId' }
+        locale:
+          type: string
+          enum: [nb, en, so]
+          default: nb
+          description: Language of the page the provider returns to
+    OrderStatus:
+      type: string
+      enum: [created, authorized, captured, refunded, cancelled, expired, failed]
+    Order:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          listingId,
+          product,
+          amountOre,
+          currency,
+          provider,
+          status,
+          redirectUrl,
+          promotedUntil,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        listingId: { type: string, format: uuid }
+        product: { $ref: '#/components/schemas/ProductId' }
+        amountOre: { type: integer, minimum: 1 }
+        currency: { type: string, const: NOK }
+        provider: { type: string, enum: [vipps, stripe] }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        redirectUrl:
+          type: [string, 'null']
+          description: Where to send the payer; only while the order waits for approval
+        promotedUntil:
+          type: [string, 'null']
+          format: date-time
+          description: End of the listing's promotion, once the order is captured
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    OrderList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Order' }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        traceId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path: { type: string }
+              message: { type: string }
+              code: { type: string }

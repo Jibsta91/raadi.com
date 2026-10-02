@@ -6,6 +6,21 @@ Each release also has generated notes on GitHub.
 
 ## [Unreleased]
 
+## [0.3.0-alpha.2] — 2026-10-02
+
+Phase 3: payments for promoted listings.
+
+### Added
+
+- Payments: promoted listings (7 or 30 days) paid through provider adapters for Vipps ePayment and Stripe
+  Checkout, with idempotent orders, signed webhooks processed exactly once, reconciliation and admin refunds
+  (ADR-0020). A Vipps-compatible mock provider runs in development.
+- Promoted listings rank first in search and carry a "Promoted" badge; buyers get a receipt e-mail.
+
+### Fixed
+
+- OpenBao's first boot could lose the unseal key on a slow host, because initialisation timed out.
+
 ## [0.3.0-alpha.1] — 2026-10-02
 
 Phase 3 so far: messaging, notifications, reviews and trust, and sign-up.
@@ -41,7 +56,8 @@ Phase 1: the foundation. A one-command compose stack, Keycloak, OpenBao, the Tra
 identity-bff token handler, observability (OpenTelemetry, Prometheus, Loki, Tempo, Grafana), the web shell
 in three languages, the toolbox, smoke and e2e tests, and CI.
 
-[Unreleased]: https://github.com/Jibsta91/raadi.com/compare/v0.3.0-alpha.1...HEAD
+[Unreleased]: https://github.com/Jibsta91/raadi.com/compare/v0.3.0-alpha.2...HEAD
+[0.3.0-alpha.2]: https://github.com/Jibsta91/raadi.com/compare/v0.3.0-alpha.1...v0.3.0-alpha.2
 [0.3.0-alpha.1]: https://github.com/Jibsta91/raadi.com/compare/v0.2.0...v0.3.0-alpha.1
 [0.2.0]: https://github.com/Jibsta91/raadi.com/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Jibsta91/raadi.com/releases/tag/v0.1.0

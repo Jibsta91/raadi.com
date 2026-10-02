@@ -67,7 +67,76 @@ const COPY: Record<EmailKind, Record<Locale, Copy>> = {
       action: 'Arag xayeysiisyadaada',
     },
   },
+  payment_receipt: {
+    nb: {
+      subject: 'Kvittering fra Raadi',
+      body: [
+        'Takk for kjøpet!',
+        'Ordre: {orderId}',
+        '{product}: {amount} (inkl. mva. {vat})',
+        'Dato: {date}',
+        'Selger: {merchant}',
+        'Denne e-posten er kvitteringen din. Ta vare på den.',
+      ],
+      action: 'Se annonsen',
+    },
+    en: {
+      subject: 'Your Raadi receipt',
+      body: [
+        'Thank you for your purchase!',
+        'Order: {orderId}',
+        '{product}: {amount} (incl. VAT {vat})',
+        'Date: {date}',
+        'Seller: {merchant}',
+        'This e-mail is your receipt. Please keep it.',
+      ],
+      action: 'See the listing',
+    },
+    so: {
+      subject: 'Rasiidkaaga Raadi',
+      body: [
+        'Waad ku mahadsan tahay iibsashadaada!',
+        'Dalab: {orderId}',
+        '{product}: {amount} (oo ay ku jirto canshuurta {vat})',
+        'Taariikh: {date}',
+        'Iibiye: {merchant}',
+        'Iimaylkan waa rasiidkaaga. Fadlan kaydi.',
+      ],
+      action: 'Arag xayeysiiska',
+    },
+  },
 };
+
+const PRODUCT_NAMES: Record<Locale, (days: string) => string> = {
+  nb: (d) => `Fremhevet annonse i ${d} dager`,
+  en: (d) => `Promoted listing for ${d} days`,
+  so: (d) => `Xayeysiis la horumariyay ${d} maalmood`,
+};
+const INTL: Record<Locale, string> = { nb: 'nb-NO', en: 'en-GB', so: 'so-SO' };
+
+/**
+ * Receipt fields formatted for the recipient's language: the price includes
+ * 25 % Norwegian VAT, and the VAT amount is shown as the law requires.
+ */
+export function receiptParams(
+  params: Record<string, string>,
+  locale: Locale,
+): Record<string, string> {
+  const ore = Number(params.amountOre);
+  const vatOre = Math.round(ore - ore / 1.25);
+  const money = (o: number) =>
+    new Intl.NumberFormat(INTL[locale], { style: 'currency', currency: 'NOK' }).format(o / 100);
+  return {
+    ...params,
+    product: PRODUCT_NAMES[locale](params.days ?? ''),
+    amount: money(ore),
+    vat: money(vatOre),
+    date: new Intl.DateTimeFormat(INTL[locale], {
+      dateStyle: 'long',
+      timeZone: 'Europe/Oslo',
+    }).format(new Date(params.capturedAt ?? Date.now())),
+  };
+}
 
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -78,6 +147,7 @@ export function renderEmail(
   links: { action: string; settings: string },
 ): RenderedEmail {
   const copy = COPY[kind][locale];
+  if (kind === 'payment_receipt') params = receiptParams(params, locale);
   const fill = (s: string, escape: (v: string) => string) =>
     s.replace(/\{(\w+)\}/g, (_, k: string) => escape(params[k] ?? ''));
   const text = [
