@@ -21,6 +21,8 @@ then [docs/development.md](docs/development.md) (layout, service checklist, conv
   database per service; retries, circuit breakers and rate limits; non-root distroless images; multi-arch.
 - **Security:** OIDC everywhere (Keycloak), zero trust between services, secrets only from OpenBao, TLS at the
   edge, OWASP ASVS L2, GDPR (no PII in logs or events).
+- **Git:** `main` is protected (PR only, both CI jobs green, signed commits, squash merge). Work on a branch,
+  push it, open a PR and merge it through the GitHub API once CI passes. Never push to `main` directly.
 - **Stack is settled:** Keycloak + OpenBao (Authentik/Bitwarden were considered and rejected). No Kubernetes.
 - **Phase gate:** a phase is done only when a cold `docker compose up` is green and smoke, e2e, lint,
   typecheck, unit, integration, licenses, security and iac-scan all pass. No TODO placeholders. Write an ADR

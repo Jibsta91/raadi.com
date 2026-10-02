@@ -10,6 +10,19 @@ Docker is the only prerequisite. Every tool runs in the `toolbox` container thro
 4. Before you push, run the gates CI runs:
    `./raadi lint && ./raadi typecheck && ./raadi test && ./raadi test-integration && ./raadi licenses && ./raadi security && ./raadi iac-scan`.
 
+## Branches and pull requests
+
+`main` is protected by a ruleset: every change goes through a pull request, both CI jobs must pass on a branch
+that is up to date with `main`, commits must be signed, and force-pushes and deletion are blocked. No review
+approval is required.
+
+1. Branch from `main` with a short prefix: `feat/`, `fix/`, `chore/`, `docs/` or `refactor/`.
+2. Open a pull request and fill in the template. Its title becomes the commit message on `main`, so write it
+   in the imperative mood ("Add notifications service").
+3. Merge with **Squash and merge** once CI is green. The branch is deleted automatically.
+
+Report security problems privately (see [SECURITY.md](SECURITY.md)), not in an issue.
+
 ## Conventions
 
 - Pin exact versions (never `latest`); Renovate proposes upgrades.
