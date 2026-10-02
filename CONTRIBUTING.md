@@ -21,6 +21,10 @@ approval is required.
    in the imperative mood ("Add notifications service").
 3. Merge with **Squash and merge** once CI is green. The branch is deleted automatically.
 
+Releases are signed SemVer tags with GitHub Releases; see [docs/releasing.md](docs/releasing.md). Label pull
+requests (`enhancement`, `bug`, `security`, `dependencies`, `documentation`, `chore`) so release notes group
+them.
+
 Report security problems privately (see [SECURITY.md](SECURITY.md)), not in an issue.
 
 ## Conventions

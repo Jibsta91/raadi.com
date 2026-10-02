@@ -77,8 +77,14 @@ export class OidcService {
     };
   }
 
-  async authorizationUrl(tx: LoginTransaction & { state: string }, uiLocale: string): Promise<URL> {
+  /** `signup` opens Keycloak's registration form directly (OIDC `prompt=create`). */
+  async authorizationUrl(
+    tx: LoginTransaction & { state: string },
+    uiLocale: string,
+    signup = false,
+  ): Promise<URL> {
     return oidc.buildAuthorizationUrl(this.config, {
+      ...(signup ? { prompt: 'create' } : {}),
       redirect_uri: this.redirectUri,
       scope: 'openid profile email',
       response_type: 'code',

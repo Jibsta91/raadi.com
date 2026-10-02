@@ -15,7 +15,8 @@
     "myListings": "Xayeysiisyadayda",
     "messages": "Fariimaha",
     "unread": "{count, plural, one {# fariin aan la akhrin} other {# fariimood oo aan la akhrin}}",
-    "notifications": "Ogeysiisyo"
+    "notifications": "Ogeysiisyo",
+    "signup": "Is diiwaan geli"
   },
   "home": {
     "heroTitle": "Raadi. Hel. Iibi.",
@@ -130,7 +131,8 @@
     "tagline": "Raadi — suuq il-furan",
     "privacy": "Asturnaanta",
     "status": "Xaaladda",
-    "openSource": "Apache-2.0"
+    "openSource": "Apache-2.0",
+    "terms": "Shuruudaha"
   },
   "notFound": {
     "title": "Bogga lama helin",
@@ -437,5 +439,55 @@
       "rateLimited": "Faallooyin aad u badan. Fadlan isku day mar dambe.",
       "error": "Faallada lama daabici karin. Fadlan isku day mar kale."
     }
+  },
+  "terms": {
+    "title": "Shuruudaha isticmaalka",
+    "intro": "Xeerarka isticmaalka Raadi. Si ula kac ah ayay u gaaban yihiin: akhri ka hor intaadan wax iibsan ama iibin.",
+    "service": {
+      "title": "Adeegga",
+      "body": "Raadi waa suuq ay dadka gaarka ah iyo ganacsiyadu ku soo bandhigaan alaab, guryo, baabuur iyo shaqooyin, oo ay isku xiriiraan. Raadi kama mid aha heshiisyada halkan lagu sameeyo."
+    },
+    "account": {
+      "title": "Akoonkaaga",
+      "body": "Waxaad u baahan tahay cinwaan iimayl oo la xaqiijiyay waana inaad jirtaa ugu yaraan 18 sano si aad u samayso akoon. Ilaali furahaaga sirta ah, noo sheeg haddii aad u malaynayso in qof kale isticmaalay akoonkaaga. Qof kastaa wuxuu BankID ku xaqiijin karaa hal akoon."
+    },
+    "listings": {
+      "title": "Xayaysiisyada",
+      "body": "Kaliya soo bandhig waxaad xaq u leedahay inaad iibiso, si daacad ah u sharax oo dhig qiime dhab ah. Alaab sharci darro ah, la xaday, been abuur ah iyo khatar ah lama oggola, sidoo kale xayaysiisyo khiyaano ama takoor leh."
+    },
+    "conduct": {
+      "title": "Xiriirka isticmaaleyaasha",
+      "body": "U isticmaal fariimaha ganacsiga la xiriira. Spam, khiyaano, dhibaateyn iyo in lacag laga codsado habab aan la isku raacin lama oggola. Weligaa ha la wadaagin furaha sirta ah ama koodhadhka BankID."
+    },
+    "reviews": {
+      "title": "Faallooyinka",
+      "body": "Iibka kadib, iibsadaha iyo iibiyaha mid waliba hal mar ayuu qiimeyn karaa kan kale. Faallooyinku waa inay daacad yihiin oo ku saabsan yihiin ganacsiga. Faallooyinka dhibaateynaya, hanjabaya ama xog shakhsi ah leh waa la saarayaa."
+    },
+    "moderation": {
+      "title": "Maamulka",
+      "body": "Maamulayaashu waxay saari karaan xayaysiisyada, fariimaha iyo faallooyinka jebiya shuruudahan, waxayna hakin karaan akoonnada. Waa lagu wargelinayaa marka xayaysiiskaaga la saaro."
+    },
+    "liability": {
+      "title": "Mas'uuliyadda",
+      "body": "Iibsadayaasha iyo iibiyayaashu waxay mas'uul ka yihiin heshiisyadooda. Hubi alaabta ka hor intaadan bixin, isticmaalna hababka lacag bixinta ee abka lagu bixiyo."
+    },
+    "changes": {
+      "title": "Isbeddellada",
+      "body": "Waan ku ogeysiinaynaa ka hor inta aan shuruudahan la beddelin. Haddii aadan aqbalin shuruudaha cusub, waad tirtiri kartaa akoonkaaga."
+    }
+  },
+  "welcome": {
+    "title": "Ku soo dhowow Raadi",
+    "greeting": "Ku soo dhowow Raadi, {name}!",
+    "intro": "Akoonkaagu waa diyaar. Saddex shay oo caawiya, dhammaantood ikhtiyaari:",
+    "languageTitle": "Luqadda",
+    "languageHint": "Raadi waxay ku jirtaa Norwiiji, Ingiriisi iyo Soomaali. Ku beddel goor kasta liiska luqadda ee sare.",
+    "verifyTitle": "Ku xaqiiji BankID",
+    "verifyHint": "Iibsadayaasha iyo iibiyayaashu waxay aad ugu kalsoon yihiin dadka la xaqiijiyay. Raadi waxay kaliya kaydisaa inaad xaqiijisan tahay, marnaba lambarkaaga aqoonsiga.",
+    "passkeyTitle": "Ku dar fure-gal (passkey)",
+    "passkeyHint": "Ku gal faraha, wejiga ama PIN-ka qalabka halkii furaha sirta ah. Ka ammaan badan khiyaanada, oo ka dhakhso badan.",
+    "passkeyAction": "Diyaari fure-gal",
+    "continue": "Sii wad",
+    "sell": "Wax iibi"
   }
 }
