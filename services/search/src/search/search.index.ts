@@ -20,6 +20,8 @@ export interface ListingDocument {
   imageIds: string[];
   publishedAt: string;
   updatedAt: string;
+  /** End of a paid promotion (ADR-0020), if any. */
+  promotedUntil: string | null;
 }
 
 export function toDocument(l: ListingSnapshot): ListingDocument {
@@ -40,6 +42,7 @@ export function toDocument(l: ListingSnapshot): ListingDocument {
     imageIds: l.imageIds,
     publishedAt: l.publishedAt,
     updatedAt: l.updatedAt,
+    promotedUntil: l.promotedUntil ?? null,
   };
 }
 

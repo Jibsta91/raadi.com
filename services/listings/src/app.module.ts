@@ -19,6 +19,7 @@ import {
 } from '@raadi/service-kit';
 import { LoggerModule } from 'nestjs-pino';
 import type { AppConfig } from './config.js';
+import { PromotionsConsumer } from './listings/promotions.consumer.js';
 import { Lifecycle } from './lifecycle.js';
 import { InternalListingsController } from './listings/internal.controller.js';
 import { ListingsController } from './listings/listings.controller.js';
@@ -74,6 +75,7 @@ export class AppModule {
         },
         ListingsRepository,
         ListingsService,
+        PromotionsConsumer,
         Lifecycle,
         { provide: APP_GUARD, useClass: ThrottlerGuard },
         { provide: APP_GUARD, useClass: JwtAuthGuard },

@@ -67,6 +67,8 @@ export interface components {
                 card: string;
             };
             imageCount: number;
+            /** @description A paid promotion is running (ADR-0020) */
+            promoted: boolean;
             attributes: {
                 [key: string]: string | number | boolean;
             };

@@ -3,5 +3,6 @@ export * from './envelope.js';
 export * from './json-schema.js';
 
 /** Kafka topic per aggregate type (Debezium routes outbox rows by aggregate_type). */
-export const topicFor = (aggregateType: 'user' | 'listing' | 'media' | 'conversation' | 'review') =>
-  `raadi.${aggregateType}.events`;
+export const topicFor = (
+  aggregateType: 'user' | 'listing' | 'media' | 'conversation' | 'review' | 'payment' | 'promotion',
+) => `raadi.${aggregateType}.events`;

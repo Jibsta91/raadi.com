@@ -161,6 +161,11 @@ export interface components {
             publishedAt: string;
             /** Format: date-time */
             updatedAt: string;
+            /**
+             * Format: date-time
+             * @description End of a running paid promotion; null when not promoted (ADR-0020)
+             */
+            promotedUntil: string | null;
             viewer?: {
                 isOwner: boolean;
                 canEdit: boolean;

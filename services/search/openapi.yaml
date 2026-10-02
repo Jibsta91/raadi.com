@@ -111,7 +111,18 @@ components:
     SearchHit:
       type: object
       required:
-        [id, title, priceNok, category, subcategory, location, imageCount, attributes, publishedAt]
+        [
+          id,
+          title,
+          priceNok,
+          category,
+          subcategory,
+          location,
+          imageCount,
+          attributes,
+          publishedAt,
+          promoted,
+        ]
       additionalProperties: false
       properties:
         id: { type: string, format: uuid }
@@ -137,6 +148,7 @@ components:
             thumb: { type: string }
             card: { type: string }
         imageCount: { type: integer }
+        promoted: { type: boolean, description: A paid promotion is running (ADR-0020) }
         attributes:
           type: object
           additionalProperties: { type: [string, number, boolean] }

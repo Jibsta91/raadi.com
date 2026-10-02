@@ -38,7 +38,12 @@ export class NotificationWorkers implements OnApplicationBootstrap, OnApplicatio
       brokers: cfg.env.KAFKA_BROKERS.split(','),
       username: cfg.env.KAFKA_USERNAME,
       password: cfg.secrets.kafka_password,
-      topics: [topicFor('conversation'), topicFor('listing'), topicFor('review')],
+      topics: [
+        topicFor('conversation'),
+        topicFor('listing'),
+        topicFor('review'),
+        topicFor('payment'),
+      ],
       deadLetterTopic: 'raadi.dlq',
       handle: (event) => notifications.onEvent(event),
       log: {

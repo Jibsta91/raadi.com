@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-export type NotificationKind = 'listing_removed' | 'review_received';
-export type EmailKind = 'new_message' | 'listing_removed';
+export type NotificationKind = 'listing_removed' | 'review_received' | 'listing_promoted';
+export type EmailKind = 'new_message' | 'listing_removed' | 'payment_receipt';
 export type Locale = 'nb' | 'en' | 'so';
 
 export interface NotificationRow {
@@ -54,6 +54,7 @@ const LINKS: Record<NotificationKind, (row: NotificationRow) => string> = {
   listing_removed: () => '/my/listings',
   // The recipient's own trust profile, where the new review is listed.
   review_received: (row) => `/users/${row.user_id}`,
+  listing_promoted: (row) => `/listings/${row.ref_id}`,
 };
 
 export function toNotification(row: NotificationRow): Notification {
