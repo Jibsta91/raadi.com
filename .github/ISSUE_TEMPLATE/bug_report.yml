@@ -1,0 +1,48 @@
+name: Bug report
+description: Something in Raadi does not work as documented.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Start from `./raadi up` on a clean checkout if you can.
+      placeholder: |
+        1. ./raadi up
+        2. Log in as kari.nordmann@raadi.localhost
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Web app
+        - Mobile app
+        - A backend service
+        - Gateway, auth or secrets
+        - Observability
+        - Compose, toolbox or CI
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Remove tokens, passwords and personal data first.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Commit
+      description: Output of `git rev-parse --short HEAD`.
