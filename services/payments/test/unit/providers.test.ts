@@ -5,7 +5,7 @@ import { WebhookRejected } from '../../src/payments/providers/provider.js';
 import { formEncode, StripeProvider, statusOf } from '../../src/payments/providers/stripe.js';
 import { VippsProvider } from '../../src/payments/providers/vipps.js';
 
-const SECRET = 'whsec-test-secret-0123456789';
+const SECRET = 'unit-test-webhook-secret';
 
 /** Signs like Vipps does (the same algorithm as payments-mock, written independently). */
 function vippsHeaders(body: string, path: string, host: string, date = new Date()) {
