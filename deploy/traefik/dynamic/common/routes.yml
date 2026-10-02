@@ -20,6 +20,22 @@ http:
       middlewares: [security-headers, ratelimit-assets, compress]
       priority: 100
 
+    # The Expo app's web export. Not PathPrefix(`/m`): that would also match the website's /messages.
+    mobile-web:
+      rule: Host(`{{ $d }}`) && (Path(`/m`) || PathPrefix(`/m/`))
+      entryPoints: [web, websecure]
+      service: mobile-web
+      middlewares: [security-headers, mobile-csp, ratelimit-default, compress]
+      priority: 100
+
+    # Content-hashed bundles and assets of the Expo web export.
+    mobile-web-static:
+      rule: Host(`{{ $d }}`) && (PathPrefix(`/m/_expo/`) || PathPrefix(`/m/assets/`))
+      entryPoints: [web, websecure]
+      service: mobile-web
+      middlewares: [security-headers, ratelimit-assets, compress]
+      priority: 110
+
     auth-flows:
       rule: Host(`{{ $d }}`) && PathPrefix(`/auth/`) && !Path(`/auth/forward`)
       entryPoints: [web, websecure]
@@ -140,6 +156,10 @@ http:
       loadBalancer:
         servers: [{ url: "http://web:3000" }]
         healthCheck: { path: /api/health, interval: 10s, timeout: 3s }
+    mobile-web:
+      loadBalancer:
+        servers: [{ url: "http://mobile-web:8080" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
     identity-bff:
       loadBalancer:
         servers: [{ url: "http://identity-bff:4000" }]
