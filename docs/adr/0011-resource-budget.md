@@ -14,6 +14,7 @@ an IDE and a browser on a 16 GB laptop (Docker Desktop with ~8–10 GB).
 | 1                            | ≈ 1.9 GB across 15 containers (Keycloak ≈ 600 MB is the largest)                                                               |
 | 2                            | ≈ 5.8 GB across 28 containers (ClamAV ≈ 950 MB, OpenSearch ≈ 660 MB, Keycloak ≈ 600 MB, Kafka Connect and Kafka ≈ 420 MB each) |
 | 3 (messaging, notifications) | ≈ 6.0 GB across 30 containers (messaging ≈ 120 MB, notifications ≈ 150 MB, Valkey and Mailpit ≈ 10 MB each)                    |
+| 3 (+ trust)                  | ≈ 6.2 GB across 31 containers (trust ≈ 150 MB; the BankID mock is a realm in the existing Keycloak, no new container)          |
 
 Later phases add Kafka, OpenSearch and Ollama, the expensive ones. They get tight limits and small defaults (a
 3–4B instruct model, small JVM heaps). Heavy extras (OpenMetadata, full lakehouse) are under `--profile full`.
