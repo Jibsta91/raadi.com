@@ -1,7 +1,7 @@
 {
   "$id": "urn:raadi:event:no.raadi.media.media.rejected.v1",
   "title": "no.raadi.media.media.rejected.v1",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "mediaId": {

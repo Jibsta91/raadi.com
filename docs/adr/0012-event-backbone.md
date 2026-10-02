@@ -21,7 +21,11 @@
 - Event contracts are **zod schemas in `@raadi/events`**. JSON Schemas generated from them are registered in
   **Apicurio Registry 3** (Apache-2.0) by `registry-init`, with global `COMPATIBILITY=BACKWARD` and
   `VALIDITY=FULL` rules. A breaking change fails at deploy time, not in a consumer. The registry requires
-  OIDC client credentials for writes. Reads are open on the internal network.
+  OIDC client credentials for writes. Reads are open on the internal network. The schemas are JSON Schema
+  **draft-07**: Apicurio's compatibility checker cannot read draft 2020-12, which made it refuse every
+  second version of a schema. That was found on 2026-10-02, when the first schema change met a registry
+  that already held the old version. A registry created before that holds 2020-12 versions and has to be
+  reset once (`docker compose down -v` in development).
 - Consumers (`service-kit/kafka`) are at-least-once and **idempotent** (they dedupe on event id or use
   aggregate versions). Transient failures are retried in place with exponential backoff (250 ms → 30 s), so
   ordering is kept. A `PermanentEventError` (invalid contract, impossible reference) sends the event to
