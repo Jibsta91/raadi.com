@@ -18,6 +18,7 @@ import { LoggerModule } from 'nestjs-pino';
 import type { AppConfig } from './config.js';
 import { Lifecycle } from './lifecycle.js';
 import { BankIdClient } from './trust/bankid.js';
+import { ListingsClient } from './trust/listings.client.js';
 import { TrustController } from './trust/trust.controller.js';
 import { TrustRepository } from './trust/trust.repository.js';
 import { TrustService } from './trust/trust.service.js';
@@ -60,6 +61,7 @@ export class AppModule {
         { provide: JwtVerifier, useValue: keycloakVerifier(env) },
         { provide: HealthRegistry, useValue: new HealthRegistry() },
         BankIdClient,
+        { provide: ListingsClient, useValue: new ListingsClient(env.LISTINGS_URL) },
         TrustRepository,
         TrustService,
         TrustWorkers,

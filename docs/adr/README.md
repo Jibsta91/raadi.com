@@ -22,3 +22,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0015](0015-search.md)                            | Search: OpenSearch fed by listing events                                      | Accepted |
 | [0016](0016-messaging.md)                         | Messaging: REST to send, WebSocket to push, participants on the row           | Accepted |
 | [0017](0017-notifications.md)                     | Notifications: events in, queued e-mail out, addresses looked up at send time | Accepted |
+| [0018](0018-reviews-and-trust.md)                 | Reviews only after a real deal; BankID over OIDC, no national ID stored       | Accepted |

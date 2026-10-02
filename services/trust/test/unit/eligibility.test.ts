@@ -56,11 +56,19 @@ describe('review eligibility', () => {
     assert.equal(reason(decide(buyer, seller, facts({ subjectWrote: false }))), 'no_conversation');
     assert.equal(reason(decide(buyer, seller, facts({ reviewerWrote: false }))), 'no_conversation');
     assert.equal(
-      reason(decide(buyer, seller, facts({ listing: listing({ status: 'active', sold_at: null }) }))),
+      reason(
+        decide(buyer, seller, facts({ listing: listing({ status: 'active', sold_at: null }) })),
+      ),
       'not_sold',
     );
-    assert.equal(reason(decide(buyer, seller, facts(), soldAt.getTime() + 31 * day)), 'window_closed');
-    assert.equal(reason(decide(buyer, seller, facts({ alreadyReviewed: true }))), 'already_reviewed');
+    assert.equal(
+      reason(decide(buyer, seller, facts(), soldAt.getTime() + 31 * day)),
+      'window_closed',
+    );
+    assert.equal(
+      reason(decide(buyer, seller, facts({ alreadyReviewed: true }))),
+      'already_reviewed',
+    );
   });
 
   it('still allows reviews when a sold listing was deleted afterwards', () => {
@@ -92,7 +100,10 @@ describe('verification redirects', () => {
 
   it('appends the outcome before any fragment', () => {
     assert.equal(withOutcome('/en/account', 'ok'), '/en/account?verification=ok');
-    assert.equal(withOutcome('/en/account?x=1#top', 'taken'), '/en/account?x=1&verification=taken#top');
+    assert.equal(
+      withOutcome('/en/account?x=1#top', 'taken'),
+      '/en/account?x=1&verification=taken#top',
+    );
   });
 
   it('hashes identities per provider with a secret key', () => {

@@ -15,11 +15,7 @@ import { Throttle } from '@nestjs/throttler';
 import { type AuthenticatedRequest, Public, Roles, ZodValidationPipe } from '@raadi/service-kit';
 import type { FastifyReply } from 'fastify';
 import type { z } from 'zod';
-import {
-  eligibilityQuerySchema,
-  pageQuerySchema,
-  reviewBodySchema,
-} from './model.js';
+import { eligibilityQuerySchema, pageQuerySchema, reviewBodySchema } from './model.js';
 import { TrustService } from './trust.service.js';
 
 const uuidPipe = new ParseUUIDPipe({ version: undefined });
@@ -69,7 +65,8 @@ export class TrustController {
     @Req() req: AuthenticatedRequest,
     @Body(new ZodValidationPipe(reviewBodySchema)) body: z.infer<typeof reviewBodySchema>,
   ) {
-    return this.trust.createReview(req.principal!, body);
+    const token = req.headers.authorization!.slice('Bearer '.length);
+    return this.trust.createReview(req.principal!, token, body);
   }
 
   @Delete('reviews/:id')

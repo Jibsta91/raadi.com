@@ -31,6 +31,11 @@ All demo users share the password **`raadi-demo-pass`** (development only; produ
 | `moderator@raadi.localhost`     | moderator (Grafana viewer)     |
 | `admin@raadi.localhost`         | platform admin (Grafana admin) |
 
+**BankID (test).** "Verify with BankID" on the account page goes to a mock BankID provider (the `bankid-mock`
+realm in Keycloak). Sign in there as one of the synthetic test people `01897000011`, `02897000022`,
+`03897000033`, `04897000044` or `05897000055`, with the same password. Each test person can verify one Raadi
+account at a time.
+
 Generated infrastructure credentials are never committed. Read them with `./raadi secret <name>`, for example
 `keycloak_admin_password`, `grafana_admin_password` or `openbao_root_token`.
 
@@ -41,7 +46,7 @@ flowchart LR
   U((Browser / app)) -->|80/443| T[Traefik<br/>TLS · rate limits · headers · forward-auth]
   T --> W[web<br/>Next.js]
   T --> B[identity-bff<br/>token handler]
-  T --> LS[listings] & SE[search] & ME[media] & MS[messaging<br/>REST + WebSocket]
+  T --> LS[listings] & SE[search] & ME[media] & MS[messaging<br/>REST + WebSocket] & TR
   T -->|/img| IP[imgproxy<br/>signed URLs]
   T --> K[Keycloak<br/>OIDC · MFA · passkeys]
   T --> G[Grafana]
@@ -50,6 +55,8 @@ flowchart LR
   B --> V[(Valkey<br/>sessions · pub/sub)]
   MS --> V
   KA --> NO[notifications<br/>e-mail · in-app]
+  KA --> TR[trust<br/>reviews · BankID]
+  TR -->|OIDC| K
   NO -->|SMTP| ML[Mailpit / SMTP]
   NO -->|users API| K
   MS -->|seller lookup| LS
@@ -84,6 +91,7 @@ Compose network.
 | listings · search · media (NestJS) | 4000 each               | /api/v1/listings · /api/v1/search · /api/v1/media               |
 | messaging (NestJS)                 | 4000                    | /api/v1/messaging/\* (REST), /api/v1/messaging/ws (WebSocket)   |
 | notifications (NestJS)             | 4000                    | /api/v1/notifications/\* (in-app, preferences); e-mail via SMTP |
+| trust (NestJS)                     | 4000                    | /api/v1/trust/\* (reviews, profiles, BankID verification)       |
 | imgproxy (listing images)          | 8080                    | http://raadi.localhost/img/… (signed URLs only)                 |
 | Keycloak                           | 8080, 9000              | http://auth.raadi.localhost (admin console: `/admin/`)          |
 | Grafana                            | 3000                    | http://grafana.raadi.localhost (SSO as `admin@raadi.localhost`) |
@@ -138,7 +146,7 @@ workflow, Let's Encrypt, backups and the "zero to live in 15 minutes" guide arri
 
 Phases 1 (foundation) and 2 (listings, search, media, web) are complete. You can browse and search about 500
 demo listings (full text, facets, geo radius), and sign in to create, edit, sell and delete listings with
-virus-scanned images. Listing changes reach search through the outbox, Debezium and Kafka. Phase 3 is under way: buyers and sellers can message each other, with live delivery over WebSockets, and get e-mail and in-app notifications. See the
+virus-scanned images. Listing changes reach search through the outbox, Debezium and Kafka. Phase 3 is under way: buyers and sellers can message each other, with live delivery over WebSockets, get e-mail and in-app notifications, review each other after a sale, and verify their identity with BankID (mocked in development). See the
 [roadmap](docs/roadmap.md) for later phases.
 
 ## Documentation

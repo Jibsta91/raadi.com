@@ -10,3 +10,4 @@ Commands assume the repository root (development) or `DEPLOY_DIR` (production, `
 | [auth-anomalies.md](auth-anomalies.md)   | `AuthLoginFailuresSpike`, suspected credential stuffing                                                                   |
 | [openbao.md](openbao.md)                 | `OpenBaoSealed`, secret retrieval or rotation                                                                             |
 | [event-pipeline.md](event-pipeline.md)   | `DeadLettersGrowing`, `ConsumerLagHigh`, `ConsumerGroupEmpty`, `SearchIndexLagHigh`, `EmailQueueBacklog`, `EmailsGivenUp` |
+| [trust.md](trust.md)                     | BankID verification failing, "taken" identities, review moderation, review eligibility questions                          |

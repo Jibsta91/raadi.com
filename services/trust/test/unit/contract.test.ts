@@ -49,7 +49,11 @@ describe('OpenAPI contract', () => {
   });
 
   it('Eligibility (both shapes)', () => {
-    valid('Eligibility', { canReview: true, subjectRole: 'buyer', deadline: '2026-10-31T12:00:00.000Z' });
+    valid('Eligibility', {
+      canReview: true,
+      subjectRole: 'buyer',
+      deadline: '2026-10-31T12:00:00.000Z',
+    });
     valid('Eligibility', { canReview: false, reason: 'not_sold' });
   });
 });

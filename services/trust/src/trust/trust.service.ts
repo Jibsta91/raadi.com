@@ -15,6 +15,7 @@ import type { z } from 'zod';
 import type { AppConfig } from '../config.js';
 import { APP_CONFIG } from '../tokens.js';
 import { BankIdClient } from './bankid.js';
+import { ListingsClient } from './listings.client.js';
 import {
   decideEligibility,
   type Eligibility,
@@ -31,7 +32,8 @@ import { TrustRepository, UniqueViolation } from './trust.repository.js';
 
 const meter = metrics.getMeter('trust');
 const reviewsCounter = meter.createCounter('raadi.trust.reviews', {
-  description: 'Review attempts by outcome (published, rejected, removed_by_author, removed_by_moderator)',
+  description:
+    'Review attempts by outcome (published, rejected, removed_by_author, removed_by_moderator)',
 });
 const verificationsCounter = meter.createCounter('raadi.trust.verifications', {
   description: 'Identity verifications by outcome (ok, cancelled, taken, expired, failed)',
@@ -50,6 +52,7 @@ export class TrustService {
   constructor(
     private readonly repo: TrustRepository,
     private readonly bankid: BankIdClient,
+    private readonly listings: ListingsClient,
     @Inject(APP_CONFIG) private readonly cfg: AppConfig,
   ) {}
 
@@ -71,15 +74,14 @@ export class TrustService {
         const { listing } = parsed.data;
         await this.repo.once(parsed.id, async (tx) => {
           await this.repo.applyListing(tx, listing);
-          if (listing.sellerName) {
-            await this.repo.rememberName(listing.ownerId, listing.sellerName, tx);
-          }
         });
         return;
       }
       case 'no.raadi.listings.listing.deleted.v1': {
         const { listingId, version } = parsed.data;
-        await this.repo.once(parsed.id, (tx) => this.repo.markListingDeleted(tx, listingId, version));
+        await this.repo.once(parsed.id, (tx) =>
+          this.repo.markListingDeleted(tx, listingId, version),
+        );
         return;
       }
       case 'no.raadi.messaging.conversation.message_sent.v1': {
@@ -96,7 +98,11 @@ export class TrustService {
 
   // ---------------------------------------------------------------- reviews
 
-  async eligibility(principal: Principal, listingId: string, subjectId: string): Promise<Eligibility> {
+  async eligibility(
+    principal: Principal,
+    listingId: string,
+    subjectId: string,
+  ): Promise<Eligibility> {
     const facts = await this.repo.dealFacts(listingId, principal.sub, subjectId);
     return decideEligibility(
       principal.sub,
@@ -107,7 +113,8 @@ export class TrustService {
     );
   }
 
-  async createReview(principal: Principal, body: z.infer<typeof reviewBodySchema>) {
+  /** `token` is the caller's bearer token, forwarded to listings for the seller's name. */
+  async createReview(principal: Principal, token: string, body: z.infer<typeof reviewBodySchema>) {
     try {
       const row = await this.repo.createReview(
         {
@@ -137,6 +144,12 @@ export class TrustService {
         },
       );
       reviewsCounter.add(1, { outcome: 'published' });
+      if (row.subject_role === 'seller') {
+        const seller = await this.listings.seller(row.listing_id, token);
+        if (seller?.ownerId === row.subject_id) {
+          await this.repo.rememberName(row.subject_id, seller.sellerName);
+        }
+      }
       return toReview(row);
     } catch (error) {
       if (error instanceof UniqueViolation) {
@@ -156,7 +169,8 @@ export class TrustService {
     const by = isAuthor ? 'author' : 'moderator';
     await this.repo.removeReview(id, by);
     reviewsCounter.add(1, { outcome: `removed_by_${by}` });
-    if (!isAuthor) this.logger.log({ reviewId: id, moderator: principal.sub }, 'review removed by moderator');
+    if (!isAuthor)
+      this.logger.log({ reviewId: id, moderator: principal.sub }, 'review removed by moderator');
   }
 
   // ---------------------------------------------------------------- profiles
@@ -243,10 +257,7 @@ export class TrustService {
   }
 
   /** Completes verification; always returns a same-site path with the outcome. */
-  async completeVerification(
-    principal: Principal | undefined,
-    rawQuery: string,
-  ): Promise<string> {
+  async completeVerification(principal: Principal | undefined, rawQuery: string): Promise<string> {
     const params = new URLSearchParams(rawQuery);
     const state = params.get('state');
     const request = state ? await this.repo.takeRequest(state) : null;
@@ -260,7 +271,8 @@ export class TrustService {
     // The state is bound to the user who started the flow (no account swapping).
     if (!principal || principal.sub !== request.user_id) return done('failed');
     if (Date.now() - request.created_at.getTime() > REQUEST_TTL_MS) return done('expired');
-    if (params.get('error')) return done(params.get('error') === 'access_denied' ? 'cancelled' : 'failed');
+    if (params.get('error'))
+      return done(params.get('error') === 'access_denied' ? 'cancelled' : 'failed');
 
     try {
       const hash = await this.bankid.complete(`?${rawQuery}`, {

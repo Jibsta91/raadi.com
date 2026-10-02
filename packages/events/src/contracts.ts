@@ -32,8 +32,6 @@ export const listingSnapshot = z
     imageIds: z.array(uuid).max(10),
     publishedAt: timestamp,
     updatedAt: timestamp,
-    /** Added later (optional, BACKWARD compatible): the public name shown on the listing ("Kari N."). */
-    sellerName: z.string().min(1).max(80).optional(),
   })
   .meta({ description: 'Public state of a listing after the change' });
 

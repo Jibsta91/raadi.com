@@ -179,7 +179,12 @@ export class TrustRepository {
     try {
       return await withTransaction(this.pool, async (client) => {
         await client.query('SELECT 1 FROM listings WHERE id = $1 FOR SHARE', [input.listingId]);
-        const facts = await this.dealFacts(input.listingId, input.reviewerId, input.subjectId, client);
+        const facts = await this.dealFacts(
+          input.listingId,
+          input.reviewerId,
+          input.subjectId,
+          client,
+        );
         const review: NewReview = { ...input, ...decide(facts) };
         const { rows } = await client.query<ReviewRow>(
           `INSERT INTO reviews (id, listing_id, listing_title, reviewer_id, reviewer_name, subject_id,
@@ -264,7 +269,9 @@ export class TrustRepository {
   }
 
   async listing(id: string): Promise<ListingRow | null> {
-    const { rows } = await this.pool.query<ListingRow>('SELECT * FROM listings WHERE id = $1', [id]);
+    const { rows } = await this.pool.query<ListingRow>('SELECT * FROM listings WHERE id = $1', [
+      id,
+    ]);
     return rows[0] ?? null;
   }
 

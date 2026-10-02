@@ -18,6 +18,8 @@ export const envSchema = baseEnvSchema
     DB_USER: z.string().default('trust'),
     KAFKA_BROKERS: z.string().default('kafka:9092'),
     KAFKA_USERNAME: z.string().default('trust'),
+    /** Seller names come from listings' internal API (events carry no names). */
+    LISTINGS_URL: z.url().default('http://listings:4000'),
     /** Redirects after verification go back here. */
     PUBLIC_BASE_URL: z.url(),
     /** Buyer and seller may review each other for this long after the sale. */
@@ -32,7 +34,10 @@ export const envSchema = baseEnvSchema
      * Where this service reaches the provider (discovery, token, JWKS) when that
      * differs from the public issuer, e.g. http://keycloak:8080/realms/bankid-mock.
      */
-    BANKID_BACKCHANNEL_URL: z.url().optional(),
+    BANKID_BACKCHANNEL_URL: z
+      .union([z.literal(''), z.url()])
+      .optional()
+      .transform((v) => v || undefined),
   });
 
 export type Env = z.infer<typeof envSchema>;

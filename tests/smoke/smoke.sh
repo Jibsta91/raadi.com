@@ -330,6 +330,48 @@ req PUT "$PUBLIC/api/v1/notifications/preferences" -H 'content-type: application
 req PUT "$PUBLIC/api/v1/notifications/preferences" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"emailMessages":true}'
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
+section "Reviews and trust (eligibility, BankID mock)"
+: > "$JAR"
+req GET "$PUBLIC/api/v1/trust/me"
+expect_status 401 "anonymous users have no trust status"
+req GET "$PUBLIC/api/v1/trust/users/00000000-0000-4000-8000-000000000000"
+expect_status 404 "unknown profiles are 404"
+req GET "$PUBLIC/api/v1/trust/verification/start?locale=en"
+[[ "$status" == "302" && "$(header location)" == /auth/login* ]] \
+  && ok "verification sends signed-out users to login first" || fail "verification start (anonymous)" "HTTP $status"
+issuer=$(curl -sf --max-time 10 --connect-to "::${GW}" "$AUTH/realms/bankid-mock/.well-known/openid-configuration" | jq -r .issuer)
+[[ "$issuer" == "$AUTH/realms/bankid-mock" ]] && ok "BankID mock provider is up" || fail "BankID mock discovery" "$issuer"
+
+login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
+req GET "$PUBLIC/api/v1/trust/me"
+[[ "$status" == "200" && "$(json '.name')" == "Kari N." ]] && ok "own trust status" || fail "trust/me" "HTTP $status"
+kari_id="$(json '.userId')"
+req GET "$PUBLIC/api/v1/trust/listings/$kari_listing/seller"
+[[ "$status" == "200" && "$(json '.userId')" == "$kari_id" ]] \
+  && ok "listing page can show the seller's rating (public)" || fail "seller summary" "HTTP $status"
+
+login_as "ola.nordmann@${RAADI_DOMAIN}" || fail "login as ola"
+req GET "$PUBLIC/api/v1/trust/eligibility?listingId=$kari_listing&subjectId=$kari_id"
+# Ola wrote to Kari in the messaging section, but she never answered and nothing was sold.
+[[ "$(json '.canReview')" == "false" && "$(json '.reason')" == "no_conversation" ]] \
+  && ok "no review without a two-way conversation and a sale" || fail "eligibility" "$(head -c 300 "$BODY")"
+review() { jq -nc --arg l "$kari_listing" --arg s "$kari_id" --argjson r "$1" '{listingId: $l, subjectId: $s, rating: $r}'; }
+req POST "$PUBLIC/api/v1/trust/reviews" -H 'content-type: application/json' -H 'origin: https://evil.example' --data "$(review 5)"
+expect_status 403 "cross-site review is rejected (CSRF)"
+req POST "$PUBLIC/api/v1/trust/reviews" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(review 6)"
+expect_status 400 "ratings outside 1-5 are rejected"
+req POST "$PUBLIC/api/v1/trust/reviews" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(review 5)"
+expect_status 422 "ineligible reviews are refused"
+req GET "$PUBLIC/api/v1/trust/verification/start?locale=en&returnTo=//evil.example"
+loc="$(header location)"
+[[ "$status" == "302" && "$loc" == "$AUTH/realms/bankid-mock/protocol/openid-connect/auth?"* \
+  && "$loc" == *code_challenge_method=S256* && "$loc" == *scope=openid\&* ]] \
+  && ok "verification redirects to BankID (PKCE, openid only)" || fail "verification start" "HTTP $status $loc"
+req GET "$PUBLIC/api/v1/trust/verification/callback?state=forged&code=x"
+[[ "$status" == "302" && "$(header location)" == "/?verification=expired" ]] \
+  && ok "forged verification callbacks are refused" || fail "verification callback" "HTTP $status $(header location)"
+req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
+
 section "Operations"
 req GET "$GRAFANA/api/health"
 expect_status 200 "Grafana healthy via gateway"
