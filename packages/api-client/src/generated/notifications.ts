@@ -135,8 +135,8 @@ export interface components {
              * @description The client renders the localized text from the kind and params.
              * @enum {string}
              */
-            kind: "listing_removed";
-            /** @description Values for the text, e.g. {"title":"…"} for listing_removed. */
+            kind: "listing_removed" | "review_received";
+            /** @description Values for the text, e.g. {"title":"…"} for listing_removed, {"rating":"5"} for review_received. */
             params: {
                 [key: string]: string;
             };

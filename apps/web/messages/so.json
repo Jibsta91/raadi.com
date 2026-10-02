@@ -380,7 +380,8 @@
     "empty": "Weli ogeysiis ma jiro.",
     "markAllRead": "Calaamadee dhammaan inay akhrisan yihiin",
     "kinds": {
-      "listing_removed": "Xayeysiiskaaga \"{title}\" waxaa saaray maamule sababtoo ah wuxuu jebinayaa xeerarka suuqa."
+      "listing_removed": "Xayeysiiskaaga \"{title}\" waxaa saaray maamule sababtoo ah wuxuu jebinayaa xeerarka suuqa.",
+      "review_received": "Qof ayaa ku qiimeeyay: {rating} ka mid ah 5 xiddigood."
     },
     "settings": {
       "title": "Iimayl",
@@ -388,6 +389,53 @@
       "emailMessagesHint": "Ugu badnaan hal iimayl wada sheekaysi kasta 30-kii daqiiqo. Ogeysiisyada xayeysiisyadaada mar walba waa la soo diraa.",
       "saved": "Waa la keydiyay",
       "error": "Lama keydin karin. Fadlan isku day mar kale."
+    }
+  },
+  "trust": {
+    "profile": "Bogga",
+    "profileTitle": "{name} ee Raadi",
+    "rating": "Qiimeyn",
+    "reviews": "Faallooyin",
+    "outOf5": "{value} ka mid ah 5",
+    "stars": "{count, plural, one {# xiddig} other {# xiddigood}}",
+    "reviewCount": "{count, plural, =0 {faallo ma jirto} one {# faallo} other {# faallooyin}}",
+    "noReviewsYet": "Weli faallo ma jirto",
+    "verified": "Lagu xaqiijiyay BankID",
+    "verifiedSince": "Lagu xaqiijiyay BankID tan iyo {date}",
+    "notVerified": "Lama xaqiijin",
+    "byBuyer": "Ka yimid <reviewer>{name}</reviewer>, oo iibsaday “{listing}”",
+    "bySeller": "Ka yimid <reviewer>{name}</reviewer>, oo iibiyay “{listing}”",
+    "more": "Faallooyin kale",
+    "remove": "Ka noqo faalladayda",
+    "removeConfirm": "Ma ka noqonaysaa faalladaada? Mar kale ma qiimeyn kartid ganacsigan.",
+    "removeModerator": "Ka saar faallada",
+    "removeConfirmModerator": "Ma ka saaraysaa faalladan maadaama ay jebinayso xeerarka?",
+    "reviewed": "Waxaad qiimeysay {name} ganacsigan.",
+    "seeProfile": "Eeg bogga",
+    "seeMyProfile": "Eeg boggayga dadweynaha",
+    "verificationTitle": "Xaqiijinta aqoonsiga",
+    "verificationHint": "U muuji iibsadayaasha iyo iibiyayaasha inaad tahay qof dhab ah. Raadi waxay kaliya kaydisaa inaad xaqiijisan tahay, marnaba lambarkaaga aqoonsiga.",
+    "verifyWithBankId": "Ku xaqiiji BankID",
+    "removeVerification": "Ka saar xaqiijinta",
+    "removeVerificationConfirm": "Ma ka saaraysaa xaqiijintaada BankID?",
+    "unavailable": "Xaqiijintu hadda lama heli karo. Fadlan isku day mar kale.",
+    "outcomes": {
+      "ok": "Hadda waxaa lagugu xaqiijiyay BankID.",
+      "cancelled": "Xaqiijinta waa la joojiyay.",
+      "taken": "BankID-gan wuxuu horey ugu xiran yahay akoon kale oo Raadi ah.",
+      "expired": "Xaqiijintu waqti badan ayay qaadatay. Fadlan isku day mar kale.",
+      "failed": "Xaqiijintu way fashilantay. Fadlan isku day mar kale."
+    },
+    "form": {
+      "titleSeller": "Sidee ahayd inaad wax ka iibsato {name}?",
+      "titleBuyer": "Sidee ahayd inaad wax u iibiso {name}?",
+      "rating": "Qiimeyn",
+      "comment": "Faallo (ikhtiyaari)",
+      "public": "Faalladaada iyo magacaaga waxaa lagu muujinayaa boggooda dadweynaha.",
+      "pickRating": "Dooro qiimeyn 1 ilaa 5 xiddigood.",
+      "submit": "Daabac faallada",
+      "rateLimited": "Faallooyin aad u badan. Fadlan isku day mar dambe.",
+      "error": "Faallada lama daabici karin. Fadlan isku day mar kale."
     }
   }
 }

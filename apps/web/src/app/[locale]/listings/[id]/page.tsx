@@ -7,6 +7,7 @@ import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/serve
 import { ImageGallery } from '@/components/listings/image-gallery';
 import { ListingActions } from '@/components/listings/listing-actions';
 import { ContactSeller } from '@/components/messaging/contact-seller';
+import { SellerTrust } from '@/components/trust/seller-trust';
 import { Link } from '@/i18n/navigation';
 import { getListing } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
@@ -121,7 +122,10 @@ export default async function ListingPage({
               <User aria-hidden className="mt-0.5 size-4 text-muted-foreground" />
               <div>
                 <dt className="sr-only">{t('listing.seller')}</dt>
-                <dd>{listing.seller.name}</dd>
+                <dd className="space-y-1">
+                  <span data-testid="listing-seller">{listing.seller.name}</span>
+                  <SellerTrust listingId={listing.id} />
+                </dd>
               </div>
             </div>
             <p className="text-xs text-muted-foreground">

@@ -17,6 +17,7 @@ import type {
   paths as NotificationsPaths,
 } from './generated/notifications';
 import type { components as SearchComponents, paths as SearchPaths } from './generated/search';
+import type { components as TrustComponents, paths as TrustPaths } from './generated/trust';
 
 export type {
   IdentityPaths,
@@ -25,6 +26,7 @@ export type {
   MessagingPaths,
   NotificationsPaths,
   SearchPaths,
+  TrustPaths,
 };
 
 // Identity
@@ -64,6 +66,14 @@ export type Notification = NotificationsComponents['schemas']['Notification'];
 export type NotificationList = NotificationsComponents['schemas']['NotificationList'];
 export type NotificationPreferences = NotificationsComponents['schemas']['Preferences'];
 
+// Trust (reviews and verification)
+export type TrustSummary = TrustComponents['schemas']['TrustSummary'];
+export type TrustProfile = TrustComponents['schemas']['Profile'];
+export type Review = TrustComponents['schemas']['Review'];
+export type ReviewInput = TrustComponents['schemas']['ReviewInput'];
+export type RatingSummary = TrustComponents['schemas']['RatingSummary'];
+export type Eligibility = TrustComponents['schemas']['Eligibility'];
+
 /*
  * Typed clients shared by web and mobile:
  *   - web (server side): baseUrl = the service (internal) or the gateway
@@ -79,3 +89,4 @@ export const createMessagingClient = (options: ClientOptions) =>
   createClient<MessagingPaths>(options);
 export const createNotificationsClient = (options: ClientOptions) =>
   createClient<NotificationsPaths>(options);
+export const createTrustClient = (options: ClientOptions) => createClient<TrustPaths>(options);

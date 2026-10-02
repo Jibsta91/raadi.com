@@ -34,10 +34,10 @@ describe('per-viewer views', () => {
     const forBuyer = toConversation(inboxRow, buyer, signer);
     const forSeller = toConversation(inboxRow, seller, signer);
     assert.equal(forBuyer.role, 'buyer');
-    assert.equal(forBuyer.counterpart.name, 'Kari N.');
+    assert.deepEqual(forBuyer.counterpart, { id: seller, name: 'Kari N.' });
     assert.equal(forBuyer.lastMessage?.fromMe, true);
     assert.equal(forSeller.role, 'seller');
-    assert.equal(forSeller.counterpart.name, 'Ola N.');
+    assert.deepEqual(forSeller.counterpart, { id: buyer, name: 'Ola N.' });
     assert.equal(forSeller.lastMessage?.fromMe, false);
     assert.equal(forSeller.unread, 2);
     assert.match(forBuyer.listing.image!.thumb, /^\/img\/[\w-]+\/pr:thumb\//);

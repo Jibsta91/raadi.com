@@ -220,8 +220,12 @@ components:
         counterpart:
           type: object
           additionalProperties: false
-          required: [name]
+          required: [id, name]
           properties:
+            id:
+              type: string
+              format: uuid
+              description: The other participant (for reviews after a sale; ADR-0018)
             name: { type: string, description: Public display name of the other participant }
         lastMessage:
           oneOf:

@@ -72,7 +72,7 @@ export interface Conversation {
   id: string;
   role: 'buyer' | 'seller';
   listing: { id: string; title: string; image: { thumb: string } | null };
-  counterpart: { name: string };
+  counterpart: { id: string; name: string };
   lastMessage: { body: string; fromMe: boolean; sentAt: string } | null;
   unread: number;
   createdAt: string;
@@ -115,7 +115,10 @@ export function toConversation(
       title: row.listing_title,
       image: row.listing_image_id ? { thumb: imageUrls(signer, row.listing_image_id).thumb } : null,
     },
-    counterpart: { name: isBuyer ? row.seller_name : row.buyer_name },
+    counterpart: {
+      id: isBuyer ? row.seller_id : row.buyer_id,
+      name: isBuyer ? row.seller_name : row.buyer_name,
+    },
     lastMessage:
       row.last_body !== null && row.last_sent_at !== null
         ? {

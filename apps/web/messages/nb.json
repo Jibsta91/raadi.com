@@ -380,7 +380,8 @@
     "empty": "Ingen varsler ennå.",
     "markAllRead": "Merk alle som lest",
     "kinds": {
-      "listing_removed": "Annonsen «{title}» ble fjernet av en moderator fordi den bryter reglene for markedsplassen."
+      "listing_removed": "Annonsen «{title}» ble fjernet av en moderator fordi den bryter reglene for markedsplassen.",
+      "review_received": "Du har fått en ny omtale: {rating} av 5 stjerner."
     },
     "settings": {
       "title": "E-post",
@@ -388,6 +389,53 @@
       "emailMessagesHint": "Maks én e-post per samtale hver halvtime. Varsler om annonsene dine sendes alltid.",
       "saved": "Lagret",
       "error": "Kunne ikke lagre. Prøv igjen."
+    }
+  },
+  "trust": {
+    "profile": "Profil",
+    "profileTitle": "{name} på Raadi",
+    "rating": "Vurdering",
+    "reviews": "Omtaler",
+    "outOf5": "{value} av 5",
+    "stars": "{count, plural, one {# stjerne} other {# stjerner}}",
+    "reviewCount": "{count, plural, =0 {ingen omtaler} one {# omtale} other {# omtaler}}",
+    "noReviewsYet": "Ingen omtaler ennå",
+    "verified": "Verifisert med BankID",
+    "verifiedSince": "Verifisert med BankID siden {date}",
+    "notVerified": "Ikke verifisert",
+    "byBuyer": "Fra <reviewer>{name}</reviewer>, som kjøpte «{listing}»",
+    "bySeller": "Fra <reviewer>{name}</reviewer>, som solgte «{listing}»",
+    "more": "Flere omtaler",
+    "remove": "Trekk tilbake omtalen",
+    "removeConfirm": "Trekke tilbake omtalen? Du kan ikke vurdere denne handelen på nytt.",
+    "removeModerator": "Fjern omtale",
+    "removeConfirmModerator": "Fjerne denne omtalen fordi den bryter reglene?",
+    "reviewed": "Du har vurdert {name} for denne handelen.",
+    "seeProfile": "Se profilen",
+    "seeMyProfile": "Se min offentlige profil",
+    "verificationTitle": "Identitetsbekreftelse",
+    "verificationHint": "Vis kjøpere og selgere at du er en ekte person. Raadi lagrer bare at du er verifisert, aldri fødselsnummeret ditt.",
+    "verifyWithBankId": "Verifiser med BankID",
+    "removeVerification": "Fjern verifiseringen",
+    "removeVerificationConfirm": "Fjerne BankID-verifiseringen din?",
+    "unavailable": "Verifisering er ikke tilgjengelig akkurat nå. Prøv igjen senere.",
+    "outcomes": {
+      "ok": "Du er nå verifisert med BankID.",
+      "cancelled": "Verifiseringen ble avbrutt.",
+      "taken": "Denne BankID-en er allerede knyttet til en annen Raadi-konto.",
+      "expired": "Verifiseringen tok for lang tid. Prøv igjen.",
+      "failed": "Verifiseringen mislyktes. Prøv igjen."
+    },
+    "form": {
+      "titleSeller": "Hvordan var det å kjøpe fra {name}?",
+      "titleBuyer": "Hvordan var det å selge til {name}?",
+      "rating": "Vurdering",
+      "comment": "Kommentar (valgfritt)",
+      "public": "Omtalen og navnet ditt vises på den offentlige profilen deres.",
+      "pickRating": "Velg en vurdering fra 1 til 5 stjerner.",
+      "submit": "Publiser omtale",
+      "rateLimited": "For mange omtaler. Prøv igjen senere.",
+      "error": "Kunne ikke publisere omtalen. Prøv igjen."
     }
   }
 }

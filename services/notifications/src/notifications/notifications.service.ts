@@ -80,6 +80,15 @@ export class NotificationsService {
         emails.add(1, { kind: 'listing_removed', outcome: 'queued' });
         return;
       }
+      case 'no.raadi.trust.review.published.v1': {
+        // In-app only: reviews are not urgent enough for an e-mail.
+        const { reviewId, subjectId, rating } = parsed.data;
+        await this.repo.once(parsed.id, (tx) =>
+          tx.notify(subjectId, 'review_received', reviewId, { rating: String(rating) }),
+        );
+        created.add(1, { kind: 'review_received' });
+        return;
+      }
       default:
         return;
     }

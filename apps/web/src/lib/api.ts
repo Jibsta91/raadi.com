@@ -8,10 +8,14 @@ import {
   type NotificationList,
   type NotificationPreferences,
   createSearchClient,
+  createTrustClient,
+  type Eligibility,
   type Listing,
   type ListingPage,
   type SearchQuery,
   type SearchResult,
+  type TrustProfile,
+  type TrustSummary,
 } from '@raadi/api-client';
 import { cache } from 'react';
 import { env } from './env';
@@ -154,6 +158,71 @@ export async function unreadNotifications(): Promise<number> {
   } catch (error) {
     logger.warn({ err: error }, 'notification count unavailable');
     return 0;
+  }
+}
+
+/** Trust summary of a listing's seller for the listing page; null if unknown or unavailable. */
+export async function sellerTrust(listingId: string): Promise<TrustSummary | null> {
+  try {
+    const client = createTrustClient({ baseUrl: env.trustUrl });
+    const { data } = await client.GET('/api/v1/trust/listings/{id}/seller', {
+      params: { path: { id: listingId } },
+      signal: AbortSignal.timeout(2000),
+      cache: 'no-store',
+    });
+    return data ?? null;
+  } catch (error) {
+    logger.warn({ err: error }, 'seller trust unavailable');
+    return null;
+  }
+}
+
+/** A public trust profile; null when the user is unknown. */
+export async function trustProfile(userId: string, offset = 0): Promise<TrustProfile | null> {
+  const client = createTrustClient({ baseUrl: env.trustUrl });
+  const { data, response } = await client.GET('/api/v1/trust/users/{id}', {
+    params: { path: { id: userId }, query: { limit: 20, offset } },
+    signal: AbortSignal.timeout(5000),
+    cache: 'no-store',
+  });
+  if (data) return data;
+  if (response.status === 404 || response.status === 400) return null;
+  throw new ServiceUnavailableError(`trust returned ${response.status}`);
+}
+
+/** The signed-in user's verification and rating; null when signed out. */
+export async function myTrust(): Promise<TrustSummary | null> {
+  const token = await accessToken();
+  if (!token) return null;
+  const client = createTrustClient({ baseUrl: env.trustUrl });
+  const { data, response } = await client.GET('/api/v1/trust/me', {
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(5000),
+    cache: 'no-store',
+  });
+  if (data) return data;
+  throw new ServiceUnavailableError(`trust returned ${response.status}`);
+}
+
+/** Whether the signed-in user may review `subjectId` about a listing (null on any failure). */
+export async function reviewEligibility(
+  listingId: string,
+  subjectId: string,
+): Promise<Eligibility | null> {
+  const token = await accessToken().catch(() => null);
+  if (!token) return null;
+  try {
+    const client = createTrustClient({ baseUrl: env.trustUrl });
+    const { data } = await client.GET('/api/v1/trust/eligibility', {
+      params: { query: { listingId, subjectId } },
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(2000),
+      cache: 'no-store',
+    });
+    return data ?? null;
+  } catch (error) {
+    logger.warn({ err: error }, 'review eligibility unavailable');
+    return null;
   }
 }
 

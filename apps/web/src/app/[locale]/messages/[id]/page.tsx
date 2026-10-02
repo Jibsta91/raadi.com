@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Thread } from '@/components/messaging/thread';
+import { ReviewForm } from '@/components/trust/review-form';
 import { Link } from '@/i18n/navigation';
-import { conversation } from '@/lib/api';
+import { conversation, reviewEligibility } from '@/lib/api';
 import { getSession } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -29,8 +30,13 @@ export default async function ConversationPage({
     );
   }
   if (!UUID.test(id)) notFound();
-  const [t, detail] = await Promise.all([getTranslations('messages'), conversation(id)]);
+  const [t, tt, detail] = await Promise.all([
+    getTranslations('messages'),
+    getTranslations('trust'),
+    conversation(id),
+  ]);
   if (!detail) notFound();
+  const eligibility = await reviewEligibility(detail.listing.id, detail.counterpart.id);
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -56,6 +62,22 @@ export default async function ConversationPage({
           </p>
         </div>
       </header>
+      {eligibility?.canReview ? (
+        <ReviewForm
+          listingId={detail.listing.id}
+          subjectId={detail.counterpart.id}
+          subjectName={detail.counterpart.name}
+          subjectRole={eligibility.subjectRole}
+        />
+      ) : null}
+      {eligibility && !eligibility.canReview && eligibility.reason === 'already_reviewed' ? (
+        <p className="rounded-lg border p-3 text-sm" data-testid="review-done">
+          {tt('reviewed', { name: detail.counterpart.name })}{' '}
+          <Link href={`/users/${detail.counterpart.id}`} className="text-primary hover:underline">
+            {tt('seeProfile')}
+          </Link>
+        </p>
+      ) : null}
       <Thread initial={detail} />
     </div>
   );

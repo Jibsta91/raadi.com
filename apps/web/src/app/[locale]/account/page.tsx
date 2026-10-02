@@ -10,6 +10,10 @@ import {
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
+import { RemoveVerification, VerifyButton } from '@/components/trust/verification';
+import { VerifiedBadge } from '@/components/trust/verified-badge';
+import { Link } from '@/i18n/navigation';
+import { myTrust } from '@/lib/api';
 import { env } from '@/lib/env';
 import { getMe, getSession } from '@/lib/session';
 
@@ -18,14 +22,30 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t('title'), robots: { index: false } };
 }
 
-export default async function AccountPage({ params }: { params: Promise<{ locale: string }> }) {
+const OUTCOMES = ['ok', 'cancelled', 'taken', 'expired', 'failed'] as const;
+
+export default async function AccountPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ verification?: string }>;
+}) {
   const { locale } = await params;
+  const { verification: outcomeParam } = await searchParams;
+  const outcome = OUTCOMES.find((o) => o === outcomeParam);
   setRequestLocale(locale);
   const session = await getSession();
   if (!session.authenticated) {
     redirect(`/auth/login?returnTo=${encodeURIComponent(`/${locale}/account`)}&locale=${locale}`);
   }
-  const [t, format, me] = await Promise.all([getTranslations('account'), getFormatter(), getMe()]);
+  const [t, tt, format, me, trust] = await Promise.all([
+    getTranslations('account'),
+    getTranslations('trust'),
+    getFormatter(),
+    getMe(),
+    myTrust().catch(() => null),
+  ]);
   const user = session.user;
   const date = (iso: string | null | undefined) =>
     iso ? format.dateTime(new Date(iso), { dateStyle: 'medium', timeStyle: 'short' }) : '—';
@@ -64,6 +84,50 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
             <dt className="text-muted-foreground">{t('lastLogin')}</dt>
             <dd>{date(me?.lastLoginAt)}</dd>
           </dl>
+        </CardContent>
+      </Card>
+
+      <Card data-testid="verification-card">
+        <CardHeader>
+          <CardTitle>{tt('verificationTitle')}</CardTitle>
+          <CardDescription>{tt('verificationHint')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {outcome ? (
+            <p
+              role="status"
+              data-testid="verification-outcome"
+              data-outcome={outcome}
+              className={outcome === 'ok' ? 'text-sm text-emerald-700' : 'text-sm text-destructive'}
+            >
+              {tt(`outcomes.${outcome}`)}
+            </p>
+          ) : null}
+          {trust === null ? (
+            <p className="text-sm text-muted-foreground">{tt('unavailable')}</p>
+          ) : trust.verification ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <VerifiedBadge
+                label={tt('verifiedSince', {
+                  date: format.dateTime(new Date(trust.verification.verifiedAt), {
+                    dateStyle: 'medium',
+                  }),
+                })}
+              />
+              <RemoveVerification />
+            </div>
+          ) : (
+            <VerifyButton locale={locale} />
+          )}
+          {trust ? (
+            <Link
+              href={`/users/${trust.userId}`}
+              className="block text-sm text-primary hover:underline"
+              data-testid="my-profile-link"
+            >
+              {tt('seeMyProfile')}
+            </Link>
+          ) : null}
         </CardContent>
       </Card>
 
