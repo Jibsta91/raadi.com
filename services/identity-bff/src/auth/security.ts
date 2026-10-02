@@ -38,7 +38,11 @@ export function keycloakUiLocale(locale: Locale): string {
  * keeps the language the user was browsing in (the target's locale), falling
  * back to their profile language.
  */
-export function afterLoginPath(returnTo: string, profileLocale: Locale, firstLogin: boolean): string {
+export function afterLoginPath(
+  returnTo: string,
+  profileLocale: Locale,
+  firstLogin: boolean,
+): string {
   if (!firstLogin) return returnTo;
   const fromPath = returnTo.split(/[/?#]/)[1];
   const locale = SUPPORTED.includes(fromPath as Locale) ? (fromPath as Locale) : profileLocale;
