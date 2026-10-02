@@ -157,7 +157,8 @@ virus-scanned images. Listing changes reach search through the outbox, Debezium 
 
 - [Architecture (C4)](docs/architecture/c4-container.md) · [ADRs](docs/adr/README.md) ·
   [Threat model](docs/threat-model.md) · [Runbooks](docs/runbooks/README.md) ·
-  [Development](docs/development.md) · [Roadmap](docs/roadmap.md)
+  [Development](docs/development.md) · [Roadmap](docs/roadmap.md) · [Releases](docs/releasing.md) ·
+  [Changelog](CHANGELOG.md)
 
 ## License
 
