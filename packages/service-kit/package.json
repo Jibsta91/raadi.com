@@ -65,7 +65,7 @@
     "@nestjs/common": "12.1.2",
     "@nestjs/core": "12.1.2",
     "@raadi/config": "workspace:*",
-    "@types/node": "24.19.0",
+    "@types/node": "24.19.1",
     "@types/opossum": "8.1.9",
     "@types/pg": "8.23.1",
     "eslint": "10.11.0",

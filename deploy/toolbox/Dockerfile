@@ -3,19 +3,19 @@
 # Docker. Usage:  docker compose run --rm toolbox <command>   (or ./raadi / make)
 # Base: the official Playwright image (Node + browsers for E2E tests).
 FROM docker:29.8.2-cli AS dockercli
-FROM ghcr.io/astral-sh/uv:0.12.21 AS uv
+FROM ghcr.io/astral-sh/uv:0.12.22 AS uv
 
 FROM mcr.microsoft.com/playwright:v1.63.0-noble
 ARG TARGETARCH
 ARG PNPM_VERSION=10.34.6
 ARG TURBO_VERSION=2.11.6
 ARG PYTHON_VERSION=3.13
-ARG TOFU_VERSION=1.13.0
+ARG TOFU_VERSION=1.13.1
 ARG TFLINT_VERSION=0.64.0
-ARG TRIVY_VERSION=0.74.0
+ARG TRIVY_VERSION=0.75.0
 ARG GITLEAKS_VERSION=8.30.1
 ARG OSV_SCANNER_VERSION=2.6.0
-ARG SYFT_VERSION=1.52.0
+ARG SYFT_VERSION=1.54.0
 ARG OPA_VERSION=1.21.1
 ARG CHECKOV_VERSION=3.3.22
 ARG ANSIBLE_CORE_VERSION=2.21.4

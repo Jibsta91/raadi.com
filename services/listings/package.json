@@ -29,7 +29,7 @@
     "@raadi/events": "workspace:*",
     "@raadi/service-kit": "workspace:*",
     "fastify": "5.12.5",
-    "nestjs-pino": "5.2.1",
+    "nestjs-pino": "5.3.0",
     "pg": "8.23.1",
     "pino": "10.3.1",
     "pino-http": "11.0.0",
@@ -40,7 +40,7 @@
   "devDependencies": {
     "@raadi/config": "workspace:*",
     "@testcontainers/postgresql": "12.2.0",
-    "@types/node": "24.19.0",
+    "@types/node": "24.19.1",
     "@types/pg": "8.23.1",
     "ajv": "8.20.0",
     "eslint": "10.11.0",

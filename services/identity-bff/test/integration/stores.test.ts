@@ -20,7 +20,7 @@ let valkey: Redis;
 before(async () => {
   [pgc, vkc] = await Promise.all([
     new PostgreSqlContainer('postgres:17.11-trixie').start(),
-    new GenericContainer('valkey/valkey:9.0.6-alpine3.24').withExposedPorts(6379).start(),
+    new GenericContainer('valkey/valkey:9.1.2-alpine3.24').withExposedPorts(6379).start(),
   ]);
   pool = new pg.Pool({ connectionString: pgc.getConnectionUri() });
   for (const file of [
