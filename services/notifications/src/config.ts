@@ -32,6 +32,8 @@ export const envSchema = baseEnvSchema
     /** At most one new-message e-mail per conversation and recipient in this window. */
     EMAIL_THROTTLE_MINUTES: z.coerce.number().int().min(0).default(30),
     EMAIL_MAX_ATTEMPTS: z.coerce.number().int().min(1).default(6),
+    /** Seller on receipts: legal name and organisation number in production. */
+    RECEIPT_MERCHANT: z.string().min(1).default('Raadi (development, no organisation number)'),
   });
 
 export type Env = z.infer<typeof envSchema>;

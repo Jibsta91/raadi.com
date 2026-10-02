@@ -197,6 +197,7 @@ components:
           seller,
           publishedAt,
           updatedAt,
+          promotedUntil,
         ]
       properties:
         id: { type: string, format: uuid }
@@ -216,6 +217,10 @@ components:
           properties: { name: { type: string } }
         publishedAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+        promotedUntil:
+          type: [string, 'null']
+          format: date-time
+          description: End of a running paid promotion; null when not promoted (ADR-0020)
         viewer:
           type: object
           required: [isOwner, canEdit, canDelete]

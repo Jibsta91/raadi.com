@@ -344,6 +344,76 @@ services:
       resources:
         limits: { memory: 256M, cpus: '1.0' }
 
+  payments:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/payments:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-service/Dockerfile
+      target: runtime
+      args: { SERVICE: payments }
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: payments
+      PORT: '4000'
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      LISTINGS_URL: http://listings:4000
+      PAYMENTS_PROVIDER: ${PAYMENTS_PROVIDER}
+      VIPPS_BASE_URL: ${VIPPS_BASE_URL}
+      VIPPS_CLIENT_ID: ${VIPPS_CLIENT_ID}
+      VIPPS_MSN: ${VIPPS_MSN}
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/openbao
+        read_only: true
+        volume: { subpath: approle/payments }
+    depends_on:
+      openbao-bootstrap: { condition: service_completed_successfully }
+      db-init: { condition: service_completed_successfully }
+      keycloak-init: { condition: service_completed_successfully }
+      otel-collector: { condition: service_started }
+    healthcheck: *node-health
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '1.0' }
+
+  # Development stand-in for Vipps MobilePay (ADR-0020). Production sets
+  # VIPPS_BASE_URL to Vipps and does not run this service.
+  payments-mock:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/payments-mock:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-service/Dockerfile
+      target: runtime
+      args: { SERVICE: payments-mock }
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: payments-mock
+      PORT: '4000'
+      PUBLIC_URL: ${PUBLIC_SCHEME}://pay.${RAADI_DOMAIN}${PUBLIC_PORT_SUFFIX}
+      VIPPS_CLIENT_ID: ${VIPPS_CLIENT_ID}
+      VIPPS_MSN: ${VIPPS_MSN}
+      WEBHOOK_URL: http://payments:4000/api/v1/payments/webhooks/vipps
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/openbao
+        read_only: true
+        volume: { subpath: approle/payments-mock }
+    depends_on:
+      openbao-bootstrap: { condition: service_completed_successfully }
+      otel-collector: { condition: service_started }
+    healthcheck: *node-health
+    deploy:
+      resources:
+        limits: { memory: 192M, cpus: '0.5' }
+
   web:
     <<: *node-service
     image: ${RAADI_IMAGE_PREFIX}/web:${RAADI_VERSION}
@@ -365,6 +435,7 @@ services:
       MESSAGING_URL: http://messaging:4000
       NOTIFICATIONS_URL: http://notifications:4000
       TRUST_URL: http://trust:4000
+      PAYMENTS_URL: http://payments:4000
     depends_on:
       identity-bff: { condition: service_healthy }
     healthcheck:

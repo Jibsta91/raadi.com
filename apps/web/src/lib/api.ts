@@ -5,8 +5,11 @@ import {
   createListingsClient,
   createMessagingClient,
   createNotificationsClient,
+  createPaymentsClient,
   type NotificationList,
   type NotificationPreferences,
+  type PaymentOrder,
+  type PaymentProduct,
   createSearchClient,
   createTrustClient,
   type Eligibility,
@@ -224,6 +227,33 @@ export async function reviewEligibility(
     logger.warn({ err: error }, 'review eligibility unavailable');
     return null;
   }
+}
+
+/** Promotion products and prices (public). */
+export async function paymentProducts(): Promise<PaymentProduct[]> {
+  const client = createPaymentsClient({ baseUrl: env.paymentsUrl });
+  const { data, response } = await client.GET('/api/v1/payments/products', {
+    signal: AbortSignal.timeout(3000),
+    cache: 'no-store',
+  });
+  if (data) return data.items;
+  throw new ServiceUnavailableError(`payments returned ${response.status}`);
+}
+
+/** One of the signed-in user's orders; null when unknown or not theirs. */
+export async function paymentOrder(id: string): Promise<PaymentOrder | null> {
+  const token = await accessToken();
+  if (!token) return null;
+  const client = createPaymentsClient({ baseUrl: env.paymentsUrl });
+  const { data, response } = await client.GET('/api/v1/payments/orders/{id}', {
+    params: { path: { id } },
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(10_000),
+    cache: 'no-store',
+  });
+  if (data) return data;
+  if (response.status === 404 || response.status === 400) return null;
+  throw new ServiceUnavailableError(`payments returned ${response.status}`);
 }
 
 function emptyFacets(): SearchResult['facets'] {

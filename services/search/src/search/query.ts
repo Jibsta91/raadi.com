@@ -179,7 +179,27 @@ export function buildSearch(p: SearchParams) {
     from: (p.page - 1) * p.pageSize,
     size: p.pageSize,
     track_total_hits: true,
-    query: { bool: { must: must.length ? must : [{ match_all: {} }], filter } },
+    query: {
+      bool: {
+        must: must.length ? must : [{ match_all: {} }],
+        filter,
+        // Running paid promotions rank first under "relevance" (ADR-0020). An
+        // optional clause: it changes the order, never which listings match.
+        // Explicit sorts (newest, price, distance) stay neutral.
+        ...(p.sort === 'relevance'
+          ? {
+              should: [
+                {
+                  constant_score: {
+                    filter: { range: { promotedUntil: { gt: 'now' } } },
+                    boost: 1000,
+                  },
+                },
+              ],
+            }
+          : {}),
+      },
+    },
     post_filter: { bool: { filter: others() } },
     aggs,
     sort,

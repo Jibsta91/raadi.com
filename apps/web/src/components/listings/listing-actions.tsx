@@ -46,6 +46,13 @@ export function ListingActions({ listing }: { listing: Listing }) {
                 {t('edit')}
               </Link>
             </Button>
+            {viewer.isOwner && listing.status === 'active' ? (
+              <Button asChild size="sm">
+                <Link href={`/listings/${listing.id}/promote`} data-testid="promote-listing">
+                  {t(listing.promotedUntil ? 'extendPromotion' : 'promote')}
+                </Link>
+              </Button>
+            ) : null}
             <Button
               variant="outline"
               size="sm"
