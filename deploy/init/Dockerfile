@@ -3,7 +3,7 @@
 # databases + migrations, Keycloak realm, dev TLS, startup summary, smoke test).
 # Scripts, migrations and the realm template are baked in so production servers
 # need nothing but this image and the compose files.
-FROM openbao/openbao:2.7.0 AS bao
+FROM openbao/openbao:2.7.1 AS bao
 FROM amacneil/dbmate:2.36.0 AS dbmate
 
 FROM alpine:3.24.2 AS migrations

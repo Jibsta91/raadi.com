@@ -19,7 +19,7 @@ paths = [
 description = "Known false positives of generic-api-key"
 regexTarget = "line"
 regexes = [
-  # image references such as valkey/valkey:9.0.6-alpine3.24
+  # image references such as valkey/valkey:9.1.2-alpine3.24
   '''valkey/valkey:[\w.-]+''',
   # C4 diagram element named "sec"
   '''Container\(sec, "ai-cybersecurity"''',
