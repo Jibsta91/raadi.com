@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { COUNTIES, type County } from '@raadi/catalog/places';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -14,6 +15,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NoPhoto } from '../../components/no-photo';
 import { Badge, Body, Button, Field, Glass, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import type { Messages } from '../../i18n/messages';
@@ -176,7 +178,9 @@ export default function ListingScreen() {
                 />
               ))}
             </ScrollView>
-          ) : null}
+          ) : (
+            <NoPhoto category={item.category} size={64} style={{ flex: 1 }} />
+          )}
           {item.images.length > 1 ? (
             <Glass style={styles.counter}>
               <Text style={[styles.counterText, { color: theme.text }]}>
@@ -207,7 +211,9 @@ export default function ListingScreen() {
           <View style={styles.place}>
             <Ionicons name="location-outline" size={16} color={theme.muted} />
             <Body muted style={styles.small}>
-              {item.location.name}, {item.location.county} · {formatAge(item.publishedAt, locale)}
+              {item.location.name},{' '}
+              {COUNTIES[item.location.county as County] ?? item.location.county} ·{' '}
+              {formatAge(item.publishedAt, locale)}
             </Body>
           </View>
 

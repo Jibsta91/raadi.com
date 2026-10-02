@@ -6,6 +6,7 @@ import { useI18n } from '../i18n';
 import { config } from '../lib/config';
 import { formatPrice } from '../lib/format';
 import { absoluteUrl } from '../lib/urls';
+import { NoPhoto } from './no-photo';
 import { fonts, radius, space, useTheme } from '../theme';
 import { Badge, Glass } from './ui';
 
@@ -23,7 +24,7 @@ function Photo({ hit, style }: { hit: SearchHit; style: object }) {
       accessibilityIgnoresInvertColors
     />
   ) : (
-    <View style={{ ...style, backgroundColor: theme.placeholder }} />
+    <NoPhoto category={hit.category} size={36} style={style} />
   );
 }
 

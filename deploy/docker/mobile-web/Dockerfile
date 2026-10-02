@@ -18,7 +18,7 @@ RUN --mount=type=cache,id=raadi-pnpm-store,target=/pnpm/store \
     pnpm config set store-dir /pnpm/store && pnpm install --frozen-lockfile
 COPY --from=pruned /out/full/ .
 COPY tsconfig.base.json ./
-RUN pnpm turbo run build --filter=@raadi/service-kit \
+RUN pnpm turbo run build --filter=@raadi/service-kit --filter=@raadi/catalog \
  && MOBILE_WEB_BASE_URL=/m pnpm --filter mobile build \
  && pnpm --filter @raadi/service-kit deploy --prod /otel
 

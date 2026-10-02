@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NoPhoto } from '../../components/no-photo';
 import { Body, Button, LargeTitle, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import { unwrap, useApi, useLoad } from '../../lib/api';
@@ -30,7 +31,7 @@ function Row({ conversation }: { conversation: Conversation }) {
             style={{ ...styles.thumb, backgroundColor: theme.placeholder }}
           />
         ) : (
-          <View style={{ ...styles.thumb, backgroundColor: theme.placeholder }} />
+          <NoPhoto size={24} style={styles.thumb} />
         )}
         <View style={styles.text}>
           <View style={styles.line}>

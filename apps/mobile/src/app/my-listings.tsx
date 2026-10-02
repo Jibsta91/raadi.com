@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Badge, Status } from '../components/ui';
+import { NoPhoto } from '../components/no-photo';
 import { useI18n } from '../i18n';
 import { unwrap, useApi, useLoad } from '../lib/api';
 import { useAuth } from '../lib/auth/context';
@@ -29,7 +30,7 @@ function Row({ listing }: { listing: Listing }) {
             style={{ ...styles.thumb, backgroundColor: theme.placeholder }}
           />
         ) : (
-          <View style={[styles.thumb, { backgroundColor: theme.placeholder }]} />
+          <NoPhoto category={listing.category} size={24} style={styles.thumb} />
         )}
         <View style={styles.text}>
           <Text numberOfLines={1} style={[styles.title, { color: theme.text }]}>

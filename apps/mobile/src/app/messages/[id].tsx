@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NoPhoto } from '../../components/no-photo';
 import { Body, Button, Glass, noFocusRing, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import { unwrap, useApi, useLoad } from '../../lib/api';
@@ -160,7 +161,7 @@ export default function ConversationScreen() {
               style={{ ...styles.headerThumb, backgroundColor: theme.placeholder }}
             />
           ) : (
-            <View style={{ ...styles.headerThumb, backgroundColor: theme.placeholder }} />
+            <NoPhoto size={20} style={styles.headerThumb} />
           )}
           <View style={styles.headerText}>
             <Body style={styles.listingTitle} testID="conversation-listing">
