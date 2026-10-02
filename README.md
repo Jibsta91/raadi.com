@@ -56,6 +56,9 @@ flowchart LR
   MS --> V
   KA --> NO[notifications<br/>e-mail · in-app]
   KA --> TR[trust<br/>reviews · BankID]
+  T --> PA[payments<br/>Vipps · Stripe adapters]
+  PA -->|ePayment API| PM[payments-mock<br/>test PSP]
+  PA -->|promotion events| KA
   TR -->|OIDC| K
   NO -->|SMTP| ML[Mailpit / SMTP]
   NO -->|users API| K
@@ -146,7 +149,7 @@ workflow, Let's Encrypt, backups and the "zero to live in 15 minutes" guide arri
 
 Phases 1 (foundation) and 2 (listings, search, media, web) are complete. You can browse and search about 500
 demo listings (full text, facets, geo radius), and sign in to create, edit, sell and delete listings with
-virus-scanned images. Listing changes reach search through the outbox, Debezium and Kafka. Phase 3 is under way: buyers and sellers can message each other, with live delivery over WebSockets, get e-mail and in-app notifications, review each other after a sale, and verify their identity with BankID (mocked in development). See the
+virus-scanned images. Listing changes reach search through the outbox, Debezium and Kafka. Phase 3 is under way: buyers and sellers can message each other, with live delivery over WebSockets, get e-mail and in-app notifications, review each other after a sale, verify their identity with BankID (mocked in development), and promote listings with payments (a Vipps-compatible test provider in development). See the
 [roadmap](docs/roadmap.md) for later phases.
 
 ## Documentation

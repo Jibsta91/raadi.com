@@ -372,6 +372,38 @@ req GET "$PUBLIC/api/v1/trust/verification/callback?state=forged&code=x"
   && ok "forged verification callbacks are refused" || fail "verification callback" "HTTP $status $(header location)"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
+section "Payments (promoted listings, Vipps-compatible mock)"
+: > "$JAR"
+req GET "$PUBLIC/api/v1/payments/products"
+[[ "$status" == "200" && "$(json '.items | length')" -ge 2 && "$(json '.items[0].currency')" == "NOK" ]] \
+  && ok "prices are public (provider $(json '.provider'))" || fail "products" "HTTP $status"
+order() { jq -nc --arg l "$1" --arg p "$2" '{listingId: $l, product: $p, locale: "en"}'; }
+req POST "$PUBLIC/api/v1/payments/orders" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(order "$kari_listing" promote_7d)"
+expect_status 401 "anonymous users cannot buy"
+login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
+req POST "$PUBLIC/api/v1/payments/orders" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(order "$kari_listing" promote_7d)"
+expect_status 400 "orders need an Idempotency-Key"
+key="smoke-$(date +%s%N)"
+req POST "$PUBLIC/api/v1/payments/orders" -H 'content-type: application/json' -H "origin: $ORIGIN" \
+  -H "idempotency-key: $key" --data "$(order "$kari_listing" promote_7d)"
+order_id="$(json '.id')"; pay_url="$(json '.redirectUrl')"
+[[ "$status" == "201" && "$(json '.status')" == "created" && "$pay_url" == *"/pay/$order_id" ]] \
+  && ok "order created; payer goes to the provider's page" || fail "create order" "HTTP $status $(head -c 300 "$BODY")"
+req POST "$PUBLIC/api/v1/payments/orders" -H 'content-type: application/json' -H "origin: $ORIGIN" \
+  -H "idempotency-key: $key" --data "$(order "$kari_listing" promote_7d)"
+[[ "$status" == "200" && "$(json '.id')" == "$order_id" ]] && ok "a retried request returns the same order" || fail "idempotent replay" "HTTP $status"
+approve=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' --max-time 10 --connect-to "::${GW}" -X POST "$pay_url?action=approve")
+[[ "$approve" == "303 $PUBLIC/en/payments/$order_id" ]] && ok "payer approves at the (mock) provider and returns" || fail "approve" "$approve"
+captured() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" "$PUBLIC/api/v1/payments/orders/$order_id" | jq -e '.status == "captured" and .promotedUntil != null'; }
+eventually "signed webhook captures the order and activates the promotion" 60 captured
+promoted() { curl -sf --max-time 10 --connect-to "::${GW}" "$PUBLIC/api/v1/listings/$kari_listing" | jq -e '.promotedUntil != null'; }
+eventually "the promotion reaches the listing (payments -> Kafka -> listings)" 90 promoted
+req POST "$PUBLIC/api/v1/payments/webhooks/vipps" -H 'content-type: application/json' --data '{"reference":"x","name":"CAPTURED"}'
+expect_status 401 "unsigned webhooks are refused"
+mock_api=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 --connect-to "::${GW}" "${pay_url%/pay/*}/epayment/v1/payments/$order_id")
+[[ "$mock_api" == "404" ]] && ok "the mock provider's API is not exposed (only its payment page)" || fail "mock API exposed" "HTTP $mock_api"
+req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
+
 section "Operations"
 req GET "$GRAFANA/api/health"
 expect_status 200 "Grafana healthy via gateway"

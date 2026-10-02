@@ -5,8 +5,10 @@ import {
   type OnApplicationBootstrap,
   type OnApplicationShutdown,
 } from '@nestjs/common';
+import { metrics } from '@opentelemetry/api';
 import type { AppConfig } from '../config.js';
 import { APP_CONFIG } from '../tokens.js';
+import { PaymentsRepository } from './payments.repository.js';
 import { PaymentsService } from './payments.service.js';
 
 /**
@@ -21,8 +23,16 @@ export class PaymentWorkers implements OnApplicationBootstrap, OnApplicationShut
 
   constructor(
     private readonly payments: PaymentsService,
+    repo: PaymentsRepository,
     @Inject(APP_CONFIG) private readonly cfg: AppConfig,
-  ) {}
+  ) {
+    metrics
+      .getMeter('payments')
+      .createObservableGauge('raadi.payments.stuck_orders', {
+        description: 'Orders still waiting for the provider after 10 minutes',
+      })
+      .addCallback(async (r) => r.observe(await repo.countStuck(600).catch(() => 0)));
+  }
 
   onApplicationBootstrap(): void {
     this.timer = setInterval(() => {

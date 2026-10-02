@@ -90,6 +90,16 @@ export class PaymentsRepository {
     return rows;
   }
 
+  /** Orders still open after `seconds` (for the PaymentsStuckOpen alert). */
+  async countStuck(seconds: number): Promise<number> {
+    const { rows } = await this.pool.query<{ n: string }>(
+      `SELECT count(*) AS n FROM orders WHERE status IN ('created', 'authorized')
+         AND created_at < now() - make_interval(secs => $1)`,
+      [seconds],
+    );
+    return Number(rows[0]!.n);
+  }
+
   /**
    * Runs `fn` with the order row locked, so webhooks, reconciliation and API
    * calls for one order are applied one at a time.
