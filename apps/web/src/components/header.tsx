@@ -16,6 +16,7 @@ export async function Header({ locale }: { locale: string }) {
     ? await Promise.all([unreadCount(), unreadNotifications()])
     : [0, 0];
   const loginHref = `/auth/login?returnTo=${encodeURIComponent(`/${locale}/account`)}&locale=${locale}`;
+  const signupHref = `/auth/login?signup=1&returnTo=${encodeURIComponent(`/${locale}`)}&locale=${locale}`;
 
   return (
     <header className="border-b bg-card">
@@ -100,11 +101,18 @@ export async function Header({ locale }: { locale: string }) {
               </form>
             </>
           ) : (
-            <Button asChild variant="outline" size="sm">
-              <a href={loginHref} data-testid="nav-login">
-                {t('login')}
-              </a>
-            </Button>
+            <>
+              <Button asChild variant="outline" size="sm">
+                <a href={loginHref} data-testid="nav-login">
+                  {t('login')}
+                </a>
+              </Button>
+              <Button asChild size="sm">
+                <a href={signupHref} data-testid="nav-signup">
+                  {t('signup')}
+                </a>
+              </Button>
+            </>
           )}
         </nav>
       </div>

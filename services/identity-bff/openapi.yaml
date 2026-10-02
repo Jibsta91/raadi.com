@@ -22,8 +22,16 @@ paths:
     get:
       tags: [auth]
       operationId: login
-      summary: Start login (redirects to Keycloak)
+      summary: Start login or sign-up (redirects to Keycloak)
+      description: |
+        After a user's first login, the callback redirects to `/{locale}/welcome?next=<returnTo>`.
       parameters:
+        - {
+            name: signup,
+            in: query,
+            schema: { type: string, enum: ['1', 'true'] },
+            description: Open the registration form directly (OIDC prompt=create),
+          }
         - {
             name: returnTo,
             in: query,

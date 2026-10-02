@@ -82,6 +82,13 @@ grant_client_role() { # <service-account client> <resource client> <role>
     --data-binary "[$role]" >/dev/null
   info "service account $1 has $2/$3"
 }
+# New accounts accept the terms of use on their first login (Keycloak's built-in step;
+# existing users are not asked again).
+api "$KC/admin/realms/$REALM/authentication/required-actions/TERMS_AND_CONDITIONS" \
+  | jq '.enabled = true | .defaultAction = true' \
+  | api -X PUT "$KC/admin/realms/$REALM/authentication/required-actions/TERMS_AND_CONDITIONS" --data-binary @-
+info "new users accept the terms of use"
+
 grant_client_role registry-init apicurio-registry sr-admin
 # notifications reads e-mail and language at send time, nothing else.
 grant_client_role notifications realm-management view-users

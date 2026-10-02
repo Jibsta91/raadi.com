@@ -24,9 +24,21 @@ export function normaliseLocale(value: unknown): Locale {
   return SUPPORTED.includes(value as Locale) ? (value as Locale) : 'nb';
 }
 
-/** Keycloak ships Norwegian as "no" and has no Somali bundle (falls back to English). */
+/**
+ * Keycloak calls Norwegian "no". Somali comes from the Raadi theme
+ * (deploy/keycloak/themes/raadi), which falls back to English where it has no text.
+ */
 export function keycloakUiLocale(locale: Locale): string {
-  return locale === 'nb' ? 'no' : 'en';
+  return locale === 'nb' ? 'no' : locale;
+}
+
+/**
+ * Where to go after the callback: a user's very first login goes through the
+ * welcome page, which then continues to the original target.
+ */
+export function afterLoginPath(returnTo: string, locale: Locale, firstLogin: boolean): string {
+  if (!firstLogin) return returnTo;
+  return `/${locale}/welcome?${new URLSearchParams({ next: returnTo })}`;
 }
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);

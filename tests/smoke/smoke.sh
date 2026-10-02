@@ -91,6 +91,18 @@ issuer=$(jq -r .issuer "$BODY" 2>/dev/null)
 req GET "$AUTH/metrics"
 [[ "$status" == "404" ]] && ok "Keycloak metrics not exposed publicly" || fail "Keycloak metrics exposed" "HTTP $status"
 
+section "Sign-up (hosted registration, Raadi theme)"
+: > "$JAR"
+req GET "$PUBLIC/auth/login?signup=1&returnTo=/en&locale=en"
+signup_url="$(header location)"
+[[ "$status" == "302" && "$signup_url" == *prompt=create* ]] && ok "sign-up opens Keycloak's registration (prompt=create)" || fail "sign-up redirect" "HTTP $status $signup_url"
+page=$(curl -s --max-time 10 --connect-to "::${GW}" -b "$JAR" -c "$JAR" -L "$signup_url")
+grep -q 'kc-register-form' <<<"$page" && grep -q 'raadi-wordmark' <<<"$page" \
+  && ok "registration page uses the Raadi theme" || fail "registration page"
+! grep -q 'id="password"' <<<"$page" && ok "password is set after the e-mail is confirmed (no pre-hijacking)" || fail "password on registration form"
+req GET "$PUBLIC/en/terms"
+expect_status 200 "terms of use page"
+
 section "Login flow (Authorization Code + PKCE via identity-bff)"
 req GET "$PUBLIC/api/v1/identity/me"
 expect_status 401 "API rejects anonymous requests"
