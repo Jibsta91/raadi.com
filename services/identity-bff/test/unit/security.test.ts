@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   isCsrfSafe,
+  afterLoginPath,
   keycloakUiLocale,
   normaliseLocale,
   safeReturnTo,
@@ -31,7 +32,19 @@ describe('locales', () => {
   });
   it('maps to Keycloak bundles', () => {
     assert.equal(keycloakUiLocale('nb'), 'no');
-    assert.equal(keycloakUiLocale('so'), 'en');
+    assert.equal(keycloakUiLocale('so'), 'so');
+    assert.equal(keycloakUiLocale('en'), 'en');
+  });
+
+  it('sends first logins through the welcome page, keeping the target', () => {
+    assert.equal(afterLoginPath('/en/account', 'en', false), '/en/account');
+    assert.equal(
+      afterLoginPath('/nb/listings/new', 'nb', true),
+      '/nb/welcome?next=%2Fnb%2Flistings%2Fnew',
+    );
+    // The language the user was browsing in wins over the profile language.
+    assert.equal(afterLoginPath('/en/account', 'nb', true), '/en/welcome?next=%2Fen%2Faccount');
+    assert.equal(afterLoginPath('/', 'so', true), '/so/welcome?next=%2F');
   });
 });
 

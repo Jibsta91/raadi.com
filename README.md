@@ -31,6 +31,10 @@ All demo users share the password **`raadi-demo-pass`** (development only; produ
 | `moderator@raadi.localhost`     | moderator (Grafana viewer)     |
 | `admin@raadi.localhost`         | platform admin (Grafana admin) |
 
+**Sign up.** "Sign up" in the header opens the Raadi-branded registration page. The confirmation e-mail lands in
+Mailpit (http://mail.raadi.localhost); after confirming you choose a password, accept the terms and see a
+welcome page.
+
 **BankID (test).** "Verify with BankID" on the account page goes to a mock BankID provider (the `bankid-mock`
 realm in Keycloak). Sign in there as one of the synthetic test people `01897000011`, `02897000022`,
 `03897000033`, `04897000044` or `05897000055`, with the same password. Each test person can verify one Raadi

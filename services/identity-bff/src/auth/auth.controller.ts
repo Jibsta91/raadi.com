@@ -8,7 +8,13 @@ import { loginCounter, refreshCounter } from '../metrics.js';
 import { APP_CONFIG } from '../tokens.js';
 import { UsersRepository } from '../users/users.repository.js';
 import { OidcService } from './oidc.service.js';
-import { isCsrfSafe, keycloakUiLocale, normaliseLocale, safeReturnTo } from './security.js';
+import {
+  afterLoginPath,
+  isCsrfSafe,
+  keycloakUiLocale,
+  normaliseLocale,
+  safeReturnTo,
+} from './security.js';
 import { type SessionData, SessionStore } from './session.store.js';
 
 const REFRESH_SKEW_SEC = 30;
@@ -28,7 +34,7 @@ export class AuthController {
     private readonly users: UsersRepository,
   ) {}
 
-  /** Starts the Authorization Code + PKCE flow. */
+  /** Starts the Authorization Code + PKCE flow; `?signup=1` opens registration instead of login. */
   @Get('login')
   @Throttle(AUTH_THROTTLE)
   async login(@Req() req: Req, @Res() reply: FastifyReply): Promise<void> {
@@ -36,7 +42,8 @@ export class AuthController {
     const locale = normaliseLocale(query.locale);
     const tx = this.oidc.newTransaction(safeReturnTo(query.returnTo, `/${locale}`));
     await this.sessions.putLoginTransaction(tx.state, tx);
-    const url = await this.oidc.authorizationUrl(tx, keycloakUiLocale(locale));
+    const signup = query.signup === '1' || query.signup === 'true';
+    const url = await this.oidc.authorizationUrl(tx, keycloakUiLocale(locale), signup);
     this.redirect(reply, 302, url.href);
   }
 
@@ -97,7 +104,7 @@ export class AuthController {
     this.logger.log({ userId: profile.id, registered }, 'user logged in');
 
     void reply.setCookie(this.cfg.env.SESSION_COOKIE_NAME, sid, this.cookieOptions());
-    this.redirect(reply, 302, tx.returnTo);
+    this.redirect(reply, 302, afterLoginPath(tx.returnTo, profile.locale, registered));
   }
 
   /** Ends the local session, revokes the refresh token and signs out of Keycloak (RP-initiated logout). */

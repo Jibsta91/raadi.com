@@ -15,7 +15,8 @@
     "myListings": "Mine annonser",
     "messages": "Meldinger",
     "unread": "{count, plural, one {# ulest melding} other {# uleste meldinger}}",
-    "notifications": "Varsler"
+    "notifications": "Varsler",
+    "signup": "Opprett konto"
   },
   "home": {
     "heroTitle": "Finn det. Selg det. Raadi.",
@@ -130,7 +131,8 @@
     "tagline": "Raadi — åpen kildekode-markedsplass",
     "privacy": "Personvern",
     "status": "Status",
-    "openSource": "Apache-2.0"
+    "openSource": "Apache-2.0",
+    "terms": "Vilkår"
   },
   "notFound": {
     "title": "Fant ikke siden",
@@ -437,5 +439,55 @@
       "rateLimited": "For mange omtaler. Prøv igjen senere.",
       "error": "Kunne ikke publisere omtalen. Prøv igjen."
     }
+  },
+  "terms": {
+    "title": "Vilkår for bruk",
+    "intro": "Reglene for å bruke Raadi. De er korte med vilje: les dem før du kjøper eller selger.",
+    "service": {
+      "title": "Tjenesten",
+      "body": "Raadi er en markedsplass der privatpersoner og bedrifter legger ut ting, bolig, bil og jobber, og kontakter hverandre. Raadi er ikke part i handlene som gjøres her."
+    },
+    "account": {
+      "title": "Kontoen din",
+      "body": "Du trenger en bekreftet e-postadresse og må være minst 18 år for å opprette en konto. Ta vare på passordet ditt, og si fra hvis du tror noen andre har brukt kontoen din. Én person kan verifisere én konto med BankID."
+    },
+    "listings": {
+      "title": "Annonser",
+      "body": "Legg bare ut det du har lov til å selge, beskriv det ærlig og sett en reell pris. Ulovlige, stjålne, forfalskede og farlige varer er ikke tillatt, heller ikke annonser som villeder eller diskriminerer."
+    },
+    "conduct": {
+      "title": "Kontakt mellom brukere",
+      "body": "Bruk meldinger til handelen det gjelder. Spam, svindel, trakassering og å be om betaling utenom avtalte metoder er ikke tillatt. Del aldri passord eller BankID-koder med noen."
+    },
+    "reviews": {
+      "title": "Omtaler",
+      "body": "Etter et salg kan kjøper og selger vurdere hverandre én gang. Omtaler skal være ærlige og handle om handelen. Omtaler som trakasserer, truer eller inneholder personopplysninger, fjernes."
+    },
+    "moderation": {
+      "title": "Moderering",
+      "body": "Moderatorer kan fjerne annonser, meldinger og omtaler som bryter vilkårene, og stenge kontoer. Du får beskjed når annonsen din blir fjernet."
+    },
+    "liability": {
+      "title": "Ansvar",
+      "body": "Kjøper og selger har selv ansvar for handelen. Sjekk varen før du betaler, og bruk betalingsmåtene som tilbys i appen."
+    },
+    "changes": {
+      "title": "Endringer",
+      "body": "Vi gir beskjed før vilkårene endres. Godtar du ikke de nye vilkårene, kan du slette kontoen din."
+    }
+  },
+  "welcome": {
+    "title": "Velkommen til Raadi",
+    "greeting": "Velkommen til Raadi, {name}!",
+    "intro": "Kontoen din er klar. Tre ting som hjelper, alle valgfrie:",
+    "languageTitle": "Språk",
+    "languageHint": "Raadi finnes på norsk, engelsk og somali. Bytt når du vil med språkmenyen øverst.",
+    "verifyTitle": "Verifiser med BankID",
+    "verifyHint": "Kjøpere og selgere stoler mer på verifiserte personer. Raadi lagrer bare at du er verifisert, aldri fødselsnummeret ditt.",
+    "passkeyTitle": "Legg til en passnøkkel",
+    "passkeyHint": "Logg inn med fingeravtrykk, ansikt eller PIN på enheten i stedet for passord. Sikrere mot phishing, og raskere.",
+    "passkeyAction": "Sett opp passnøkkel",
+    "continue": "Fortsett",
+    "sell": "Selg noe"
   }
 }

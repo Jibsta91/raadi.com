@@ -19,7 +19,7 @@
   "minimumQuickLoginWaitSeconds": 60,
   "quickLoginCheckMilliSeconds": 1000,
   "maxDeltaTimeSeconds": 43200,
-  "passwordPolicy": "length(12) and maxLength(128) and notUsername and notEmail",
+  "passwordPolicy": "length(12) and maxLength(128) and notUsername and notEmail and passwordBlacklist(common-12plus.txt)",
   "accessTokenLifespan": 300,
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 36000,
@@ -27,7 +27,7 @@
   "revokeRefreshToken": true,
   "refreshTokenMaxReuse": 0,
   "internationalizationEnabled": true,
-  "supportedLocales": ["en", "no"],
+  "supportedLocales": ["en", "no", "so"],
   "defaultLocale": "en",
   "eventsEnabled": true,
   "eventsExpiration": 2592000,
@@ -353,5 +353,7 @@
       ],
       "realmRoles": ["user", "moderator", "platform-admin"]
     }
-  ]
+  ],
+  "loginTheme": "raadi",
+  "emailTheme": "raadi"
 }

@@ -15,7 +15,8 @@
     "myListings": "My listings",
     "messages": "Messages",
     "unread": "{count, plural, one {# unread message} other {# unread messages}}",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "signup": "Sign up"
   },
   "home": {
     "heroTitle": "Find it. Sell it. Raadi.",
@@ -130,7 +131,8 @@
     "tagline": "Raadi — open-source classifieds",
     "privacy": "Privacy",
     "status": "Status",
-    "openSource": "Apache-2.0"
+    "openSource": "Apache-2.0",
+    "terms": "Terms"
   },
   "notFound": {
     "title": "Page not found",
@@ -437,5 +439,55 @@
       "rateLimited": "Too many reviews. Please try again later.",
       "error": "Could not publish the review. Please try again."
     }
+  },
+  "terms": {
+    "title": "Terms of use",
+    "intro": "The rules for using Raadi. They are short on purpose: read them before you buy or sell.",
+    "service": {
+      "title": "The service",
+      "body": "Raadi is a marketplace where private people and businesses list items, property, cars and jobs, and contact each other. Raadi is not a party to the deals made on it."
+    },
+    "account": {
+      "title": "Your account",
+      "body": "You need a confirmed e-mail address and must be at least 18 years old to create an account. Keep your password safe, and tell us if you think someone else has used your account. One person may verify one account with BankID."
+    },
+    "listings": {
+      "title": "Listings",
+      "body": "Only list things you are allowed to sell, describe them honestly and set a real price. Illegal, stolen, counterfeit and dangerous goods are not allowed, and neither are listings that mislead or discriminate."
+    },
+    "conduct": {
+      "title": "Contact between users",
+      "body": "Use messages for the deal at hand. Spam, scams, harassment and asking for payment outside agreed methods are not allowed. Never share passwords or BankID codes with anyone."
+    },
+    "reviews": {
+      "title": "Reviews",
+      "body": "After a sale, buyer and seller may review each other once. Reviews must be honest and about the deal. Reviews that harass, threaten or contain personal data are removed."
+    },
+    "moderation": {
+      "title": "Moderation",
+      "body": "Moderators may remove listings, messages and reviews that break these terms, and suspend accounts. You are told when your listing is removed."
+    },
+    "liability": {
+      "title": "Responsibility",
+      "body": "Buyers and sellers are responsible for their own deals. Check the item before you pay, and use the payment methods offered in the app."
+    },
+    "changes": {
+      "title": "Changes",
+      "body": "We tell you before these terms change. If you do not accept the new terms, you can delete your account."
+    }
+  },
+  "welcome": {
+    "title": "Welcome to Raadi",
+    "greeting": "Welcome to Raadi, {name}!",
+    "intro": "Your account is ready. Three things that help, all optional:",
+    "languageTitle": "Language",
+    "languageHint": "Raadi is available in Norsk, English and Soomaali. Change it any time with the language menu at the top.",
+    "verifyTitle": "Verify with BankID",
+    "verifyHint": "Buyers and sellers trust verified people more. Raadi only stores that you are verified, never your national identity number.",
+    "passkeyTitle": "Add a passkey",
+    "passkeyHint": "Log in with your fingerprint, face or device PIN instead of a password. Safer against phishing, and faster.",
+    "passkeyAction": "Set up a passkey",
+    "continue": "Continue",
+    "sell": "Sell something"
   }
 }

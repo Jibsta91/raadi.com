@@ -5,8 +5,12 @@
   "schedule": ["before 7am on monday"],
   "dependencyDashboard": true,
   "rangeStrategy": "pin",
-  "docker-compose": { "enabled": true },
-  "dockerfile": { "enabled": true },
+  "docker-compose": {
+    "enabled": true
+  },
+  "dockerfile": {
+    "enabled": true
+  },
   "customManagers": [
     {
       "customType": "regex",
@@ -23,11 +27,26 @@
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "{{#if (containsString matchString 'TOFU')}}opentofu/opentofu{{else if (containsString matchString 'TFLINT')}}terraform-linters/tflint{{else if (containsString matchString 'TRIVY')}}aquasecurity/trivy{{else if (containsString matchString 'GITLEAKS')}}gitleaks/gitleaks{{else if (containsString matchString 'OSV')}}google/osv-scanner{{else}}anchore/syft{{/if}}",
       "extractVersionTemplate": "^v?(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "description": "Playwright MCP image for AI coding sessions (.mcp.json)",
+      "managerFilePatterns": ["/^\\.mcp\\.json$/"],
+      "matchStrings": [
+        "\"(?<depName>mcr\\.microsoft\\.com/playwright/mcp):(?<currentValue>v[\\d.]+)@(?<currentDigest>sha256:[a-f0-9]{64})\""
+      ],
+      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [
-    { "groupName": "OpenTelemetry (JS)", "matchPackageNames": ["@opentelemetry/**"] },
-    { "groupName": "NestJS", "matchPackageNames": ["@nestjs/**"] },
+    {
+      "groupName": "OpenTelemetry (JS)",
+      "matchPackageNames": ["@opentelemetry/**"]
+    },
+    {
+      "groupName": "NestJS",
+      "matchPackageNames": ["@nestjs/**"]
+    },
     {
       "groupName": "Next.js + React",
       "matchPackageNames": [
@@ -54,6 +73,9 @@
       "matchPackageNames": ["node"],
       "allowedVersions": "<25"
     },
-    { "matchUpdateTypes": ["major"], "dependencyDashboardApproval": true }
+    {
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    }
   ]
 }
