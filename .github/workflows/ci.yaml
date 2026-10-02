@@ -1,12 +1,19 @@
 # Phase 1 CI: the same ./raadi commands developers run locally, all in containers.
 # Phase 5 extends this with multi-arch builds, SBOMs, signing, CodeQL/Semgrep,
 # ZAP and path-based job selection.
+#
+# Image layers are cached in the GitHub Actions cache, one scope per image (ADR-0021). The weekly
+# scheduled run, and any manual run, builds everything without the cache, so a build that only works
+# from cached layers cannot hide for long.
 name: ci
 
 on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,6 +22,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DOCKER_BUILD_SUMMARY: false
+  DOCKER_BUILD_RECORD_UPLOAD: false
+
 jobs:
   quality:
     name: Lint, types, tests, scans
@@ -22,8 +33,18 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build toolbox
-        run: docker compose --profile tools build toolbox
+        uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
+        with:
+          source: .
+          files: compose.yaml
+          targets: toolbox
+          load: true
+          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+          set: |
+            toolbox.cache-from=type=gha,scope=raadi-toolbox-dev
+            toolbox.cache-to=type=gha,scope=raadi-toolbox-dev,mode=max,ignore-error=true
       - run: ./raadi lint
       - run: ./raadi typecheck
       - run: ./raadi test
@@ -38,8 +59,36 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      # Several services share one image (init, toolbox): build each image once, cached under its tag.
+      - name: List images to build
+        id: images
+        run: |
+          plan=$(docker buildx bake --print 2>/dev/null |
+            jq -r '.target | to_entries | unique_by(.value.tags[0]) | .[] | "\(.key) \(.value.tags[0] | gsub("[/:]"; "-"))"')
+          {
+            echo 'targets<<EOF'
+            cut -d' ' -f1 <<<"$plan"
+            echo EOF
+            echo 'set<<EOF'
+            while read -r target scope; do
+              echo "$target.cache-from=type=gha,scope=$scope"
+              echo "$target.cache-to=type=gha,scope=$scope,mode=max,ignore-error=true"
+            done <<<"$plan"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+      - name: Build images
+        uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
+        with:
+          source: .
+          files: compose.yaml
+          targets: ${{ steps.images.outputs.targets }}
+          load: true
+          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+          set: ${{ steps.images.outputs.set }}
+      # --no-build: the images above are the ones under test (pull_policy: build would rebuild them).
       - name: docker compose up --wait
-        run: docker compose up -d --wait --wait-timeout 1200
+        run: docker compose up -d --no-build --wait --wait-timeout 1200
       - name: Smoke test
         run: ./raadi smoke
       - name: Playwright end-to-end tests
