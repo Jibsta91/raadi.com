@@ -13,6 +13,9 @@ RUN /opt/keycloak/bin/kc.sh build
 
 FROM quay.io/keycloak/keycloak:26.8.0
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
+# Raadi login and e-mail theme, and the common-password list (password policy).
+COPY themes/ /opt/keycloak/themes/
+COPY password-blacklists/common-12plus.txt /opt/keycloak/data/password-blacklists/common-12plus.txt
 COPY --chmod=0755 entrypoint.sh /opt/raadi/entrypoint.sh
 COPY --chmod=0755 healthcheck.sh /opt/raadi/healthcheck.sh
 USER 1000

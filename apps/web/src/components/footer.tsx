@@ -11,6 +11,9 @@ export async function Footer() {
           <Link href="/privacy" prefetch={false} className="hover:underline">
             {t('privacy')}
           </Link>
+          <Link href="/terms" prefetch={false} className="hover:underline">
+            {t('terms')}
+          </Link>
           <Link href="/status" prefetch={false} className="hover:underline">
             {t('status')}
           </Link>
