@@ -42,6 +42,9 @@ describe('locales', () => {
       afterLoginPath('/nb/listings/new', 'nb', true),
       '/nb/welcome?next=%2Fnb%2Flistings%2Fnew',
     );
+    // The language the user was browsing in wins over the profile language.
+    assert.equal(afterLoginPath('/en/account', 'nb', true), '/en/welcome?next=%2Fen%2Faccount');
+    assert.equal(afterLoginPath('/', 'so', true), '/so/welcome?next=%2F');
   });
 });
 
