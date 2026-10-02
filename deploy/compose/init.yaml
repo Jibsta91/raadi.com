@@ -30,6 +30,7 @@ x-init: &init
     KEYCLOAK_REALM: ${KEYCLOAK_REALM}
     SEED_DEMO_DATA: ${SEED_DEMO_DATA}
     DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD}
+    BANKID_MOCK: ${BANKID_MOCK}
     TZ: ${TZ}
 
 services:
@@ -157,6 +158,7 @@ services:
       messaging: { condition: service_healthy }
       messaging-seed: { condition: service_completed_successfully }
       notifications: { condition: service_healthy }
+      trust: { condition: service_healthy }
       apicurio: { condition: service_healthy }
       opensearch: { condition: service_healthy }
       imgproxy: { condition: service_healthy }

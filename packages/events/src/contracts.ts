@@ -82,6 +82,20 @@ export const contracts = {
     recipientId: uuid,
     sentAt: timestamp,
   }),
+  /**
+   * A buyer or seller rated the other party after a sale (reviews-trust). Ids
+   * and the rating only: the comment stays in the trust service.
+   */
+  'no.raadi.trust.review.published.v1': z.object({
+    reviewId: uuid,
+    listingId: uuid,
+    reviewerId: uuid,
+    subjectId: uuid,
+    /** What the subject was in the deal. */
+    subjectRole: z.enum(['buyer', 'seller']),
+    rating: z.number().int().min(1).max(5),
+    publishedAt: timestamp,
+  }),
 } as const;
 
 export type EventType = keyof typeof contracts;

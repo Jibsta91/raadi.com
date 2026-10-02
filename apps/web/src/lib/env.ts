@@ -15,6 +15,9 @@ export const env = {
   get notificationsUrl() {
     return process.env.NOTIFICATIONS_URL ?? 'http://notifications:4000';
   },
+  get trustUrl() {
+    return process.env.TRUST_URL ?? 'http://trust:4000';
+  },
   get publicBaseUrl() {
     return process.env.PUBLIC_BASE_URL ?? 'http://raadi.localhost';
   },

@@ -174,6 +174,11 @@ export interface components {
                 } | null;
             };
             counterpart: {
+                /**
+                 * Format: uuid
+                 * @description The other participant (for reviews after a sale; ADR-0018)
+                 */
+                id: string;
                 /** @description Public display name of the other participant */
                 name: string;
             };

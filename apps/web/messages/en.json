@@ -380,7 +380,8 @@
     "empty": "No notifications yet.",
     "markAllRead": "Mark all as read",
     "kinds": {
-      "listing_removed": "Your listing \"{title}\" was removed by a moderator because it breaks the marketplace rules."
+      "listing_removed": "Your listing \"{title}\" was removed by a moderator because it breaks the marketplace rules.",
+      "review_received": "Someone reviewed you: {rating} out of 5 stars."
     },
     "settings": {
       "title": "E-mail",
@@ -388,6 +389,53 @@
       "emailMessagesHint": "At most one e-mail per conversation every 30 minutes. Notices about your listings are always sent.",
       "saved": "Saved",
       "error": "Could not save. Please try again."
+    }
+  },
+  "trust": {
+    "profile": "Profile",
+    "profileTitle": "{name} on Raadi",
+    "rating": "Rating",
+    "reviews": "Reviews",
+    "outOf5": "{value} out of 5",
+    "stars": "{count, plural, one {# star} other {# stars}}",
+    "reviewCount": "{count, plural, =0 {no reviews} one {# review} other {# reviews}}",
+    "noReviewsYet": "No reviews yet",
+    "verified": "Verified with BankID",
+    "verifiedSince": "Verified with BankID since {date}",
+    "notVerified": "Not verified",
+    "byBuyer": "From <reviewer>{name}</reviewer>, who bought “{listing}”",
+    "bySeller": "From <reviewer>{name}</reviewer>, who sold “{listing}”",
+    "more": "More reviews",
+    "remove": "Withdraw my review",
+    "removeConfirm": "Withdraw your review? You cannot review this deal again.",
+    "removeModerator": "Remove review",
+    "removeConfirmModerator": "Remove this review for breaking the rules?",
+    "reviewed": "You have reviewed {name} for this deal.",
+    "seeProfile": "See profile",
+    "seeMyProfile": "See my public profile",
+    "verificationTitle": "Identity verification",
+    "verificationHint": "Show buyers and sellers that you are a real person. Raadi only stores that you are verified, never your national identity number.",
+    "verifyWithBankId": "Verify with BankID",
+    "removeVerification": "Remove verification",
+    "removeVerificationConfirm": "Remove your BankID verification?",
+    "unavailable": "Verification is unavailable right now. Please try again later.",
+    "outcomes": {
+      "ok": "You are now verified with BankID.",
+      "cancelled": "Verification was cancelled.",
+      "taken": "This BankID is already linked to another Raadi account.",
+      "expired": "The verification took too long. Please try again.",
+      "failed": "Verification failed. Please try again."
+    },
+    "form": {
+      "titleSeller": "How was it to buy from {name}?",
+      "titleBuyer": "How was it to sell to {name}?",
+      "rating": "Rating",
+      "comment": "Comment (optional)",
+      "public": "Your review and your name are shown on their public profile.",
+      "pickRating": "Choose a rating from 1 to 5 stars.",
+      "submit": "Publish review",
+      "rateLimited": "Too many reviews. Please try again later.",
+      "error": "Could not publish the review. Please try again."
     }
   }
 }

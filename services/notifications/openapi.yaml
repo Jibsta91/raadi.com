@@ -130,12 +130,12 @@ components:
         id: { type: string, format: uuid }
         kind:
           type: string
-          enum: [listing_removed]
+          enum: [listing_removed, review_received]
           description: The client renders the localized text from the kind and params.
         params:
           type: object
           additionalProperties: { type: string }
-          description: Values for the text, e.g. {"title":"…"} for listing_removed.
+          description: Values for the text, e.g. {"title":"…"} for listing_removed, {"rating":"5"} for review_received.
         link: { type: string, description: Path in the web app (without locale) }
         createdAt: { type: string, format: date-time }
         read: { type: boolean }

@@ -39,6 +39,7 @@ C4Container
   title Raadi — containers
   Person(user, "Buyer / seller")
   Person(ops, "Operator / moderator")
+  System_Ext(bankid, "BankID", "OIDC identity verification (bankid-mock realm in Keycloak by default)")
 
   System_Boundary(edge, "Edge") {
     Container(traefik, "Traefik", "Go", "TLS, routing, rate limits, security headers, forward-auth; CrowdSec bouncer + Coraza WAF (P6)")
@@ -57,7 +58,7 @@ C4Container
     Container(messaging, "messaging", "NestJS", "Buyer-seller conversations; REST to send, WebSocket push")
     Container(notifications, "notifications", "NestJS", "E-mail (queued, throttled) and in-app; Expo push later")
     Container(payments, "payments", "NestJS", "Promoted listings, pluggable providers (P3)")
-    Container(trust, "reviews-trust", "NestJS", "Ratings, BankID-ready verification (P3)")
+    Container(trust, "trust", "NestJS", "Reviews after a sale, BankID verification (OIDC)")
   }
 
   System_Boundary(ai, "AI pillars (Python / FastAPI)") {
@@ -99,6 +100,8 @@ C4Container
   Rel(messaging, listings, "Seller lookup (internal API)")
   Rel(kafka, notifications, "message and listing events")
   Rel(notifications, keycloak, "E-mail address + language (view-users)")
+  Rel(kafka, trust, "listing and message events")
+  Rel(trust, bankid, "Verifies identity", "OIDC + PKCE")
   Rel(traefik, keycloak, "auth.<domain>")
   Rel(traefik, grafana, "grafana.<domain>")
   Rel(web, bff, "Session + token exchange")
@@ -214,7 +217,7 @@ reachable only on the internal Docker network.
 | messaging                              | 3                    | 4000                                  | `/api/v1/messaging/*`, WebSocket `/api/v1/messaging/ws`            |
 | notifications                          | 3                    | 4000                                  | `/api/v1/notifications/*`; SMTP out                                |
 | payments                               | 3                    | 4060                                  | `/api/v1/payments`                                                 |
-| reviews-trust                          | 3                    | 4070                                  | `/api/v1/trust`                                                    |
+| trust                                  | 3                    | 4000                                  | `/api/v1/trust/*`; BankID OIDC (mock realm in dev)                 |
 | mobile (Expo dev server)               | 3                    | 8081                                  | LAN / tunnel                                                       |
 | ai-governance                          | 4                    | 8100                                  | `/api/v1/ai/governance`                                            |
 | ai-cybersecurity                       | 4                    | 8110                                  | `/api/v1/ai/security`                                              |

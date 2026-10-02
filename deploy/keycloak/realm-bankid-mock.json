@@ -1,0 +1,122 @@
+{
+  "realm": "bankid-mock",
+  "displayName": "BankID (test)",
+  "displayNameHtml": "<strong>BankID</strong> (test)",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 10,
+  "accessTokenLifespan": 60,
+  "ssoSessionIdleTimeout": 300,
+  "ssoSessionMaxLifespan": 600,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["en", "no"],
+  "defaultLocale": "no",
+  "clients": [
+    {
+      "clientId": "raadi",
+      "name": "Raadi (identity verification)",
+      "description": "Development stand-in for a BankID OIDC client. Only the trust service uses it.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${TRUST_BANKID_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": false,
+      "fullScopeAllowed": false,
+      "redirectUris": [
+        "${PUBLIC_BASE_URL}/api/v1/trust/verification/callback",
+        "https://${RAADI_DOMAIN}/api/v1/trust/verification/callback"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "access.token.lifespan": "60"
+      },
+      "defaultClientScopes": ["basic", "acr"],
+      "optionalClientScopes": []
+    }
+  ],
+  "users": [
+    {
+      "username": "01897000011",
+      "firstName": "Kari",
+      "lastName": "Testperson",
+      "enabled": true,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "02897000022",
+      "firstName": "Ola",
+      "lastName": "Testperson",
+      "enabled": true,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "03897000033",
+      "firstName": "Amina",
+      "lastName": "Testperson",
+      "enabled": true,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "04897000044",
+      "firstName": "Per",
+      "lastName": "Testperson",
+      "enabled": true,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "05897000055",
+      "firstName": "Fatima",
+      "lastName": "Testperson",
+      "enabled": true,
+      "emailVerified": false,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

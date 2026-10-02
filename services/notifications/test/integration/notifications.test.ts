@@ -186,4 +186,29 @@ describe('notifications pipeline', () => {
       .rows[0];
     assert.equal(failed.status, 'failed');
   });
+
+  it('tells people in the app when they are reviewed, without e-mail', async () => {
+    const subject = randomUUID();
+    const event = buildEvent('no.raadi.trust.review.published.v1', {
+      source: 'urn:raadi:trust',
+      subject: randomUUID(),
+      data: {
+        reviewId: randomUUID(),
+        listingId: randomUUID(),
+        reviewerId: randomUUID(),
+        subjectId: subject,
+        subjectRole: 'seller',
+        rating: 4,
+        publishedAt: new Date().toISOString(),
+      },
+    });
+    await service.onEvent(received(event));
+    await service.onEvent(received(event));
+    const list = await repo.list(subject, 10);
+    assert.equal(list.length, 1);
+    assert.equal(list[0]!.kind, 'review_received');
+    assert.deepEqual(list[0]!.params, { rating: '4' });
+    const queued = await pool.query('SELECT 1 FROM emails WHERE user_id = $1', [subject]);
+    assert.equal(queued.rowCount, 0);
+  });
 });

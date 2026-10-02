@@ -85,3 +85,33 @@ grant_client_role() { # <service-account client> <resource client> <role>
 grant_client_role registry-init apicurio-registry sr-admin
 # notifications reads e-mail and language at send time, nothing else.
 grant_client_role notifications realm-management view-users
+
+# --- BankID mock realm (development; ADR-0018) --------------------------------
+# A stand-in BankID OIDC provider for the trust service's identity verification,
+# with synthetic test people. Production sets BANKID_MOCK=false and points
+# BANKID_ISSUER at a real BankID provider.
+if [[ "${BANKID_MOCK:-false}" == "true" ]]; then
+  TOKEN="$(token)"
+  TRUST_BANKID_CLIENT_SECRET="$(secret trust_bankid_client_secret)"
+  export TRUST_BANKID_CLIENT_SECRET
+  # shellcheck disable=SC2016
+  mock="$(envsubst '$PUBLIC_BASE_URL $RAADI_DOMAIN $DEMO_USER_PASSWORD $TRUST_BANKID_CLIENT_SECRET' \
+    < /opt/raadi/keycloak/realm-bankid-mock.json)"
+  [[ -n "$DEMO_USER_PASSWORD" ]] || mock="$(jq 'del(.users)' <<<"$mock")"
+  code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" "$KC/admin/realms/bankid-mock")
+  if [[ "$code" == "404" ]]; then
+    api -X POST "$KC/admin/realms" --data-binary @- <<<"$mock"
+    info "realm bankid-mock created"
+  else
+    jq 'del(.users, .clients)' <<<"$mock" | api -X PUT "$KC/admin/realms/bankid-mock" --data-binary @-
+    jq '{ifResourceExists: "OVERWRITE", clients: .clients}' <<<"$mock" \
+      | api -X POST "$KC/admin/realms/bankid-mock/partialImport" --data-binary @- >/dev/null
+    jq '{ifResourceExists: "SKIP", users: (.users // [])}' <<<"$mock" \
+      | api -X POST "$KC/admin/realms/bankid-mock/partialImport" --data-binary @- >/dev/null
+    info "realm bankid-mock updated"
+  fi
+  # BankID never asks for an e-mail address; Keycloak's user profile would (test people have none).
+  api "$KC/admin/realms/bankid-mock/authentication/required-actions/VERIFY_PROFILE" \
+    | jq '.enabled = false | .defaultAction = false' \
+    | api -X PUT "$KC/admin/realms/bankid-mock/authentication/required-actions/VERIFY_PROFILE" --data-binary @-
+fi
