@@ -18,6 +18,9 @@ export const env = {
   get trustUrl() {
     return process.env.TRUST_URL ?? 'http://trust:4000';
   },
+  get paymentsUrl() {
+    return process.env.PAYMENTS_URL ?? 'http://payments:4000';
+  },
   get publicBaseUrl() {
     return process.env.PUBLIC_BASE_URL ?? 'http://raadi.localhost';
   },

@@ -19,6 +19,9 @@ export const envSchema = baseEnvSchema
     OPENFGA_URL: z.url().default('http://openfga:8080'),
     OPA_URL: z.url().default('http://opa:8181'),
     SEED_DEMO_DATA: z.enum(['true', 'false']).default('false'),
+    /** Promotion events from payments (ADR-0020). */
+    KAFKA_BROKERS: z.string().default('kafka:9092'),
+    KAFKA_USERNAME: z.string().default('listings'),
   });
 
 export type Env = z.infer<typeof envSchema>;
@@ -27,6 +30,7 @@ export const secretsSchema = z.object({
   db_password: z.string().min(16),
   fga_key: z.string().min(16),
   opa_token: z.string().min(16),
+  kafka_password: z.string().min(16),
   'imgproxy.key': z.string().regex(/^[0-9a-f]{64}$/),
   'imgproxy.salt': z.string().regex(/^[0-9a-f]{64}$/),
 });

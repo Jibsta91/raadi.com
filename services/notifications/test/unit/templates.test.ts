@@ -37,4 +37,20 @@ describe('helpers', () => {
     assert.deepEqual([1, 2, 3].map(retryDelayMs), [30_000, 60_000, 120_000]);
     assert.equal(retryDelayMs(20), 3_600_000);
   });
+
+  it('receipts show the price, the 25 % VAT in it, date and seller', () => {
+    const params = {
+      orderId: '0d7c1f3e-9a51-4c47-8f0e-1c2b3a4d5e6f',
+      days: '7',
+      amountOre: '4900',
+      capturedAt: '2026-10-02T12:00:00Z',
+      merchant: 'Raadi AS',
+    };
+    const nb = renderEmail('payment_receipt', 'nb', params, links);
+    assert.match(nb.text, /Fremhevet annonse i 7 dager: 49,00\s?kr \(inkl\. mva\. 9,80\s?kr\)/);
+    assert.match(nb.text, /Dato: 2\. oktober 2026/);
+    assert.match(nb.text, /Selger: Raadi AS/);
+    const en = renderEmail('payment_receipt', 'en', params, links);
+    assert.match(en.text, /incl\. VAT NOK\s?9\.80/);
+  });
 });

@@ -32,6 +32,8 @@ export const listingSnapshot = z
     imageIds: z.array(uuid).max(10),
     publishedAt: timestamp,
     updatedAt: timestamp,
+    /** Added later (optional, BACKWARD compatible): end of a paid promotion, if any (ADR-0020). */
+    promotedUntil: timestamp.nullable().optional(),
   })
   .meta({ description: 'Public state of a listing after the change' });
 
@@ -95,6 +97,27 @@ export const contracts = {
     subjectRole: z.enum(['buyer', 'seller']),
     rating: z.number().int().min(1).max(5),
     publishedAt: timestamp,
+  }),
+  /** A payment was captured (payments). Amounts in øre; no card or account data. */
+  'no.raadi.payments.payment.captured.v1': z.object({
+    orderId: uuid,
+    userId: uuid,
+    listingId: uuid,
+    product: z.string().min(1).max(40),
+    amountOre: z.number().int().min(1),
+    currency: z.literal('NOK'),
+    provider: z.enum(['vipps', 'stripe']),
+    capturedAt: timestamp,
+  }),
+  /**
+   * The effective end of a listing's paid promotion changed (bought, extended or
+   * refunded). Keyed by listing, so events for one listing arrive in order.
+   */
+  'no.raadi.payments.promotion.changed.v1': z.object({
+    listingId: uuid,
+    orderId: uuid,
+    promotedUntil: timestamp.nullable(),
+    reason: z.enum(['purchased', 'refunded']),
   }),
 } as const;
 

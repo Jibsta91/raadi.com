@@ -41,6 +41,7 @@ export interface SearchHit {
   imageCount: number;
   attributes: Record<string, string | number | boolean>;
   publishedAt: string;
+  promoted: boolean;
 }
 
 export interface FacetValue {
@@ -120,6 +121,7 @@ export class SearchService {
           imageCount: s.imageIds.length,
           attributes: s.attributes,
           publishedAt: s.publishedAt,
+          promoted: !!s.promotedUntil && Date.parse(s.promotedUntil) > Date.now(),
         };
       }),
       facets,

@@ -159,6 +159,8 @@ services:
       messaging-seed: { condition: service_completed_successfully }
       notifications: { condition: service_healthy }
       trust: { condition: service_healthy }
+      payments: { condition: service_healthy }
+      payments-mock: { condition: service_healthy }
       apicurio: { condition: service_healthy }
       opensearch: { condition: service_healthy }
       imgproxy: { condition: service_healthy }

@@ -45,6 +45,7 @@ const row: ListingRow = {
   created_at: new Date(),
   updated_at: new Date(),
   published_at: new Date(),
+  promoted_until: null,
 };
 
 describe('OpenAPI contract', () => {

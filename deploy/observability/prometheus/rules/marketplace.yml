@@ -52,6 +52,24 @@ groups:
           summary: E-mails failed after every retry in the last hour
           runbook_url: docs/runbooks/event-pipeline.md
 
+  - name: payments
+    rules:
+      - alert: PaymentsStuckOpen
+        expr: max(raadi_payments_stuck_orders) > 0
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $value }} payment orders have been open for more than 10 minutes'
+          description: Reconciliation cannot settle them; the provider is unreachable or refuses Raadi's credentials.
+          runbook_url: docs/runbooks/payments.md
+      - alert: PaymentWebhooksRejected
+        expr: sum(increase(raadi_payments_webhooks_total{outcome="rejected"}[15m])) > 3
+        labels: { severity: warning }
+        annotations:
+          summary: Provider webhooks fail signature checks
+          description: Wrong webhook secret, clock skew, a proxy rewriting requests, or forged requests.
+          runbook_url: docs/runbooks/payments.md
+
   - name: marketplace-security
     rules:
       - alert: MalwareUploadsSpike

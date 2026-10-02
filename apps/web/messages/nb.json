@@ -297,7 +297,11 @@
     "deleted": "Annonsen er slettet.",
     "actionFailed": "Det gikk ikke. Prøv igjen.",
     "back": "Tilbake til søket",
-    "notFound": "Annonsen finnes ikke eller er fjernet."
+    "notFound": "Annonsen finnes ikke eller er fjernet.",
+    "promoted": "Fremhevet",
+    "promotedUntil": "Fremhevet til {date}",
+    "promote": "Fremhev",
+    "extendPromotion": "Forleng fremheving"
   },
   "form": {
     "newTitle": "Ny annonse",
@@ -383,7 +387,8 @@
     "markAllRead": "Merk alle som lest",
     "kinds": {
       "listing_removed": "Annonsen «{title}» ble fjernet av en moderator fordi den bryter reglene for markedsplassen.",
-      "review_received": "Du har fått en ny omtale: {rating} av 5 stjerner."
+      "review_received": "Du har fått en ny omtale: {rating} av 5 stjerner.",
+      "listing_promoted": "Annonsen din er nå fremhevet i {days} dager. Kvitteringen ligger i e-posten din."
     },
     "settings": {
       "title": "E-post",
@@ -489,5 +494,34 @@
     "passkeyAction": "Sett opp passnøkkel",
     "continue": "Fortsett",
     "sell": "Selg noe"
+  },
+  "payments": {
+    "title": "Fremhev annonsen din",
+    "intro": "Fremhevede annonser vises først i søkeresultatene og er merket «Fremhevet». Du betaler én gang, uten abonnement.",
+    "choose": "Velg fremheving",
+    "days": "{count, plural, one {# dag} other {# dager}}",
+    "vatIncluded": "Inkl. mva.",
+    "pay": "Gå til betaling",
+    "hostedNote": "Du godkjenner betalingen hos betalingsleverandøren. Raadi ser aldri kort- eller kontoopplysningene dine.",
+    "currentlyUntil": "Fremhevet til {date}. Et nytt kjøp forlenger fremhevingen.",
+    "status": {
+      "created": "Venter på betaling",
+      "authorized": "Betalingen er godkjent",
+      "captured": "Annonsen din er fremhevet",
+      "refunded": "Betalingen er refundert",
+      "cancelled": "Betalingen ble avbrutt",
+      "expired": "Betalingen utløp",
+      "failed": "Betalingen mislyktes"
+    },
+    "promotedUntil": "Fremhevet til {date}.",
+    "waiting": "Vi venter på bekreftelse fra betalingsleverandøren. Siden oppdateres av seg selv.",
+    "receipt": "Kvitteringen er sendt til e-posten din.",
+    "toListing": "Gå til annonsen",
+    "tryAgain": "Prøv igjen",
+    "errors": {
+      "generic": "Kunne ikke starte betalingen. Prøv igjen.",
+      "rateLimited": "For mange forsøk. Prøv igjen senere.",
+      "provider": "Betalingsleverandøren er ikke tilgjengelig akkurat nå. Prøv igjen om litt."
+    }
   }
 }

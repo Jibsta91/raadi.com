@@ -89,6 +89,26 @@ export class NotificationsService {
         created.add(1, { kind: 'review_received' });
         return;
       }
+      case 'no.raadi.payments.payment.captured.v1': {
+        // A receipt (always sent: it is a legal document, not a marketing e-mail)
+        // and an in-app notice that the listing is promoted.
+        const { orderId, userId, listingId, product, amountOre, capturedAt } = parsed.data;
+        const days = /(\d+)d$/.exec(product)?.[1] ?? '';
+        const params = {
+          orderId,
+          days,
+          amountOre: String(amountOre),
+          capturedAt,
+          merchant: this.cfg.env.RECEIPT_MERCHANT,
+        };
+        await this.repo.once(parsed.id, async (tx) => {
+          await tx.notify(userId, 'listing_promoted', listingId, { days });
+          await tx.queueEmail({ userId, kind: 'payment_receipt', refId: listingId, params });
+        });
+        created.add(1, { kind: 'listing_promoted' });
+        emails.add(1, { kind: 'payment_receipt', outcome: 'queued' });
+        return;
+      }
       default:
         return;
     }
@@ -112,7 +132,11 @@ export class NotificationsService {
       }
       const base = `${this.cfg.env.PUBLIC_BASE_URL}/${recipient.locale}`;
       const action =
-        email.kind === 'new_message' ? `${base}/messages/${email.ref_id}` : `${base}/my/listings`;
+        email.kind === 'new_message'
+          ? `${base}/messages/${email.ref_id}`
+          : email.kind === 'payment_receipt'
+            ? `${base}/listings/${email.ref_id}`
+            : `${base}/my/listings`;
       const rendered = renderEmail(email.kind, recipient.locale, email.params, {
         action,
         settings: `${base}/notifications`,
