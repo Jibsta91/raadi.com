@@ -32,6 +32,8 @@ export const listingSnapshot = z
     imageIds: z.array(uuid).max(10),
     publishedAt: timestamp,
     updatedAt: timestamp,
+    /** Added later (optional, BACKWARD compatible): the public name shown on the listing ("Kari N."). */
+    sellerName: z.string().min(1).max(80).optional(),
   })
   .meta({ description: 'Public state of a listing after the change' });
 
@@ -81,6 +83,20 @@ export const contracts = {
     senderId: uuid,
     recipientId: uuid,
     sentAt: timestamp,
+  }),
+  /**
+   * A buyer or seller rated the other party after a sale (reviews-trust). Ids
+   * and the rating only: the comment stays in the trust service.
+   */
+  'no.raadi.trust.review.published.v1': z.object({
+    reviewId: uuid,
+    listingId: uuid,
+    reviewerId: uuid,
+    subjectId: uuid,
+    /** What the subject was in the deal. */
+    subjectRole: z.enum(['buyer', 'seller']),
+    rating: z.number().int().min(1).max(5),
+    publishedAt: timestamp,
   }),
 } as const;
 

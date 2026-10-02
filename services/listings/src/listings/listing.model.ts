@@ -178,5 +178,6 @@ export function toSnapshot(row: ListingRow): ListingSnapshot {
     imageIds: row.image_ids,
     publishedAt: row.published_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
+    sellerName: row.seller_name,
   };
 }

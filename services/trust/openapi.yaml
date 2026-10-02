@@ -1,0 +1,315 @@
+openapi: 3.1.0
+info:
+  title: Raadi trust
+  version: 1.0.0
+  description: |
+    Reviews between buyers and sellers, and identity verification with BankID (ADR-0018).
+    A buyer and a seller who both wrote in a conversation about a listing may rate each
+    other once the listing is sold, once per direction, for a limited time. Trust profiles
+    (name, verification, rating and reviews) are public.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: http://raadi.localhost
+    description: Local development through the gateway
+tags:
+  - name: profiles
+  - name: reviews
+  - name: verification
+security: [{ bearer: [] }, { session: [] }]
+paths:
+  /api/v1/trust/users/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [profiles]
+      operationId: trustProfile
+      summary: Public trust profile with a page of reviews about the user
+      security: []
+      parameters:
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 50, default: 20 },
+          }
+        - {
+            name: offset,
+            in: query,
+            schema: { type: integer, minimum: 0, maximum: 10000, default: 0 },
+          }
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /api/v1/trust/listings/{id}/seller:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [profiles]
+      operationId: listingSeller
+      summary: Trust summary of a listing's seller (listings do not expose owner ids)
+      security: []
+      responses:
+        '200':
+          description: Seller summary
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TrustSummary' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /api/v1/trust/me:
+    get:
+      tags: [profiles]
+      operationId: myTrust
+      summary: The caller's own verification and rating
+      responses:
+        '200':
+          description: Summary
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TrustSummary' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/trust/eligibility:
+    get:
+      tags: [reviews]
+      operationId: reviewEligibility
+      summary: Whether the caller may review a person about a listing
+      parameters:
+        - { name: listingId, in: query, required: true, schema: { type: string, format: uuid } }
+        - { name: subjectId, in: query, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Decision
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Eligibility' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/trust/reviews:
+    post:
+      tags: [reviews]
+      operationId: createReview
+      summary: Review the other party of a sold listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReviewInput' }
+      responses:
+        '201':
+          description: Published
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Review' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+  /api/v1/trust/reviews/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    delete:
+      tags: [reviews]
+      operationId: removeReview
+      summary: Withdraw your own review, or remove any review (moderators)
+      description: The review stays recorded, so the same deal cannot be reviewed again.
+      responses:
+        '204': { description: Removed }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /api/v1/trust/verification/start:
+    get:
+      tags: [verification]
+      operationId: startVerification
+      summary: Browser navigation that starts BankID verification
+      description: |
+        Redirects to BankID, or to login first when signed out. BankID returns to
+        /api/v1/trust/verification/callback, which redirects to `returnTo` with
+        `verification=ok|cancelled|taken|expired|failed` appended.
+      security: []
+      parameters:
+        - { name: returnTo, in: query, schema: { type: string, description: Same-site path } }
+        - { name: locale, in: query, schema: { type: string, enum: [nb, en, so] } }
+      responses:
+        '302': { description: Redirect to BankID or to login }
+  /api/v1/trust/verification/callback:
+    get:
+      tags: [verification]
+      operationId: verificationCallback
+      summary: BankID redirect target (not called by clients)
+      security: []
+      responses:
+        '302': { description: Redirect to the return path with the outcome }
+  /api/v1/trust/verification:
+    delete:
+      tags: [verification]
+      operationId: removeVerification
+      summary: Remove the caller's verification
+      responses:
+        '204': { description: Removed }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      operationId: liveness
+      security: []
+      responses: { '200': { description: Process is alive } }
+  /readyz:
+    get:
+      operationId: readiness
+      security: []
+      responses:
+        '200': { description: Ready }
+        '503': { description: Not ready }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    session: { type: apiKey, in: cookie, name: raadi_sid }
+  responses:
+    Problem:
+      description: RFC 9457 problem details
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Role:
+      type: string
+      enum: [buyer, seller]
+    Verification:
+      type: [object, 'null']
+      additionalProperties: false
+      required: [method, verifiedAt]
+      properties:
+        method: { type: string, enum: [bankid] }
+        verifiedAt: { type: string, format: date-time }
+    RatingSummary:
+      type: object
+      additionalProperties: false
+      required: [average, count, distribution]
+      properties:
+        average:
+          type: [number, 'null']
+          minimum: 1
+          maximum: 5
+          description: Mean rating with one decimal; null without reviews
+        count: { type: integer, minimum: 0 }
+        distribution:
+          type: array
+          minItems: 5
+          maxItems: 5
+          items: { type: integer, minimum: 0 }
+          description: Number of 1- to 5-star ratings (index 0 = one star)
+    TrustSummary:
+      type: object
+      additionalProperties: false
+      required: [userId, name, verification, rating]
+      properties:
+        userId: { type: string, format: uuid }
+        name: { type: string, description: Public display name ("Kari N.") }
+        verification: { $ref: '#/components/schemas/Verification' }
+        rating: { $ref: '#/components/schemas/RatingSummary' }
+    Review:
+      type: object
+      additionalProperties: false
+      required: [id, rating, comment, subjectRole, listing, reviewer, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, maxLength: 1000 }
+        subjectRole:
+          $ref: '#/components/schemas/Role'
+          description: What the reviewed person was in the deal
+        listing:
+          type: object
+          additionalProperties: false
+          required: [id, title]
+          properties:
+            id: { type: string, format: uuid }
+            title: { type: string }
+        reviewer:
+          type: object
+          additionalProperties: false
+          required: [id, name]
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+        createdAt: { type: string, format: date-time }
+    ReviewPage:
+      type: object
+      additionalProperties: false
+      required: [total, limit, offset, items]
+      properties:
+        total: { type: integer, minimum: 0 }
+        limit: { type: integer }
+        offset: { type: integer }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Review' }
+    Profile:
+      type: object
+      additionalProperties: false
+      required: [userId, name, verification, rating, reviews]
+      properties:
+        userId: { type: string, format: uuid }
+        name: { type: string }
+        verification: { $ref: '#/components/schemas/Verification' }
+        rating: { $ref: '#/components/schemas/RatingSummary' }
+        reviews: { $ref: '#/components/schemas/ReviewPage' }
+    ReviewInput:
+      type: object
+      additionalProperties: false
+      required: [listingId, subjectId, rating]
+      properties:
+        listingId: { type: string, format: uuid }
+        subjectId: { type: string, format: uuid, description: The other party of the deal }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, maxLength: 1000, default: '' }
+    Eligibility:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [canReview, subjectRole, deadline]
+          properties:
+            canReview: { const: true }
+            subjectRole: { $ref: '#/components/schemas/Role' }
+            deadline: { type: string, format: date-time }
+        - type: object
+          additionalProperties: false
+          required: [canReview, reason]
+          properties:
+            canReview: { const: false }
+            reason:
+              type: string
+              enum:
+                [
+                  self,
+                  unknown_listing,
+                  not_party,
+                  no_conversation,
+                  not_sold,
+                  window_closed,
+                  already_reviewed,
+                ]
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        traceId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path: { type: string }
+              message: { type: string }
+              code: { type: string }
