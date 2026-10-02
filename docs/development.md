@@ -69,6 +69,15 @@ Contract tests validate controller output against the service's `openapi.yaml`, 
 generates `@raadi/api-client`. `./raadi generate` rebuilds that client and the event JSON Schemas in
 `packages/events/schemas` (from the zod contracts); run it after changing either.
 
+## Browser automation for AI coding sessions (MCP)
+
+`.mcp.json` registers the [Playwright MCP server](https://github.com/microsoft/playwright-mcp) (Apache-2.0)
+for Claude Code and other MCP clients, so an assistant can open the running app, click through it and take
+screenshots while it works. It runs headless in Docker (no host install) and joins Traefik's network
+namespace, like the e2e container, so `http://raadi.localhost` resolves to the gateway. Start the stack
+first (`./raadi up`), then approve the server when the client asks. The image is pinned by version and
+digest; Renovate updates it.
+
 ## Adding a NestJS service (checklist)
 
 1. `services/<name>/` with `package.json` (`build`, `dev`, `test`, `lint`, `typecheck` scripts), `openapi.yaml`,
