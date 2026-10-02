@@ -13,6 +13,18 @@ docker compose up -d openbao-unsealer        # if the unsealer is not running
 If the unsealer reports _"uninitialised but an unseal key exists"_, the OpenBao data volume was lost while the
 keys remain. Restore the OpenBao volume from backup ([Phase 5 backups](../deploy.md)). Never delete the keys.
 
+## Sealed, and no unseal key is stored
+
+`openbao-unsealer` exits with "OpenBao is sealed and no unseal key is stored" when OpenBao reports that it is
+initialised, but the secrets volume holds no unseal key. Typical causes: the secrets volume was deleted
+while the OpenBao volume was kept, or (before 2026-10-02) an initialisation that timed out on a slow host.
+OpenBao cannot be opened without that key.
+
+- **Development:** reset both volumes. All generated secrets are recreated on the next start:
+  `docker compose down -v && docker compose up -d --wait`.
+- **Production:** restore the secrets volume (`_openbao/unseal_key`) and the OpenBao volume from the same
+  restic snapshot. Never initialise OpenBao again over existing data.
+
 ## Read a generated secret
 
 ```bash
