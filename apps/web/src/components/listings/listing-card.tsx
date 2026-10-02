@@ -14,6 +14,14 @@ export async function ListingCard({ hit }: { hit: SearchHit }) {
       data-testid="listing-card"
     >
       <div className="relative aspect-[4/3] bg-muted">
+        {hit.promoted ? (
+          <span
+            className="absolute left-2 top-2 z-10 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground"
+            data-testid="listing-card-promoted"
+          >
+            {t('listing.promoted')}
+          </span>
+        ) : null}
         {hit.image ? (
           /* Plain <img>: imgproxy already serves sized, signed variants. */
           <img

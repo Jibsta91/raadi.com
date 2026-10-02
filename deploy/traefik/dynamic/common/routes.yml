@@ -79,6 +79,21 @@ http:
       middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
       priority: 100
 
+    # Payments: orders need a signed-in user (forward-auth); provider webhooks
+    # carry no user token and are authenticated by their HMAC signature instead.
+    api-payments:
+      rule: Host(`{{ $d }}`) && PathPrefix(`/api/v1/payments/`)
+      entryPoints: [web, websecure]
+      service: payments
+      middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
+      priority: 100
+    api-payments-webhooks:
+      rule: Host(`{{ $d }}`) && PathPrefix(`/api/v1/payments/webhooks/`)
+      entryPoints: [web, websecure]
+      service: payments
+      middlewares: [security-headers, ratelimit-default, api-body-limit]
+      priority: 110
+
     # Live delivery (WebSocket, push only). No body buffering or compression on
     # an upgrade; forward-auth turns the session cookie into a bearer token and
     # messaging checks the Origin itself.
@@ -156,6 +171,10 @@ http:
     trust:
       loadBalancer:
         servers: [{ url: "http://trust:4000" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
+    payments:
+      loadBalancer:
+        servers: [{ url: "http://payments:4000" }]
         healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
     imgproxy:
       loadBalancer:

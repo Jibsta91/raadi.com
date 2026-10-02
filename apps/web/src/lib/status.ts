@@ -16,6 +16,7 @@ const CHECKS: Array<Omit<ComponentStatus, 'ok' | 'latencyMs'> & { url: string }>
   { name: 'messaging', group: 'app', url: 'http://messaging:4000/readyz' },
   { name: 'notifications', group: 'app', url: 'http://notifications:4000/readyz' },
   { name: 'trust', group: 'app', url: 'http://trust:4000/readyz' },
+  { name: 'payments', group: 'app', url: 'http://payments:4000/readyz' },
   { name: 'Keycloak', group: 'platform', url: 'http://keycloak:9000/health/ready' },
   { name: 'OpenBao', group: 'platform', url: 'http://openbao:8200/v1/sys/health' },
   { name: 'Kafka Connect (Debezium)', group: 'platform', url: 'http://kafka-connect:8083/' },

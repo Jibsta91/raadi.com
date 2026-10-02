@@ -38,6 +38,7 @@ cat <<BANNER
     Messages ........... ${PUBLIC_BASE_URL}/en/messages
     Notifications ...... ${PUBLIC_BASE_URL}/en/notifications   (e-mails land in Mailpit below)
     Verify with BankID . ${PUBLIC_BASE_URL}/en/account   (test person 01897000011, demo password)
+    Promote a listing .. ${PUBLIC_BASE_URL}/en/my/listings   (test payments at pay.${RAADI_DOMAIN})
     Status page ........ ${PUBLIC_BASE_URL}/en/status
 
   Operations

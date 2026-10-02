@@ -13,7 +13,7 @@ import {
 
 const COLUMNS = `id, owner_id, seller_name, category, subcategory, title, description, price_nok,
   attributes, place_id, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lon,
-  image_ids, status, version, created_at, updated_at, published_at`;
+  image_ids, status, version, created_at, updated_at, published_at, promoted_until`;
 
 export class VersionConflictError extends Error {}
 
@@ -141,6 +141,31 @@ export class ListingsRepository {
         listing: toSnapshot(row),
       });
       return row;
+    });
+  }
+
+  /**
+   * Records a listing's promotion end from payments (exactly once per event).
+   * Bumps the version so search reindexes, but not updated_at: a promotion is
+   * not an edit of the listing's content.
+   */
+  async applyPromotion(eventId: string, listingId: string, until: Date | null): Promise<void> {
+    await withTransaction(this.pool, async (client) => {
+      const fresh = await client.query(
+        'INSERT INTO processed_events (event_id) VALUES ($1) ON CONFLICT DO NOTHING',
+        [eventId],
+      );
+      if (!fresh.rowCount) return;
+      const { rows } = await client.query<ListingRow>(
+        `UPDATE listings SET promoted_until = $2, version = version + 1
+          WHERE id = $1 AND status <> 'deleted' RETURNING ${COLUMNS}`,
+        [listingId, until],
+      );
+      const row = rows[0];
+      if (!row) return; // deleted since: nothing to show
+      await this.outbox(client, row, 'no.raadi.listings.listing.updated.v1', {
+        listing: toSnapshot(row),
+      });
     });
   }
 

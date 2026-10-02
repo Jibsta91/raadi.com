@@ -31,6 +31,8 @@ services/media           NestJS: image uploads (ClamAV, imgproxy re-encode), att
 services/messaging       NestJS: buyer-seller conversations, WebSocket push (Valkey pub/sub fan-out)
 services/notifications   NestJS: e-mail queue (SMTP, Keycloak lookups) and in-app notifications from events
 services/trust           NestJS: reviews after a sale (event-fed eligibility) and BankID verification (OIDC)
+services/payments        NestJS: promoted listings; Vipps/Stripe adapters, idempotent orders, webhooks, reconciliation
+services/payments-mock   NestJS: Vipps ePayment-compatible test PSP with a hosted approve page (development only)
 services/*               further domain services (Phase 3)
 ai/*                     Python AI pillars (Phase 4)
 packages/service-kit     telemetry, logging, OpenBao, JWT guard, errors, resilience, health, shutdown,

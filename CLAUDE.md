@@ -65,6 +65,27 @@ A full reset (wipes data): `docker compose down -v --remove-orphans`.
 - All Playwright workers reach Traefik from one IP and share its per-client rate limit. A 429 on a page or
   JS chunk means the page never hydrates (forms submit natively, `router.push`/`onChange` do nothing). Keep
   links rendered on every page (header, footer) at `prefetch={false}`: each prefetch is a full dynamic render.
+- Switching branches with the stack running leaves the other branch's Keycloak realm and init state in the
+  volumes, and Keycloak can crash-loop. Do a cold start after switching between branches that change
+  Keycloak or init (`docker compose --profile tools --profile test down -v --remove-orphans`, then `up`).
+- After the laptop sleeps, Docker Desktop can wedge (Kafka stops answering, containers cannot be killed).
+  Run `systemctl --user restart docker-desktop`, then do a cold start. `ENOTFOUND registry.npmjs.org`
+  during a build is a dropped network: retry.
+- A locked 1Password SSH agent ("communication with agent failed", "failed to fill whole buffer") blocks
+  signed commits, tags and pushes. Ask the user to unlock it; never disable signing.
+- The toolbox mounts only this checkout. In a worktree, bind-mount the worktree's files explicitly and run
+  `./raadi lint` on them before pushing.
+- A service that consumes Kafka needs `kafka-init: service_completed_successfully` in `depends_on`, or a
+  cold start fails with "Group authorization failed".
+- Right after a cold start, demo users' first login lands on `/<locale>/welcome`. Tests must accept both.
+- A failed full-stack CI job uploads `compose-logs.txt` as an artifact; download it through the API.
+- Event schemas are JSON Schema draft-07 (Apicurio cannot check 2020-12). Adding an optional field is
+  BACKWARD compatible; removing one is not, and a dev registry then needs `down -v`.
+- Events never carry names (listings' tests enforce it). Services fetch public names from listings'
+  internal contact API with the user's token.
+- `./raadi` runs several turbo tasks in one call (`lint typecheck test`), but `licenses`, `security` and
+  `iac-scan` must each be a separate call.
+- `./raadi generate` after changing an OpenAPI spec, and commit the generated client.
 
 ## Demo logins
 

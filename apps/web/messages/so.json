@@ -297,7 +297,11 @@
     "deleted": "Xayeysiiska waa la tirtiray.",
     "actionFailed": "Ma shaqayn. Fadlan dib isku day.",
     "back": "Ku noqo raadinta",
-    "notFound": "Xayeysiiskan ma jiro ama waa laga saaray."
+    "notFound": "Xayeysiiskan ma jiro ama waa laga saaray.",
+    "promoted": "La horumariyay",
+    "promotedUntil": "La horumariyay ilaa {date}",
+    "promote": "Horumari",
+    "extendPromotion": "Kordhi horumarinta"
   },
   "form": {
     "newTitle": "Xayeysiis cusub",
@@ -383,7 +387,8 @@
     "markAllRead": "Calaamadee dhammaan inay akhrisan yihiin",
     "kinds": {
       "listing_removed": "Xayeysiiskaaga \"{title}\" waxaa saaray maamule sababtoo ah wuxuu jebinayaa xeerarka suuqa.",
-      "review_received": "Qof ayaa ku qiimeeyay: {rating} ka mid ah 5 xiddigood."
+      "review_received": "Qof ayaa ku qiimeeyay: {rating} ka mid ah 5 xiddigood.",
+      "listing_promoted": "Xayeysiiskaaga hadda waa la horumariyay {days} maalmood. Rasiidka waxaa lagu diray iimaylkaaga."
     },
     "settings": {
       "title": "Iimayl",
@@ -489,5 +494,34 @@
     "passkeyAction": "Diyaari fure-gal",
     "continue": "Sii wad",
     "sell": "Wax iibi"
+  },
+  "payments": {
+    "title": "Horumari xayeysiiskaaga",
+    "intro": "Xayeysiisyada la horumariyay ayaa ugu horreeya natiijooyinka raadinta waxaana lagu calaamadeeyay \"La horumariyay\". Hal mar ayaad bixinaysaa, rukun la'aan.",
+    "choose": "Dooro horumarin",
+    "days": "{count, plural, one {# maalin} other {# maalmood}}",
+    "vatIncluded": "Canshuurta waa ku jirtaa",
+    "pay": "U gudub lacag bixinta",
+    "hostedNote": "Lacag bixinta waxaad ku ansixinaysaa bogga bixiyaha. Raadi marnaba ma arkaan faahfaahinta kaarkaaga ama akoonkaaga.",
+    "currentlyUntil": "Hadda waa la horumariyay ilaa {date}. Iibsasho cusub ayaa kordhinaysa.",
+    "status": {
+      "created": "Waxaa la sugayaa lacag bixinta",
+      "authorized": "Lacag bixinta waa la ansixiyay",
+      "captured": "Xayeysiiskaaga waa la horumariyay",
+      "refunded": "Lacagta waa la celiyay",
+      "cancelled": "Lacag bixinta waa la joojiyay",
+      "expired": "Lacag bixintu way dhacday",
+      "failed": "Lacag bixintu way fashilantay"
+    },
+    "promotedUntil": "La horumariyay ilaa {date}.",
+    "waiting": "Waxaan sugaynaa xaqiijinta bixiyaha lacagta. Boggani si iskiis ah ayuu isu cusbooneysiinayaa.",
+    "receipt": "Rasiidka waxaa loo diray iimaylkaaga.",
+    "toListing": "Tag xayeysiiska",
+    "tryAgain": "Isku day mar kale",
+    "errors": {
+      "generic": "Lacag bixinta lama bilaabi karin. Fadlan isku day mar kale.",
+      "rateLimited": "Isku dayo aad u badan. Fadlan isku day mar dambe.",
+      "provider": "Bixiyaha lacagta hadda lama heli karo. Fadlan isku day wax yar kadib."
+    }
   }
 }
