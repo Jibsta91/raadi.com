@@ -124,8 +124,12 @@ cb="$(header location)"
   || fail "credentials accepted" "HTTP $status → $cb"
 
 req GET "$cb"
-[[ "$status" == "302" && "$(header location)" == "/en/account" ]] && ok "callback returns to /en/account" \
-  || fail "callback redirect" "HTTP $status → $(header location)"
+# A user's very first login goes through the welcome page, which keeps the original target.
+case "$status $(header location)" in
+  "302 /en/account") ok "callback returns to /en/account" ;;
+  "302 /en/welcome?next=%2Fen%2Faccount") ok "first login goes to the welcome page, then /en/account" ;;
+  *) fail "callback redirect" "HTTP $status → $(header location)" ;;
+esac
 grep -qi '^set-cookie: raadi_sid=.*HttpOnly' "$HDRS" && ok "session cookie is HttpOnly" || fail "HttpOnly session cookie"
 grep -qi '^set-cookie: raadi_sid=.*SameSite=Lax' "$HDRS" && ok "session cookie is SameSite=Lax" || fail "SameSite session cookie"
 
@@ -364,8 +368,8 @@ req GET "$PUBLIC/api/v1/trust/listings/$kari_listing/seller"
 
 login_as "ola.nordmann@${RAADI_DOMAIN}" || fail "login as ola"
 req GET "$PUBLIC/api/v1/trust/eligibility?listingId=$kari_listing&subjectId=$kari_id"
-# Ola wrote to Kari in the messaging section, but she never answered and nothing was sold.
-[[ "$(json '.canReview')" == "false" && "$(json '.reason')" == "no_conversation" ]] \
+# Ola wrote to Kari in the messaging section (Kari may have answered in an e2e run), but nothing was sold.
+[[ "$(json '.canReview')" == "false" && "$(json '.reason')" =~ ^(no_conversation|not_sold)$ ]] \
   && ok "no review without a two-way conversation and a sale" || fail "eligibility" "$(head -c 300 "$BODY")"
 review() { jq -nc --arg l "$kari_listing" --arg s "$kari_id" --argjson r "$1" '{listingId: $l, subjectId: $s, rating: $r}'; }
 req POST "$PUBLIC/api/v1/trust/reviews" -H 'content-type: application/json' -H 'origin: https://evil.example' --data "$(review 5)"
