@@ -1,7 +1,8 @@
 import { BlurView } from 'expo-blur';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -14,6 +15,16 @@ import {
 } from 'react-native';
 import { useI18n } from '../i18n';
 import { fonts, radius, space, useTheme } from '../theme';
+
+/**
+ * Hides the browser's focus ring on a text input whose container shows focus instead (accent border).
+ * Chromium draws `outline-style: auto` whatever the width, so it must be `none`: react-native-web
+ * passes that to CSS, while RN's types only list the values native platforms support.
+ */
+export const noFocusRing = Platform.select<TextStyle>({
+  web: { outlineStyle: 'none' } as unknown as TextStyle,
+  default: {},
+});
 
 /** Screen-level title in the display face ("Discover"-style large title). */
 export function LargeTitle({ children, testID }: { children: ReactNode; testID?: string }) {
@@ -141,19 +152,32 @@ export function Chip({
 
 export function Field(props: TextInputProps & { icon?: ReactNode }) {
   const theme = useTheme();
-  const { icon, style, ...input } = props;
+  const { icon, style, onFocus, onBlur, ...input } = props;
+  const [focused, setFocused] = useState(false);
   return (
     <View
       style={[
         styles.field,
-        { borderColor: theme.border, backgroundColor: theme.surface, shadowColor: theme.shadow },
+        {
+          borderColor: focused ? theme.accent : theme.border,
+          backgroundColor: theme.surface,
+          shadowColor: theme.shadow,
+        },
       ]}
     >
       {icon}
       <TextInput
         placeholderTextColor={theme.muted}
         {...input}
-        style={[styles.fieldInput, { color: theme.text }, style]}
+        onFocus={(e) => {
+          setFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          onBlur?.(e);
+        }}
+        style={[styles.fieldInput, noFocusRing, { color: theme.text }, style]}
       />
     </View>
   );
@@ -178,12 +202,15 @@ export function Glass({
       testID={testID}
       style={[styles.glass, { borderColor: theme.glassBorder, shadowColor: theme.shadow }, style]}
     >
+      {/* Backdrop layers sit behind the content: react-native-web leaves a TextInput statically
+          positioned, so absolute siblings would otherwise paint (and catch taps) over it. */}
       <BlurView
+        pointerEvents="none"
         intensity={60}
         tint={theme.scheme === 'dark' ? 'systemChromeMaterialDark' : 'systemChromeMaterialLight'}
-        style={StyleSheet.absoluteFill}
+        style={styles.backdrop}
       />
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.glass }]} />
+      <View pointerEvents="none" style={[styles.backdrop, { backgroundColor: theme.glass }]} />
       {children}
     </View>
   );
@@ -298,6 +325,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 28,
   },
+  backdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: -1 },
   centred: {
     flex: 1,
     alignItems: 'center',

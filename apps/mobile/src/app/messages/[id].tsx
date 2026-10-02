@@ -14,7 +14,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Body, Button, Glass, Status } from '../../components/ui';
+import { Body, Button, Glass, noFocusRing, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { config } from '../../lib/config';
@@ -56,6 +56,7 @@ export default function ConversationScreen() {
   const list = useRef<FlatList<Message>>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasMore, setHasMore] = useState(false);
+  const [composerFocused, setComposerFocused] = useState(false);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(false);
@@ -191,7 +192,13 @@ export default function ConversationScreen() {
           {m.messages.errors.generic}
         </Body>
       ) : null}
-      <Glass style={[styles.composer, { marginBottom: Math.max(insets.bottom, space.md) }]}>
+      <Glass
+        style={[
+          styles.composer,
+          { marginBottom: Math.max(insets.bottom, space.md) },
+          composerFocused ? { borderColor: theme.accent } : null,
+        ]}
+      >
         <TextInput
           testID="compose"
           value={draft}
@@ -201,7 +208,9 @@ export default function ConversationScreen() {
           accessibilityLabel={m.messages.compose}
           multiline
           maxLength={2000}
-          style={[styles.composerInput, { color: theme.text }]}
+          onFocus={() => setComposerFocused(true)}
+          onBlur={() => setComposerFocused(false)}
+          style={[styles.composerInput, noFocusRing, { color: theme.text }]}
         />
         <Pressable
           role="button"

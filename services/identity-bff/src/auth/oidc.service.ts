@@ -108,11 +108,13 @@ export class OidcService {
     return this.toTokenSet(res, res.claims() as Record<string, unknown> | undefined);
   }
 
-  endSessionUrl(idToken: string | undefined): string {
-    if (!idToken) return `${this.cfg.env.PUBLIC_BASE_URL}/`;
+  /** `returnTo` must already be a safe same-site path (see safeReturnTo). */
+  endSessionUrl(idToken: string | undefined, returnTo = '/'): string {
+    const target = `${this.cfg.env.PUBLIC_BASE_URL}${returnTo}`;
+    if (!idToken) return target;
     return oidc.buildEndSessionUrl(this.config, {
       id_token_hint: idToken,
-      post_logout_redirect_uri: `${this.cfg.env.PUBLIC_BASE_URL}/`,
+      post_logout_redirect_uri: target,
     }).href;
   }
 

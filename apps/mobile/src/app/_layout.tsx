@@ -13,6 +13,9 @@ import { AuthProvider } from '../lib/auth/provider';
 import { RealtimeProvider } from '../lib/realtime';
 import { fonts, ThemeProvider, useTheme } from '../theme';
 
+// Deep links (a shared listing, a chat from a notification) open on top of the tabs, so Back works.
+export const unstable_settings = { initialRouteName: '(tabs)' };
+
 function Screens() {
   const theme = useTheme();
   const { m } = useI18n();

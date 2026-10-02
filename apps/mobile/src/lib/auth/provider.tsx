@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // A top-level form POST, so the BFF can end the Keycloak session with a redirect.
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/auth/logout';
+    form.action = `/auth/logout?${new URLSearchParams({ returnTo: '/m/account' })}`;
     document.body.append(form);
     form.submit();
   }, []);

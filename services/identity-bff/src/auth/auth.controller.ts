@@ -107,7 +107,10 @@ export class AuthController {
     this.redirect(reply, 302, afterLoginPath(tx.returnTo, profile.locale, registered));
   }
 
-  /** Ends the local session, revokes the refresh token and signs out of Keycloak (RP-initiated logout). */
+  /**
+   * Ends the local session, revokes the refresh token and signs out of Keycloak (RP-initiated logout).
+   * `?returnTo=` (a same-site path, as for login) is where Keycloak sends the browser afterwards.
+   */
   @Post('logout')
   @HttpCode(303)
   async logout(@Req() req: Req, @Res() reply: FastifyReply): Promise<void> {
@@ -125,7 +128,8 @@ export class AuthController {
         .catch((err) => this.logger.warn({ err }, 'token revocation failed'));
     }
     void reply.clearCookie(this.cfg.env.SESSION_COOKIE_NAME, { path: '/' });
-    this.redirect(reply, 303, this.oidc.endSessionUrl(session?.idToken));
+    const returnTo = safeReturnTo((req.query as Record<string, unknown>).returnTo);
+    this.redirect(reply, 303, this.oidc.endSessionUrl(session?.idToken, returnTo));
   }
 
   /** Session status for the web app. Never exposes tokens. */

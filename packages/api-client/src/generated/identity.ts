@@ -240,7 +240,10 @@ export interface operations {
     };
     logout: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Relative path Keycloak returns to after logout (default /) */
+                returnTo?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;

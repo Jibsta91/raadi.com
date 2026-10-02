@@ -12,6 +12,11 @@ const en = {
     share: 'Share',
     noPrice: 'No price',
   },
+  notFound: {
+    title: 'Page not found',
+    body: 'The page you are looking for does not exist.',
+    home: 'Back to the front page',
+  },
   auth: {
     login: 'Log in',
     logout: 'Log out',
@@ -94,6 +99,11 @@ const nb: Messages = {
     share: 'Del',
     noPrice: 'Pris ikke oppgitt',
   },
+  notFound: {
+    title: 'Fant ikke siden',
+    body: 'Siden du leter etter finnes ikke.',
+    home: 'Tilbake til forsiden',
+  },
   auth: {
     login: 'Logg inn',
     logout: 'Logg ut',
@@ -167,6 +177,11 @@ const so: Messages = {
     back: 'Dib u noqo',
     share: 'La wadaag',
     noPrice: 'Qiime lama sheegin',
+  },
+  notFound: {
+    title: 'Bogga lama helin',
+    body: 'Bogga aad raadinayso ma jiro.',
+    home: 'Ku noqo bogga hore',
   },
   auth: {
     login: 'Gal',
