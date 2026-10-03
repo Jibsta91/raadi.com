@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Raadi — kjøp og selg lokalt",
-    "description": "Raadi er en åpen markedsplass for kjøp og salg i Norge: torget, bil, eiendom, jobb og reise."
+    "title": "Raadiso — kjøp og selg lokalt",
+    "description": "Raadiso er en åpen markedsplass for kjøp og salg i Norge: torget, bil, eiendom, jobb og reise."
   },
   "nav": {
     "main": "Hovedmeny",
@@ -22,7 +22,7 @@
     "categories": "Kategorier"
   },
   "home": {
-    "heroTitle": "Finn det. Selg det. <brand>Raadi.</brand>",
+    "heroTitle": "Finn det. Selg det. <brand>Raadiso.</brand>",
     "heroSubtitle": "En trygg og åpen markedsplass for alt fra brukte møbler til ditt neste hjem eller din neste jobb.",
     "categoriesTitle": "Kategorier",
     "categories": {
@@ -47,7 +47,7 @@
         "description": "Feriehus, reiser og reisetilbud."
       }
     },
-    "trustTitle": "Hvorfor Raadi",
+    "trustTitle": "Hvorfor Raadiso",
     "trust": {
       "verified": {
         "title": "Verifiserte brukere",
@@ -87,7 +87,7 @@
   },
   "status": {
     "title": "Driftsstatus",
-    "subtitle": "Sanntidsstatus for Raadis tjenester.",
+    "subtitle": "Sanntidsstatus for Raadisos tjenester.",
     "allOk": "Alle systemer fungerer normalt",
     "degraded": "Noen komponenter har redusert drift",
     "groups": {
@@ -100,10 +100,10 @@
   },
   "privacy": {
     "title": "Personvern",
-    "intro": "Slik behandler Raadi personopplysninger etter GDPR og personopplysningsloven.",
+    "intro": "Slik behandler Raadiso personopplysninger etter GDPR og personopplysningsloven.",
     "controller": {
       "title": "Behandlingsansvarlig",
-      "body": "Den som drifter denne Raadi-installasjonen er behandlingsansvarlig for personopplysningene som behandles på plattformen."
+      "body": "Den som drifter denne Raadiso-installasjonen er behandlingsansvarlig for personopplysningene som behandles på plattformen."
     },
     "data": {
       "title": "Hva vi behandler",
@@ -131,12 +131,12 @@
     }
   },
   "footer": {
-    "tagline": "Raadi — åpen kildekode-markedsplass",
+    "tagline": "Raadiso — åpen kildekode-markedsplass",
     "privacy": "Personvern",
     "status": "Status",
     "openSource": "Apache-2.0",
     "terms": "Vilkår",
-    "links": "Om Raadi"
+    "links": "Om Raadiso"
   },
   "notFound": {
     "title": "Fant ikke siden",
@@ -337,7 +337,7 @@
       "policy": {
         "quota_exceeded": "Du har nådd grensen for aktive annonser.",
         "price_above_ceiling": "Prisen er høyere enn tillatt i denne kategorien.",
-        "prohibited_item": "Denne varen er ikke tillatt på Raadi.",
+        "prohibited_item": "Denne varen er ikke tillatt på Raadiso.",
         "too_many_images": "Bruk maks 10 bilder.",
         "policy_undefined": "Annonsen kunne ikke kontrolleres. Prøv igjen."
       },
@@ -404,7 +404,7 @@
   },
   "trust": {
     "profile": "Profil",
-    "profileTitle": "{name} på Raadi",
+    "profileTitle": "{name} på Raadiso",
     "rating": "Vurdering",
     "reviews": "Omtaler",
     "outOf5": "{value} av 5",
@@ -425,7 +425,7 @@
     "seeProfile": "Se profilen",
     "seeMyProfile": "Se min offentlige profil",
     "verificationTitle": "Identitetsbekreftelse",
-    "verificationHint": "Vis kjøpere og selgere at du er en ekte person. Raadi lagrer bare at du er verifisert, aldri fødselsnummeret ditt.",
+    "verificationHint": "Vis kjøpere og selgere at du er en ekte person. Raadiso lagrer bare at du er verifisert, aldri fødselsnummeret ditt.",
     "verifyWithBankId": "Verifiser med BankID",
     "removeVerification": "Fjern verifiseringen",
     "removeVerificationConfirm": "Fjerne BankID-verifiseringen din?",
@@ -433,7 +433,7 @@
     "outcomes": {
       "ok": "Du er nå verifisert med BankID.",
       "cancelled": "Verifiseringen ble avbrutt.",
-      "taken": "Denne BankID-en er allerede knyttet til en annen Raadi-konto.",
+      "taken": "Denne BankID-en er allerede knyttet til en annen Raadiso-konto.",
       "expired": "Verifiseringen tok for lang tid. Prøv igjen.",
       "failed": "Verifiseringen mislyktes. Prøv igjen."
     },
@@ -451,10 +451,10 @@
   },
   "terms": {
     "title": "Vilkår for bruk",
-    "intro": "Reglene for å bruke Raadi. De er korte med vilje: les dem før du kjøper eller selger.",
+    "intro": "Reglene for å bruke Raadiso. De er korte med vilje: les dem før du kjøper eller selger.",
     "service": {
       "title": "Tjenesten",
-      "body": "Raadi er en markedsplass der privatpersoner og bedrifter legger ut ting, bolig, bil og jobber, og kontakter hverandre. Raadi er ikke part i handlene som gjøres her."
+      "body": "Raadiso er en markedsplass der privatpersoner og bedrifter legger ut ting, bolig, bil og jobber, og kontakter hverandre. Raadiso er ikke part i handlene som gjøres her."
     },
     "account": {
       "title": "Kontoen din",
@@ -486,13 +486,13 @@
     }
   },
   "welcome": {
-    "title": "Velkommen til Raadi",
-    "greeting": "Velkommen til Raadi, {name}!",
+    "title": "Velkommen til Raadiso",
+    "greeting": "Velkommen til Raadiso, {name}!",
     "intro": "Kontoen din er klar. Tre ting som hjelper, alle valgfrie:",
     "languageTitle": "Språk",
-    "languageHint": "Raadi finnes på norsk, engelsk og somali. Bytt når du vil med språkmenyen øverst.",
+    "languageHint": "Raadiso finnes på norsk, engelsk og somali. Bytt når du vil med språkmenyen øverst.",
     "verifyTitle": "Verifiser med BankID",
-    "verifyHint": "Kjøpere og selgere stoler mer på verifiserte personer. Raadi lagrer bare at du er verifisert, aldri fødselsnummeret ditt.",
+    "verifyHint": "Kjøpere og selgere stoler mer på verifiserte personer. Raadiso lagrer bare at du er verifisert, aldri fødselsnummeret ditt.",
     "passkeyTitle": "Legg til en passnøkkel",
     "passkeyHint": "Logg inn med fingeravtrykk, ansikt eller PIN på enheten i stedet for passord. Sikrere mot phishing, og raskere.",
     "passkeyAction": "Sett opp passnøkkel",
@@ -506,7 +506,7 @@
     "days": "{count, plural, one {# dag} other {# dager}}",
     "vatIncluded": "Inkl. mva.",
     "pay": "Gå til betaling",
-    "hostedNote": "Du godkjenner betalingen hos betalingsleverandøren. Raadi ser aldri kort- eller kontoopplysningene dine.",
+    "hostedNote": "Du godkjenner betalingen hos betalingsleverandøren. Raadiso ser aldri kort- eller kontoopplysningene dine.",
     "currentlyUntil": "Fremhevet til {date}. Et nytt kjøp forlenger fremhevingen.",
     "status": {
       "created": "Venter på betaling",

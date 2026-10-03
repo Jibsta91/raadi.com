@@ -6,15 +6,20 @@ const publicBaseUrl = process.env.PUBLIC_BASE_URL ?? 'http://raadi.localhost';
 const authBaseUrl = process.env.AUTH_BASE_URL ?? 'http://auth.raadi.localhost';
 
 const config: ExpoConfig = {
-  name: 'Raadi',
+  name: 'Raadiso',
   slug: 'raadi',
   version: '0.1.0',
   scheme: 'raadi',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
+  // The brand mark (the same shapes as the website's favicon): white "r", blue dot, ink ground.
+  icon: './assets/icon.png',
   ios: { bundleIdentifier: 'no.raadi.app', supportsTablet: true },
-  android: { package: 'no.raadi.app' },
-  web: { bundler: 'metro', output: 'single' },
+  android: {
+    package: 'no.raadi.app',
+    adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', backgroundColor: '#0e1116' },
+  },
+  web: { bundler: 'metro', output: 'single', favicon: './assets/favicon.png' },
   plugins: ['expo-router', 'expo-secure-store', 'expo-localization', 'expo-web-browser'],
   experiments: {
     // Only the web export lives under a sub-path; Expo Go serves the app from the dev server's root.

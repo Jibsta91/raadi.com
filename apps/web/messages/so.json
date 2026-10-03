@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Raadi — iibso oo iibi meel kuu dhow",
-    "description": "Raadi waa suuq furan oo lagu iibsado laguna iibiyo Noorweey: alaab, baabuur, guryo, shaqo iyo safar."
+    "title": "Raadiso — iibso oo iibi meel kuu dhow",
+    "description": "Raadiso waa suuq furan oo lagu iibsado laguna iibiyo Noorweey: alaab, baabuur, guryo, shaqo iyo safar."
   },
   "nav": {
     "main": "Liiska ugu muhiimsan",
@@ -22,7 +22,7 @@
     "categories": "Qaybaha"
   },
   "home": {
-    "heroTitle": "<brand>Raadi.</brand> Hel. Iibi.",
+    "heroTitle": "<brand>Raadiso.</brand> Hel. Iibi.",
     "heroSubtitle": "Suuq furan oo ammaan ah oo wax walba laga helo, laga bilaabo alaab la isticmaalay ilaa gurigaaga ama shaqadaada xigta.",
     "categoriesTitle": "Qaybaha",
     "categories": {
@@ -47,7 +47,7 @@
         "description": "Guryo fasax, safarro iyo dalabyo safar."
       }
     },
-    "trustTitle": "Maxaa Raadi",
+    "trustTitle": "Maxaa Raadiso",
     "trust": {
       "verified": {
         "title": "Dad la xaqiijiyay",
@@ -87,7 +87,7 @@
   },
   "status": {
     "title": "Xaaladda nidaamka",
-    "subtitle": "Xaaladda tooska ah ee adeegyada Raadi.",
+    "subtitle": "Xaaladda tooska ah ee adeegyada Raadiso.",
     "allOk": "Dhammaan nidaamyadu way shaqeynayaan",
     "degraded": "Qaar ka mid ah qaybaha ayaa dhibaato qaba",
     "groups": {
@@ -100,10 +100,10 @@
   },
   "privacy": {
     "title": "Asturnaanta",
-    "intro": "Sida Raadi u maamusho xogta shakhsiga ah sida uu dhigayo GDPR iyo sharciga Noorweey.",
+    "intro": "Sida Raadiso u maamusho xogta shakhsiga ah sida uu dhigayo GDPR iyo sharciga Noorweey.",
     "controller": {
       "title": "Mas'uulka xogta",
-      "body": "Hawlwadeenka rakibaaddan Raadi ayaa mas'uul ka ah xogta shakhsiga ah ee madasha lagu maamulo."
+      "body": "Hawlwadeenka rakibaaddan Raadiso ayaa mas'uul ka ah xogta shakhsiga ah ee madasha lagu maamulo."
     },
     "data": {
       "title": "Waxa aan maamulno",
@@ -131,12 +131,12 @@
     }
   },
   "footer": {
-    "tagline": "Raadi — suuq il-furan",
+    "tagline": "Raadiso — suuq il-furan",
     "privacy": "Asturnaanta",
     "status": "Xaaladda",
     "openSource": "Apache-2.0",
     "terms": "Shuruudaha",
-    "links": "Ku saabsan Raadi"
+    "links": "Ku saabsan Raadiso"
   },
   "notFound": {
     "title": "Bogga lama helin",
@@ -337,7 +337,7 @@
       "policy": {
         "quota_exceeded": "Waxaad gaartay xadka xayeysiisyada firfircoon.",
         "price_above_ceiling": "Qiimuhu wuu ka sarreeyaa inta qaybtan loo oggol yahay.",
-        "prohibited_item": "Alaabtan laguma oggola Raadi.",
+        "prohibited_item": "Alaabtan laguma oggola Raadiso.",
         "too_many_images": "Isticmaal ugu badnaan 10 sawir.",
         "policy_undefined": "Xayeysiiska lama hubin karin. Fadlan dib isku day."
       },
@@ -404,7 +404,7 @@
   },
   "trust": {
     "profile": "Bogga",
-    "profileTitle": "{name} ee Raadi",
+    "profileTitle": "{name} ee Raadiso",
     "rating": "Qiimeyn",
     "reviews": "Faallooyin",
     "outOf5": "{value} ka mid ah 5",
@@ -425,7 +425,7 @@
     "seeProfile": "Eeg bogga",
     "seeMyProfile": "Eeg boggayga dadweynaha",
     "verificationTitle": "Xaqiijinta aqoonsiga",
-    "verificationHint": "U muuji iibsadayaasha iyo iibiyayaasha inaad tahay qof dhab ah. Raadi waxay kaliya kaydisaa inaad xaqiijisan tahay, marnaba lambarkaaga aqoonsiga.",
+    "verificationHint": "U muuji iibsadayaasha iyo iibiyayaasha inaad tahay qof dhab ah. Raadiso waxay kaliya kaydisaa inaad xaqiijisan tahay, marnaba lambarkaaga aqoonsiga.",
     "verifyWithBankId": "Ku xaqiiji BankID",
     "removeVerification": "Ka saar xaqiijinta",
     "removeVerificationConfirm": "Ma ka saaraysaa xaqiijintaada BankID?",
@@ -433,7 +433,7 @@
     "outcomes": {
       "ok": "Hadda waxaa lagugu xaqiijiyay BankID.",
       "cancelled": "Xaqiijinta waa la joojiyay.",
-      "taken": "BankID-gan wuxuu horey ugu xiran yahay akoon kale oo Raadi ah.",
+      "taken": "BankID-gan wuxuu horey ugu xiran yahay akoon kale oo Raadiso ah.",
       "expired": "Xaqiijintu waqti badan ayay qaadatay. Fadlan isku day mar kale.",
       "failed": "Xaqiijintu way fashilantay. Fadlan isku day mar kale."
     },
@@ -451,10 +451,10 @@
   },
   "terms": {
     "title": "Shuruudaha isticmaalka",
-    "intro": "Xeerarka isticmaalka Raadi. Si ula kac ah ayay u gaaban yihiin: akhri ka hor intaadan wax iibsan ama iibin.",
+    "intro": "Xeerarka isticmaalka Raadiso. Si ula kac ah ayay u gaaban yihiin: akhri ka hor intaadan wax iibsan ama iibin.",
     "service": {
       "title": "Adeegga",
-      "body": "Raadi waa suuq ay dadka gaarka ah iyo ganacsiyadu ku soo bandhigaan alaab, guryo, baabuur iyo shaqooyin, oo ay isku xiriiraan. Raadi kama mid aha heshiisyada halkan lagu sameeyo."
+      "body": "Raadiso waa suuq ay dadka gaarka ah iyo ganacsiyadu ku soo bandhigaan alaab, guryo, baabuur iyo shaqooyin, oo ay isku xiriiraan. Raadiso kama mid aha heshiisyada halkan lagu sameeyo."
     },
     "account": {
       "title": "Akoonkaaga",
@@ -486,13 +486,13 @@
     }
   },
   "welcome": {
-    "title": "Ku soo dhowow Raadi",
-    "greeting": "Ku soo dhowow Raadi, {name}!",
+    "title": "Ku soo dhowow Raadiso",
+    "greeting": "Ku soo dhowow Raadiso, {name}!",
     "intro": "Akoonkaagu waa diyaar. Saddex shay oo caawiya, dhammaantood ikhtiyaari:",
     "languageTitle": "Luqadda",
-    "languageHint": "Raadi waxay ku jirtaa Norwiiji, Ingiriisi iyo Soomaali. Ku beddel goor kasta liiska luqadda ee sare.",
+    "languageHint": "Raadiso waxay ku jirtaa Norwiiji, Ingiriisi iyo Soomaali. Ku beddel goor kasta liiska luqadda ee sare.",
     "verifyTitle": "Ku xaqiiji BankID",
-    "verifyHint": "Iibsadayaasha iyo iibiyayaashu waxay aad ugu kalsoon yihiin dadka la xaqiijiyay. Raadi waxay kaliya kaydisaa inaad xaqiijisan tahay, marnaba lambarkaaga aqoonsiga.",
+    "verifyHint": "Iibsadayaasha iyo iibiyayaashu waxay aad ugu kalsoon yihiin dadka la xaqiijiyay. Raadiso waxay kaliya kaydisaa inaad xaqiijisan tahay, marnaba lambarkaaga aqoonsiga.",
     "passkeyTitle": "Ku dar fure-gal (passkey)",
     "passkeyHint": "Ku gal faraha, wejiga ama PIN-ka qalabka halkii furaha sirta ah. Ka ammaan badan khiyaanada, oo ka dhakhso badan.",
     "passkeyAction": "Diyaari fure-gal",
@@ -506,7 +506,7 @@
     "days": "{count, plural, one {# maalin} other {# maalmood}}",
     "vatIncluded": "Canshuurta waa ku jirtaa",
     "pay": "U gudub lacag bixinta",
-    "hostedNote": "Lacag bixinta waxaad ku ansixinaysaa bogga bixiyaha. Raadi marnaba ma arkaan faahfaahinta kaarkaaga ama akoonkaaga.",
+    "hostedNote": "Lacag bixinta waxaad ku ansixinaysaa bogga bixiyaha. Raadiso marnaba ma arkaan faahfaahinta kaarkaaga ama akoonkaaga.",
     "currentlyUntil": "Hadda waa la horumariyay ilaa {date}. Iibsasho cusub ayaa kordhinaysa.",
     "status": {
       "created": "Waxaa la sugayaa lacag bixinta",

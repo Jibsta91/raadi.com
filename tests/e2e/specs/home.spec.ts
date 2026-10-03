@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('front page defaults to Norwegian and lists the categories', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/\/nb$/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Finn det. Selg det. Raadi.');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Finn det. Selg det. Raadiso.');
   for (const category of ['torget', 'bil', 'eiendom', 'jobb', 'reise']) {
     await expect(page.getByTestId(`category-${category}`)).toBeVisible();
   }
@@ -13,7 +13,7 @@ test('language switcher changes locale (nb → en → so)', async ({ page }) => 
   await page.goto('/nb');
   await page.getByTestId('locale-switcher').selectOption('en');
   await expect(page).toHaveURL(/\/en$/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Find it. Sell it. Raadi.');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Find it. Sell it. Raadiso.');
   await page.getByTestId('locale-switcher').selectOption('so');
   await expect(page).toHaveURL(/\/so$/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'so');

@@ -4,12 +4,13 @@
 #   ./raadi smoke      or      docker compose --profile test run --rm smoke
 set -uo pipefail
 
-GW="${GATEWAY_INTERNAL:-traefik:80}"
+# The gateway inside the network: port 443 when the public URLs are https (phone mode, production).
+GW="${GATEWAY_INTERNAL:-traefik:$([[ "${PUBLIC_SCHEME:-http}" == https ]] && echo 443 || echo 80)}"
 PUBLIC="${PUBLIC_BASE_URL:?}"
 AUTH="${AUTH_BASE_URL:?}"
 GRAFANA="${GRAFANA_BASE_URL:?}"
 REALM="${KEYCLOAK_REALM:-raadi}"
-USER_EMAIL="kari.nordmann@${RAADI_DOMAIN:?}"
+USER_EMAIL="kari.nordmann@${DEMO_EMAIL_DOMAIN:-${RAADI_DOMAIN:?}}"
 PASSWORD="${DEMO_USER_PASSWORD:?demo users are required for the smoke test}"
 ORIGIN="$(sed -E 's#^(https?://[^/]+).*#\1#' <<<"$PUBLIC")"
 
@@ -98,6 +99,36 @@ else
 fi
 req GET "$PUBLIC/m/my-listings"
 expect_status 200 "client routes are served by the app (/m/my-listings)"
+
+section "Mobile app, native sign-in (raadi-mobile, ADR-0021)"
+# What the app does in Expo Go: OIDC + PKCE with an exp:// redirect, then the API with its own bearer
+# token and no browser session, and a refresh of its offline token.
+: > "$JAR"
+verifier="$(openssl rand -base64 48 | tr '+/' '-_' | tr -d '=\n')"
+challenge="$(printf '%s' "$verifier" | openssl dgst -sha256 -binary | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
+app_redirect='exp://127.0.0.1:8081/--/auth'
+OIDC="$AUTH/realms/$REALM/protocol/openid-connect"
+req GET "$OIDC/auth" -G --data-urlencode client_id=raadi-mobile --data-urlencode "redirect_uri=$app_redirect" \
+  --data-urlencode response_type=code --data-urlencode 'scope=openid profile email offline_access' \
+  --data-urlencode "code_challenge=$challenge" --data-urlencode code_challenge_method=S256 --data-urlencode state=smoke
+action=$(grep -o '<form[^>]*id="kc-form-login"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 \
+  | sed -e 's/^action="//' -e 's/"$//' -e 's/&amp;/\&/g')
+req POST "$action" --data-urlencode "username=$USER_EMAIL" --data-urlencode "password=$PASSWORD" --data-urlencode "credentialId="
+code="$(header location | sed -n 's/.*[?&]code=\([^&]*\).*/\1/p')"
+[[ "$(header location)" == "$app_redirect?"* && -n "$code" ]] && ok "login returns to the app (exp:// redirect)" \
+  || fail "native login redirect" "got: $(header location)"
+req POST "$OIDC/token" --data-urlencode grant_type=authorization_code --data-urlencode client_id=raadi-mobile \
+  --data-urlencode "code=$code" --data-urlencode "redirect_uri=$app_redirect" --data-urlencode "code_verifier=$verifier"
+app_access="$(json .access_token)"; app_refresh="$(json .refresh_token)"
+[[ "$status" == 200 && -n "$app_refresh" && "$(json .scope)" == *offline_access* ]] \
+  && ok "PKCE code exchange gives an offline refresh token" || fail "native token exchange" "HTTP $status: $(head -c 300 "$BODY")"
+: > "$JAR"
+req GET "$PUBLIC/api/v1/listings/mine?limit=1" -H "Authorization: Bearer $app_access"
+expect_status 200 "the app's bearer token passes the gateway (no browser session)"
+req POST "$OIDC/token" --data-urlencode grant_type=refresh_token --data-urlencode client_id=raadi-mobile \
+  --data-urlencode "refresh_token=$app_refresh"
+expect_status 200 "the app's refresh token is accepted"
+unset app_access app_refresh verifier challenge code
 
 section "Identity provider"
 req GET "$AUTH/realms/$REALM/.well-known/openid-configuration"
@@ -258,13 +289,13 @@ req DELETE "$PUBLIC/api/v1/media/$image" -H "origin: $ORIGIN"
 eventually "media learns the image is attached (listing events)" 60 \
   bash -c "curl -s -o /dev/null -w '%{http_code}' --connect-to ::$GW -b '$JAR' -X DELETE -H 'origin: $ORIGIN' '$PUBLIC/api/v1/media/$image' | grep -q 409"
 
-login_as "ola.nordmann@${RAADI_DOMAIN}" || fail "login as ola"
+login_as "ola.nordmann@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as ola"
 req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"priceNok": 1}'
 expect_status 403 "another user cannot edit the listing (OpenFGA)"
 req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(listing_body "Stolen image")"
 [[ "$status" == "422" ]] && ok "another user cannot attach someone else's image" || fail "image ownership" "HTTP $status"
 
-login_as "moderator@${RAADI_DOMAIN}" || fail "login as moderator"
+login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as moderator"
 req DELETE "$PUBLIC/api/v1/listings/$listing" -H "origin: $ORIGIN"
 expect_status 204 "a moderator can remove the listing (role as contextual tuple)"
 eventually "removed listing disappears from search" 90 \
@@ -276,7 +307,7 @@ section "Messaging (conversations, WebSocket, events)"
 req GET "$PUBLIC/api/v1/messaging/conversations"
 expect_status 401 "anonymous users cannot read conversations"
 ws() { # <origin> — WebSocket handshake through the gateway with the session cookie
-  curl -s -o /dev/null -w '%{http_code}' --max-time 3 --connect-to "::${GW}" -b "$JAR" \
+  curl -s -o /dev/null -w '%{http_code}' --max-time 3 --http1.1 --connect-to "::${GW}" -b "$JAR" \
     -H 'Connection: Upgrade' -H 'Upgrade: websocket' -H 'Sec-WebSocket-Version: 13' \
     -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' -H "Origin: $1" "$PUBLIC/api/v1/messaging/ws"
 }
@@ -290,7 +321,7 @@ req GET "$PUBLIC/internal/v1/listings/$kari_listing/contact"
 [[ "$status" =~ ^(307|404)$ ]] && ! grep -q ownerId "$BODY" \
   && ok "internal listings API is not reachable through the gateway" || fail "internal API exposed" "HTTP $status"
 
-login_as "ola.nordmann@${RAADI_DOMAIN}" || fail "login as ola"
+login_as "ola.nordmann@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as ola"
 hello="Hei! Er denne fortsatt ledig? (smoke $(date +%s%N | tail -c 7))"
 start() { jq -nc --arg l "$1" --arg b "$2" '{listingId: $l, body: $b}'; }
 req POST "$PUBLIC/api/v1/messaging/conversations" -H 'content-type: application/json' \
@@ -315,7 +346,7 @@ expect_status 400 "empty messages are rejected"
 [[ "$(ws "$ORIGIN")" == "101" ]] && ok "WebSocket opens for a signed-in user (via token handler)" || fail "WebSocket upgrade"
 [[ "$(ws "https://evil.example")" == "403" ]] && ok "WebSocket refuses foreign origins" || fail "WebSocket origin check"
 
-login_as "amina.hassan@${RAADI_DOMAIN}" || fail "login as amina"
+login_as "amina.hassan@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as amina"
 req GET "$PUBLIC/api/v1/messaging/conversations/$conversation"
 expect_status 404 "other users cannot read the conversation"
 
@@ -382,7 +413,7 @@ req GET "$PUBLIC/api/v1/trust/listings/$kari_listing/seller"
 [[ "$status" == "200" && "$(json '.userId')" == "$kari_id" ]] \
   && ok "listing page can show the seller's rating (public)" || fail "seller summary" "HTTP $status"
 
-login_as "ola.nordmann@${RAADI_DOMAIN}" || fail "login as ola"
+login_as "ola.nordmann@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as ola"
 req GET "$PUBLIC/api/v1/trust/eligibility?listingId=$kari_listing&subjectId=$kari_id"
 # Ola wrote to Kari in the messaging section (Kari may have answered in an e2e run), but nothing was sold.
 [[ "$(json '.canReview')" == "false" && "$(json '.reason')" =~ ^(no_conversation|not_sold)$ ]] \

@@ -20,7 +20,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'meta' });
-  return { title: { default: t('title'), template: `%s · Raadi` }, description: t('description') };
+  return {
+    title: { default: t('title'), template: `%s · Raadiso` },
+    description: t('description'),
+  };
 }
 
 export default async function LocaleLayout({

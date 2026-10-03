@@ -1,4 +1,5 @@
 import { Badge, Button } from '@raadi/ui';
+import { Image as ImageIcon } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server';
@@ -42,7 +43,11 @@ export default async function MyListingsPage({ params }: { params: Promise<{ loc
           </Button>
         </div>
       ) : (
-        <ul className="divide-y rounded-lg border" role="list" data-testid="my-listings">
+        <ul
+          className="divide-y overflow-hidden rounded-3xl border bg-card"
+          role="list"
+          data-testid="my-listings"
+        >
           {items.map((l) => (
             <li key={l.id}>
               <Link
@@ -53,10 +58,12 @@ export default async function MyListingsPage({ params }: { params: Promise<{ loc
                   <img
                     src={l.images[0].urls.thumb}
                     alt=""
-                    className="h-16 w-20 rounded object-cover"
+                    className="h-16 w-20 rounded-xl object-cover"
                   />
                 ) : (
-                  <div className="h-16 w-20 rounded bg-muted" />
+                  <div className="flex h-16 w-20 items-center justify-center rounded-xl bg-placeholder">
+                    <ImageIcon aria-hidden className="size-5 text-muted-foreground" />
+                  </div>
                 )}
                 <div className="flex-1">
                   <p className="font-medium">{l.title}</p>

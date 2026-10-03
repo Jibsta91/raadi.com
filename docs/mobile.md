@@ -11,10 +11,51 @@ account (language and appearance). [ADR-0021](adr/0021-mobile-app-and-fjord-glas
   BFF's session cookie, like the website. After changing app code:
   `docker compose build mobile-web && docker compose up -d mobile-web`. Traefik can answer 503 for about 10 s
   while the new container passes its health check.
-- **On a phone** (not wired up yet): the native app signs in with OIDC + PKCE against the `raadi-mobile`
-  Keycloak client. It needs an Expo dev server reachable from the phone, and the stack reachable on the
-  laptop's LAN address over TLS (Keycloak cookies need HTTPS off `localhost`). That containerized dev server
-  (a compose profile on port 8081) is the next slice.
+- **On a phone**: `./raadi phone` (details below).
+
+## Phone mode
+
+The native app runs in Expo Go on a phone on the same Wi-Fi as the laptop
+([ADR-0022](adr/0022-phone-mode.md)). The stack then answers as `https://dev.raadiso.com`
+(`PHONE_DOMAIN`), with a Let's Encrypt certificate the phone already trusts.
+
+1. **Once:** at <https://developer.godaddy.com/keys>, create a Personal Access Token with the scopes
+   `domains.domain:read` and `domains.dns:update`. Then store it from your own terminal. The input is hidden,
+   and the token never goes into the repository or a chat:
+
+   ```bash
+   ./raadi secret-set godaddy_pat
+   ```
+
+   For an **iPhone** you also need a free Expo account: since Expo Go 57, Expo Go on a physical iPhone
+   opens only projects served by an Expo CLI signed in to the same account. Create an access token at
+   expo.dev (Account settings → Access tokens), store it with `./raadi secret-set expo_token`, and sign in
+   to Expo Go with that account. Without the token, Metro stays offline (Android and simulators still work).
+
+2. **Each time:** `./raadi phone`. This:
+   - points `dev.raadiso.com` and `*.dev.raadiso.com` at the laptop's current LAN address (private
+     addresses only, and only when they changed);
+   - gets or renews the wildcard certificate with a DNS-01 challenge (nothing is exposed to the internet);
+   - starts the stack on the LAN address and Metro on port 8081.
+
+   The first certificate takes a minute or two while the challenge record propagates.
+
+3. On the phone, install **Expo Go**, open it and enter `exp://<laptop LAN address>:8081` (printed by
+   `./raadi phone`). Sign in with a demo user.
+4. Back to the normal setup: `./raadi up`. The certificate and Keycloak's URLs switch back to
+   `raadi.localhost` on their own.
+
+Notes:
+
+- While phone mode runs, the stack (with its demo passwords) is reachable from your LAN. Use it on a
+  network you trust.
+- Fedora's firewall blocks ports 80 and 443 from the network by default. Open them for this session with
+  `sudo firewall-cmd --add-service=http --add-service=https`.
+- Some routers block DNS answers that point at private addresses ("DNS rebinding protection"). If the
+  phone cannot resolve `dev.raadiso.com`, allow the domain in the router's settings, or set the phone's
+  DNS to a public resolver.
+- Metro runs in a container, where file changes on the host don't always arrive. After editing app code,
+  reload in Expo Go (shake → Reload) or run `./raadi restart expo`.
 
 ## Layout
 

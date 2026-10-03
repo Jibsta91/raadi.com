@@ -14,9 +14,9 @@ interface Copy {
 }
 
 const footer: Record<Locale, string> = {
-  nb: 'Du får denne e-posten fordi du har en konto på Raadi. Endre varslene dine her:',
-  en: 'You receive this e-mail because you have a Raadi account. Change your notifications here:',
-  so: 'Waxaad helaysaa iimaylkan sababtoo ah waxaad leedahay akoon Raadi. Halkan ka beddel ogeysiisyadaada:',
+  nb: 'Du får denne e-posten fordi du har en konto på Raadiso. Endre varslene dine her:',
+  en: 'You receive this e-mail because you have a Raadiso account. Change your notifications here:',
+  so: 'Waxaad helaysaa iimaylkan sababtoo ah waxaad leedahay akoon Raadiso. Halkan ka beddel ogeysiisyadaada:',
 };
 
 /**
@@ -26,18 +26,18 @@ const footer: Record<Locale, string> = {
 const COPY: Record<EmailKind, Record<Locale, Copy>> = {
   new_message: {
     nb: {
-      subject: 'Du har fått en ny melding på Raadi',
-      body: ['Hei!', 'Du har fått en ny melding om en annonse på Raadi.'],
+      subject: 'Du har fått en ny melding på Raadiso',
+      body: ['Hei!', 'Du har fått en ny melding om en annonse på Raadiso.'],
       action: 'Les og svar',
     },
     en: {
-      subject: 'You have a new message on Raadi',
-      body: ['Hi!', 'Someone sent you a message about a listing on Raadi.'],
+      subject: 'You have a new message on Raadiso',
+      body: ['Hi!', 'Someone sent you a message about a listing on Raadiso.'],
       action: 'Read and reply',
     },
     so: {
-      subject: 'Fariin cusub ayaa kuu timid Raadi',
-      body: ['Salaan!', 'Qof ayaa kuu soo diray fariin ku saabsan xayeysiis Raadi ah.'],
+      subject: 'Fariin cusub ayaa kuu timid Raadiso',
+      body: ['Salaan!', 'Qof ayaa kuu soo diray fariin ku saabsan xayeysiis Raadiso ah.'],
       action: 'Akhri oo ka jawaab',
     },
   },
@@ -54,7 +54,7 @@ const COPY: Record<EmailKind, Record<Locale, Copy>> = {
       subject: 'Your listing was removed',
       body: [
         'Hi!',
-        'Your listing "{title}" was removed by Raadi\'s moderators because it does not follow the marketplace rules.',
+        'Your listing "{title}" was removed by Raadiso\'s moderators because it does not follow the marketplace rules.',
       ],
       action: 'See your listings',
     },
@@ -62,14 +62,14 @@ const COPY: Record<EmailKind, Record<Locale, Copy>> = {
       subject: 'Xayeysiiskaaga waa la saaray',
       body: [
         'Salaan!',
-        'Xayeysiiskaaga "{title}" waxaa saaray maamulayaasha Raadi sababtoo ah ma raacayo xeerarka suuqa.',
+        'Xayeysiiskaaga "{title}" waxaa saaray maamulayaasha Raadiso sababtoo ah ma raacayo xeerarka suuqa.',
       ],
       action: 'Arag xayeysiisyadaada',
     },
   },
   payment_receipt: {
     nb: {
-      subject: 'Kvittering fra Raadi',
+      subject: 'Kvittering fra Raadiso',
       body: [
         'Takk for kjøpet!',
         'Ordre: {orderId}',
@@ -81,7 +81,7 @@ const COPY: Record<EmailKind, Record<Locale, Copy>> = {
       action: 'Se annonsen',
     },
     en: {
-      subject: 'Your Raadi receipt',
+      subject: 'Your Raadiso receipt',
       body: [
         'Thank you for your purchase!',
         'Order: {orderId}',
@@ -93,7 +93,7 @@ const COPY: Record<EmailKind, Record<Locale, Copy>> = {
       action: 'See the listing',
     },
     so: {
-      subject: 'Rasiidkaaga Raadi',
+      subject: 'Rasiidkaaga Raadiso',
       body: [
         'Waad ku mahadsan tahay iibsashadaada!',
         'Dalab: {orderId}',

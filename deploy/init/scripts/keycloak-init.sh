@@ -14,7 +14,8 @@ BFF_CLIENT_SECRET="$(secret bff_oidc_client_secret)"
 GRAFANA_CLIENT_SECRET="$(secret grafana_oidc_client_secret)"
 REGISTRY_INIT_CLIENT_SECRET="$(secret registry_init_client_secret)"
 NOTIFICATIONS_CLIENT_SECRET="$(secret notifications_kc_client_secret)"
-export PUBLIC_BASE_URL AUTH_BASE_URL GRAFANA_BASE_URL RAADI_DOMAIN REALM BFF_CLIENT_SECRET GRAFANA_CLIENT_SECRET \
+DEMO_EMAIL_DOMAIN="${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}"
+export DEMO_EMAIL_DOMAIN PUBLIC_BASE_URL AUTH_BASE_URL GRAFANA_BASE_URL RAADI_DOMAIN REALM BFF_CLIENT_SECRET GRAFANA_CLIENT_SECRET \
   REGISTRY_INIT_CLIENT_SECRET NOTIFICATIONS_CLIENT_SECRET \
   SMTP_HOST="${SMTP_HOST:-mailpit}" SMTP_PORT="${SMTP_PORT:-1025}" \
   SMTP_FROM="${SMTP_FROM:-no-reply@${RAADI_DOMAIN}}" \
@@ -22,7 +23,7 @@ export PUBLIC_BASE_URL AUTH_BASE_URL GRAFANA_BASE_URL RAADI_DOMAIN REALM BFF_CLI
 
 # envsubst only replaces this explicit list (Keycloak's own ${...} keys stay intact).
 # shellcheck disable=SC2016
-vars='$PUBLIC_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET'
+vars='$PUBLIC_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $DEMO_EMAIL_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET'
 realm="$(envsubst "$vars" < /opt/raadi/keycloak/realm-raadi.json)"
 if [[ "${SEED_DEMO_DATA:-false}" != "true" ]]; then
   realm="$(jq 'del(.users)' <<<"$realm")"
@@ -69,6 +70,14 @@ user_role="$(api "$KC/admin/realms/$REALM/roles/user")"
 api -X POST "$KC/admin/realms/$REALM/roles/default-roles-${REALM}/composites" \
   --data-binary "[$user_role]" >/dev/null
 info "default role includes 'user'"
+
+# Imported users with explicit realmRoles miss the default role, and with it offline_access, which the
+# app needs to stay signed in (ADR-0021). Grant it to the demo users; repeating the grant is harmless.
+default_role="$(api "$KC/admin/realms/$REALM/roles/default-roles-${REALM}")"
+while read -r id; do
+  api -X POST "$KC/admin/realms/$REALM/users/$id/role-mappings/realm" --data-binary "[$default_role]" >/dev/null
+done < <(jq -r '.users // [] | .[].id' <<<"$realm")
+info "demo users have the default role"
 
 # Service accounts get their client roles here (the realm import cannot express
 # them, and overwriting a client recreates its service-account user).

@@ -111,7 +111,7 @@ export default async function ProfilePage({
           <h2 id="reviews" className="text-lg font-semibold">
             {t('reviews')}
           </h2>
-          <ul className="divide-y rounded-lg border">
+          <ul className="divide-y overflow-hidden rounded-3xl border bg-card">
             {reviews.items.map((r) => (
               <li key={r.id} className="space-y-2 p-4" data-testid="review-item">
                 <div className="flex flex-wrap items-center justify-between gap-2">

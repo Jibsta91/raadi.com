@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Raadi — buy and sell locally",
-    "description": "Raadi is an open-source marketplace for buying and selling in Norway: goods, cars, property, jobs and travel."
+    "title": "Raadiso — buy and sell locally",
+    "description": "Raadiso is an open-source marketplace for buying and selling in Norway: goods, cars, property, jobs and travel."
   },
   "nav": {
     "main": "Main navigation",
@@ -22,7 +22,7 @@
     "categories": "Categories"
   },
   "home": {
-    "heroTitle": "Find it. Sell it. <brand>Raadi.</brand>",
+    "heroTitle": "Find it. Sell it. <brand>Raadiso.</brand>",
     "heroSubtitle": "A safe, open marketplace for everything from second-hand furniture to your next home or job.",
     "categoriesTitle": "Categories",
     "categories": {
@@ -47,7 +47,7 @@
         "description": "Holiday homes, trips and travel deals."
       }
     },
-    "trustTitle": "Why Raadi",
+    "trustTitle": "Why Raadiso",
     "trust": {
       "verified": {
         "title": "Verified people",
@@ -87,7 +87,7 @@
   },
   "status": {
     "title": "Platform status",
-    "subtitle": "Live health of Raadi's services.",
+    "subtitle": "Live health of Raadiso's services.",
     "allOk": "All systems operational",
     "degraded": "Some components are degraded",
     "groups": {
@@ -100,10 +100,10 @@
   },
   "privacy": {
     "title": "Privacy",
-    "intro": "How Raadi processes personal data under the GDPR and the Norwegian Personal Data Act.",
+    "intro": "How Raadiso processes personal data under the GDPR and the Norwegian Personal Data Act.",
     "controller": {
       "title": "Data controller",
-      "body": "The operator of this Raadi installation is the data controller for the personal data processed on the platform."
+      "body": "The operator of this Raadiso installation is the data controller for the personal data processed on the platform."
     },
     "data": {
       "title": "What we process",
@@ -131,12 +131,12 @@
     }
   },
   "footer": {
-    "tagline": "Raadi — open-source classifieds",
+    "tagline": "Raadiso — open-source classifieds",
     "privacy": "Privacy",
     "status": "Status",
     "openSource": "Apache-2.0",
     "terms": "Terms",
-    "links": "About Raadi"
+    "links": "About Raadiso"
   },
   "notFound": {
     "title": "Page not found",
@@ -337,7 +337,7 @@
       "policy": {
         "quota_exceeded": "You have reached the limit of active listings.",
         "price_above_ceiling": "The price is higher than allowed for this category.",
-        "prohibited_item": "This item is not allowed on Raadi.",
+        "prohibited_item": "This item is not allowed on Raadiso.",
         "too_many_images": "Use at most 10 images.",
         "policy_undefined": "The listing could not be checked. Please try again."
       },
@@ -404,7 +404,7 @@
   },
   "trust": {
     "profile": "Profile",
-    "profileTitle": "{name} on Raadi",
+    "profileTitle": "{name} on Raadiso",
     "rating": "Rating",
     "reviews": "Reviews",
     "outOf5": "{value} out of 5",
@@ -425,7 +425,7 @@
     "seeProfile": "See profile",
     "seeMyProfile": "See my public profile",
     "verificationTitle": "Identity verification",
-    "verificationHint": "Show buyers and sellers that you are a real person. Raadi only stores that you are verified, never your national identity number.",
+    "verificationHint": "Show buyers and sellers that you are a real person. Raadiso only stores that you are verified, never your national identity number.",
     "verifyWithBankId": "Verify with BankID",
     "removeVerification": "Remove verification",
     "removeVerificationConfirm": "Remove your BankID verification?",
@@ -433,7 +433,7 @@
     "outcomes": {
       "ok": "You are now verified with BankID.",
       "cancelled": "Verification was cancelled.",
-      "taken": "This BankID is already linked to another Raadi account.",
+      "taken": "This BankID is already linked to another Raadiso account.",
       "expired": "The verification took too long. Please try again.",
       "failed": "Verification failed. Please try again."
     },
@@ -451,10 +451,10 @@
   },
   "terms": {
     "title": "Terms of use",
-    "intro": "The rules for using Raadi. They are short on purpose: read them before you buy or sell.",
+    "intro": "The rules for using Raadiso. They are short on purpose: read them before you buy or sell.",
     "service": {
       "title": "The service",
-      "body": "Raadi is a marketplace where private people and businesses list items, property, cars and jobs, and contact each other. Raadi is not a party to the deals made on it."
+      "body": "Raadiso is a marketplace where private people and businesses list items, property, cars and jobs, and contact each other. Raadiso is not a party to the deals made on it."
     },
     "account": {
       "title": "Your account",
@@ -486,13 +486,13 @@
     }
   },
   "welcome": {
-    "title": "Welcome to Raadi",
-    "greeting": "Welcome to Raadi, {name}!",
+    "title": "Welcome to Raadiso",
+    "greeting": "Welcome to Raadiso, {name}!",
     "intro": "Your account is ready. Three things that help, all optional:",
     "languageTitle": "Language",
-    "languageHint": "Raadi is available in Norsk, English and Soomaali. Change it any time with the language menu at the top.",
+    "languageHint": "Raadiso is available in Norsk, English and Soomaali. Change it any time with the language menu at the top.",
     "verifyTitle": "Verify with BankID",
-    "verifyHint": "Buyers and sellers trust verified people more. Raadi only stores that you are verified, never your national identity number.",
+    "verifyHint": "Buyers and sellers trust verified people more. Raadiso only stores that you are verified, never your national identity number.",
     "passkeyTitle": "Add a passkey",
     "passkeyHint": "Log in with your fingerprint, face or device PIN instead of a password. Safer against phishing, and faster.",
     "passkeyAction": "Set up a passkey",
@@ -506,7 +506,7 @@
     "days": "{count, plural, one {# day} other {# days}}",
     "vatIncluded": "VAT included",
     "pay": "Continue to payment",
-    "hostedNote": "You approve the payment on the provider's page. Raadi never sees your card or account details.",
+    "hostedNote": "You approve the payment on the provider's page. Raadiso never sees your card or account details.",
     "currentlyUntil": "Currently promoted until {date}. A new purchase extends it.",
     "status": {
       "created": "Waiting for payment",

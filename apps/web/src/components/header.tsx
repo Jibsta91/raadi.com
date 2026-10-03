@@ -38,9 +38,9 @@ export async function Header({ locale }: { locale: string }) {
           prefetch={false}
           href="/"
           className="rounded-lg font-display text-[28px] font-extrabold leading-none tracking-[-0.04em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label="Raadi"
+          aria-label="Raadiso"
         >
-          raadi<span className="text-primary">.</span>
+          raadiso<span className="text-primary">.</span>
         </Link>
         <nav aria-label={t('categories')} className="hidden gap-1 lg:flex">
           {CATEGORIES.map((key) => (

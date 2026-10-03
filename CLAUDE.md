@@ -1,9 +1,12 @@
 # Raadi: working notes for AI coding sessions
 
-Raadi is a Finn.no-style classifieds marketplace (web, mobile, domain microservices, four AI pillars). It is
-built in six phases; [docs/roadmap.md](docs/roadmap.md) holds the scope and status of each. Read that first,
-then [docs/development.md](docs/development.md) (layout, service checklist, conventions) and
-[docs/adr/README.md](docs/adr/README.md) (decisions already made; don't re-litigate them without a new ADR).
+Raadi is a Finn.no-style classifieds marketplace (web, mobile, domain microservices, four AI pillars). Users
+see it as **Raadiso** (raadiso.com): the brand in UI text, e-mails, login pages and the app name. Code keeps the
+working name `raadi` (packages, `./raadi`, realm, databases, images). In Somali text, "raadi" is also the verb
+"search": leave those strings alone. It is built in six phases; [docs/roadmap.md](docs/roadmap.md) holds the
+scope and status of each. Read that first, then [docs/development.md](docs/development.md) (layout, service
+checklist, conventions) and [docs/adr/README.md](docs/adr/README.md) (decisions already made; don't
+re-litigate them without a new ADR).
 
 ## Non-negotiables
 
@@ -69,7 +72,10 @@ A full reset (wipes data): `docker compose down -v --remove-orphans`.
   volumes, and Keycloak can crash-loop. Do a cold start after switching between branches that change
   Keycloak or init (`docker compose --profile tools --profile test down -v --remove-orphans`, then `up`).
 - After the laptop sleeps, Docker Desktop can wedge (Kafka stops answering, containers cannot be killed).
-  Run `systemctl --user restart docker-desktop`, then do a cold start. `ENOTFOUND registry.npmjs.org`
+  Run `systemctl --user restart docker-desktop`, then do a cold start. A wedged VM also made Keycloak drop
+  `raadi-bff` client sessions after a few minutes, so token refreshes failed with "Session doesn't have
+  required client" and users were signed out. That stopped after the restart (refreshes then worked after a
+  330 s gap). `ENOTFOUND registry.npmjs.org`
   during a build is a dropped network: retry.
 - A locked 1Password SSH agent ("communication with agent failed", "failed to fill whole buffer") blocks
   signed commits, tags and pushes. Ask the user to unlock it; never disable signing.

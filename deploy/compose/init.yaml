@@ -22,6 +22,7 @@ x-init: &init
   environment: &init-env
     RAADI_ENV: ${RAADI_ENV}
     RAADI_DOMAIN: ${RAADI_DOMAIN}
+    DEMO_EMAIL_DOMAIN: ${DEMO_EMAIL_DOMAIN}
     PUBLIC_SCHEME: ${PUBLIC_SCHEME}
     PUBLIC_PORT_SUFFIX: ${PUBLIC_PORT_SUFFIX}
     PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
@@ -45,6 +46,33 @@ services:
     command: ['/opt/raadi/bin/certs-init.sh']
     volumes:
       - certs:/certs
+
+  # Operator jobs (profile "ops", never started by `up`): ./raadi dns and ./raadi cert (ADR-0023).
+  dns:
+    <<: *init
+    profiles: [ops]
+    command: ['/opt/raadi/bin/dns-point.sh']
+    environment:
+      DNS_ZONE: ${DNS_ZONE}
+      DNS_NAME: ${DNS_NAME:-}
+      TARGET_IP: ${TARGET_IP:-}
+      ADDRESS_KIND: public
+      DRY_RUN: ${DRY_RUN:-0}
+    volumes:
+      - secrets:/secrets:ro
+
+  acme-cert:
+    <<: *init
+    profiles: [ops]
+    command: ['/opt/raadi/bin/acme-cert.sh']
+    environment:
+      DNS_ZONE: ${DNS_ZONE}
+      CERT_DOMAIN: ${CERT_DOMAIN:-}
+      INSTALL: ${INSTALL:-0}
+    volumes:
+      - secrets:/secrets:ro
+      - certs:/certs
+      - acme:/acme
 
   openbao-unsealer:
     <<: *init
@@ -180,3 +208,4 @@ services:
 volumes:
   secrets: {}
   certs: {}
+  acme: {}

@@ -75,6 +75,6 @@ describe('displayName', () => {
       'Kari N.',
     );
     assert.equal(displayName({ given_name: 'Amina' }), 'Amina');
-    assert.equal(displayName({ email: 'k@x' }), 'Raadi-bruker');
+    assert.equal(displayName({ email: 'k@x' }), 'Raadiso-bruker');
   });
 });
