@@ -4,12 +4,13 @@
 #   ./raadi smoke      or      docker compose --profile test run --rm smoke
 set -uo pipefail
 
-GW="${GATEWAY_INTERNAL:-traefik:80}"
+# The gateway inside the network: port 443 when the public URLs are https (phone mode, production).
+GW="${GATEWAY_INTERNAL:-traefik:$([[ "${PUBLIC_SCHEME:-http}" == https ]] && echo 443 || echo 80)}"
 PUBLIC="${PUBLIC_BASE_URL:?}"
 AUTH="${AUTH_BASE_URL:?}"
 GRAFANA="${GRAFANA_BASE_URL:?}"
 REALM="${KEYCLOAK_REALM:-raadi}"
-USER_EMAIL="kari.nordmann@${RAADI_DOMAIN:?}"
+USER_EMAIL="kari.nordmann@${DEMO_EMAIL_DOMAIN:-${RAADI_DOMAIN:?}}"
 PASSWORD="${DEMO_USER_PASSWORD:?demo users are required for the smoke test}"
 ORIGIN="$(sed -E 's#^(https?://[^/]+).*#\1#' <<<"$PUBLIC")"
 
@@ -258,7 +259,7 @@ req DELETE "$PUBLIC/api/v1/media/$image" -H "origin: $ORIGIN"
 eventually "media learns the image is attached (listing events)" 60 \
   bash -c "curl -s -o /dev/null -w '%{http_code}' --connect-to ::$GW -b '$JAR' -X DELETE -H 'origin: $ORIGIN' '$PUBLIC/api/v1/media/$image' | grep -q 409"
 
-login_as "ola.nordmann@${RAADI_DOMAIN}" || fail "login as ola"
+login_as "ola.nordmann@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as ola"
 req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"priceNok": 1}'
 expect_status 403 "another user cannot edit the listing (OpenFGA)"
 req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(listing_body "Stolen image")"
@@ -290,7 +291,7 @@ req GET "$PUBLIC/internal/v1/listings/$kari_listing/contact"
 [[ "$status" =~ ^(307|404)$ ]] && ! grep -q ownerId "$BODY" \
   && ok "internal listings API is not reachable through the gateway" || fail "internal API exposed" "HTTP $status"
 
-login_as "ola.nordmann@${RAADI_DOMAIN}" || fail "login as ola"
+login_as "ola.nordmann@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as ola"
 hello="Hei! Er denne fortsatt ledig? (smoke $(date +%s%N | tail -c 7))"
 start() { jq -nc --arg l "$1" --arg b "$2" '{listingId: $l, body: $b}'; }
 req POST "$PUBLIC/api/v1/messaging/conversations" -H 'content-type: application/json' \
@@ -382,7 +383,7 @@ req GET "$PUBLIC/api/v1/trust/listings/$kari_listing/seller"
 [[ "$status" == "200" && "$(json '.userId')" == "$kari_id" ]] \
   && ok "listing page can show the seller's rating (public)" || fail "seller summary" "HTTP $status"
 
-login_as "ola.nordmann@${RAADI_DOMAIN}" || fail "login as ola"
+login_as "ola.nordmann@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as ola"
 req GET "$PUBLIC/api/v1/trust/eligibility?listingId=$kari_listing&subjectId=$kari_id"
 # Ola wrote to Kari in the messaging section (Kari may have answered in an e2e run), but nothing was sold.
 [[ "$(json '.canReview')" == "false" && "$(json '.reason')" =~ ^(no_conversation|not_sold)$ ]] \

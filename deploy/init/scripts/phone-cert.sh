@@ -8,9 +8,13 @@ TASK="phone-cert"
 DOMAIN="${PHONE_DOMAIN:?PHONE_DOMAIN is required}"
 [[ -s "${MASTER_DIR}/godaddy_pat" ]] || die "missing secret godaddy_pat: run ./raadi secret-set godaddy_pat"
 
-EXEC_PATH=/opt/raadi/bin/godaddy-acme.sh EXEC_PROPAGATION_TIMEOUT=300 EXEC_POLLING_INTERVAL=10 \
+# lego's propagation pre-check never confirmed the record here (it timed out while GoDaddy's servers
+# already answered with it, from the same container). GoDaddy publishes within seconds, so wait a fixed
+# minute instead, and let Let's Encrypt check the record itself.
+EXEC_PATH=/opt/raadi/bin/godaddy-acme.sh \
   lego run --accept-tos --path /acme --dns exec --cert.name phone \
   -d "$DOMAIN" -d "*.${DOMAIN}" --renew-days 30 --log.format text \
+  --dns.propagation.wait 60s \
   || die "could not get a certificate for ${DOMAIN}"
 
 crt="$(find /acme -name phone.crt | head -1)"

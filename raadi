@@ -97,7 +97,9 @@ case "$cmd" in
     lan_ip="${LAN_IP:-$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "src") print $(i + 1)}')}"
     [[ -n "$lan_ip" ]] || { echo "could not find this laptop's LAN address; run LAN_IP=<address> ./raadi phone" >&2; exit 2; }
     phone_domain="${PHONE_DOMAIN:-$(sed -n 's/^PHONE_DOMAIN=//p' .env)}"
-    export LAN_IP="$lan_ip" RAADI_DOMAIN="$phone_domain" PUBLIC_SCHEME=https BIND_ADDRESS="$lan_ip"
+    # Demo logins stay kari.nordmann@raadi.localhost etc., so they are the same in every mode.
+    demo_domain="${DEMO_EMAIL_DOMAIN:-$(sed -n 's/^RAADI_DOMAIN=//p' .env)}"
+    export LAN_IP="$lan_ip" RAADI_DOMAIN="$phone_domain" DEMO_EMAIL_DOMAIN="$demo_domain" PUBLIC_SCHEME=https BIND_ADDRESS="$lan_ip"
     "${DC[@]}" -f compose.yaml -f compose.phone.yaml up -d --wait "$@"
     cat <<PHONE
 

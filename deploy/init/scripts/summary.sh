@@ -6,7 +6,8 @@
 source /opt/raadi/bin/lib.sh
 TASK="summary"
 
-GW="${GATEWAY_INTERNAL:-traefik:80}"
+# The gateway inside the network: port 443 when the public URLs are https (phone mode, production).
+GW="${GATEWAY_INTERNAL:-traefik:$([[ "${PUBLIC_SCHEME:-http}" == https ]] && echo 443 || echo 80)}"
 # up <url> — true when the URL answers 2xx/3xx through the gateway (public Host header).
 up() {
   [[ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 --connect-to "::${GW}" "$1")" =~ ^[23][0-9][0-9]$ ]]
@@ -23,7 +24,7 @@ for name in "${!urls[@]}"; do
   retry 20 up "${urls[$name]}" || warn "${name} did not answer through the gateway: ${urls[$name]}"
 done
 
-S="${PUBLIC_SCHEME:-http}"; D="${RAADI_DOMAIN}"; P="${PUBLIC_PORT_SUFFIX:-}"
+S="${PUBLIC_SCHEME:-http}"; D="${RAADI_DOMAIN}"; P="${PUBLIC_PORT_SUFFIX:-}"; E="${DEMO_EMAIL_DOMAIN:-$D}"
 cat <<BANNER
 
   ┌────────────────────────────────────────────────────────────────────┐
@@ -53,11 +54,11 @@ cat <<BANNER
     Mailpit (emails) ... ${S}://mail.${D}${P}
 
   Demo logins (password for all: ${DEMO_USER_PASSWORD:-<seed disabled>})
-    kari.nordmann@${D}   buyer/seller (nb)
-    ola.nordmann@${D}    buyer/seller (nb)
-    amina.hassan@${D}    buyer/seller (en)
-    moderator@${D}       content moderator
-    admin@${D}           platform admin (Grafana, admin APIs)
+    kari.nordmann@${E}   buyer/seller (nb)
+    ola.nordmann@${E}    buyer/seller (nb)
+    amina.hassan@${E}    buyer/seller (en)
+    moderator@${E}       content moderator
+    admin@${E}           platform admin (Grafana, admin APIs)
 
   HTTPS works too (https://${D}) with a locally generated dev CA:
   trust it optionally with ./raadi ca-cert. Plain HTTP needs nothing.

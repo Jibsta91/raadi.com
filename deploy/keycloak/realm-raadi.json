@@ -255,8 +255,8 @@
   "users": [
     {
       "id": "3f0c5a6e-1b7d-4c2a-9e51-7a0d2b6c4f11",
-      "username": "kari.nordmann@${RAADI_DOMAIN}",
-      "email": "kari.nordmann@${RAADI_DOMAIN}",
+      "username": "kari.nordmann@${DEMO_EMAIL_DOMAIN}",
+      "email": "kari.nordmann@${DEMO_EMAIL_DOMAIN}",
       "firstName": "Kari",
       "lastName": "Nordmann",
       "enabled": true,
@@ -275,8 +275,8 @@
     },
     {
       "id": "8b2e4d90-5c3a-4f6b-a1d7-2e9c0f3b5a22",
-      "username": "ola.nordmann@${RAADI_DOMAIN}",
-      "email": "ola.nordmann@${RAADI_DOMAIN}",
+      "username": "ola.nordmann@${DEMO_EMAIL_DOMAIN}",
+      "email": "ola.nordmann@${DEMO_EMAIL_DOMAIN}",
       "firstName": "Ola",
       "lastName": "Nordmann",
       "enabled": true,
@@ -295,8 +295,8 @@
     },
     {
       "id": "c7d1f2a4-9e6b-4a3c-8f50-1b4e7d2a6c33",
-      "username": "amina.hassan@${RAADI_DOMAIN}",
-      "email": "amina.hassan@${RAADI_DOMAIN}",
+      "username": "amina.hassan@${DEMO_EMAIL_DOMAIN}",
+      "email": "amina.hassan@${DEMO_EMAIL_DOMAIN}",
       "firstName": "Amina",
       "lastName": "Hassan",
       "enabled": true,
@@ -315,8 +315,8 @@
     },
     {
       "id": "1a9e3c5b-7d2f-4e8a-b6c1-9f0d4a2e7b44",
-      "username": "moderator@${RAADI_DOMAIN}",
-      "email": "moderator@${RAADI_DOMAIN}",
+      "username": "moderator@${DEMO_EMAIL_DOMAIN}",
+      "email": "moderator@${DEMO_EMAIL_DOMAIN}",
       "firstName": "Mona",
       "lastName": "Moderator",
       "enabled": true,
@@ -335,8 +335,8 @@
     },
     {
       "id": "5e7b9d1f-3a4c-4b6e-9d2a-0c8f6e1b3d55",
-      "username": "admin@${RAADI_DOMAIN}",
-      "email": "admin@${RAADI_DOMAIN}",
+      "username": "admin@${DEMO_EMAIL_DOMAIN}",
+      "email": "admin@${DEMO_EMAIL_DOMAIN}",
       "firstName": "Ada",
       "lastName": "Admin",
       "enabled": true,
