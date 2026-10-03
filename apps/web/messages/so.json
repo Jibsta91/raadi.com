@@ -32,7 +32,7 @@
       },
       "bil": {
         "name": "Baabuur",
-        "description": "Baabuur, mooto, doonyo iyo gaadiid kale."
+        "description": "Baabuur, baabuur xamuul yar, mootooyin iyo baabuur guri."
       },
       "eiendom": {
         "name": "Guryo",
@@ -160,12 +160,12 @@
       "reise": "Safar"
     },
     "subcategories": {
-      "elektronikk": "Elektaroonig",
-      "mobler": "Alaab guri",
-      "klaer": "Dhar",
+      "elektronikk": "Elektaroonig iyo qalabka guriga",
+      "mobler": "Alaab guri iyo qurxin",
+      "klaer": "Dhar, qurxin iyo agab",
       "sport": "Ciyaaraha iyo banaanka",
-      "barn": "Carruurta",
-      "hobby": "Hiwaayad iyo muusig",
+      "barn": "Waalidka iyo carruurta",
+      "hobby": "Madadaalo iyo hiwaayad",
       "personbil": "Baabuur",
       "varebil": "Baabuur xamuul yar",
       "motorsykkel": "Mootooyin",
@@ -182,7 +182,16 @@
       "transport": "Gaadiid",
       "hytteutleie": "Kirada aqallada",
       "leilighet": "Abaartamano",
-      "pakkereise": "Safarro xirmo ah"
+      "pakkereise": "Safarro xirmo ah",
+      "hage": "Beer, dayactir iyo guri",
+      "antikviteter": "Alaab qadiimi ah iyo farshaxan",
+      "dyr": "Xayawaan iyo agabkooda",
+      "kjoretoyutstyr": "Agabka baabuurta, doonyaha iyo mootada",
+      "nybygg": "Guryo cusub",
+      "naering": "Hanti ganacsi",
+      "kontor": "Xafiis iyo maamul",
+      "industri": "Warshado iyo wax soo saar",
+      "reiseliv": "Huteel iyo maqaayad"
     },
     "attributes": {
       "condition": "Xaaladda",
@@ -197,7 +206,10 @@
       "bedrooms": "Qolalka jiifka",
       "employer": "Loo-shaqeeyaha",
       "employmentType": "Nooca shaqada",
-      "guests": "Martida"
+      "guests": "Martida",
+      "bodyType": "Qaabka jirka",
+      "drivetrain": "Wadista taayirada",
+      "ownership": "Nooca lahaanshaha"
     },
     "values": {
       "condition": {
@@ -221,13 +233,34 @@
         "house": "Guri",
         "townhouse": "Guri saf ah",
         "cabin": "Aqal",
-        "plot": "Dhul"
+        "plot": "Dhul",
+        "commercial": "Goob ganacsi"
       },
       "employmentType": {
         "full_time": "Waqti buuxa",
         "part_time": "Waqti dhiman",
         "temporary": "Ku meel gaar",
         "internship": "Tababar shaqo"
+      },
+      "bodyType": {
+        "sedan": "Sedan",
+        "station_wagon": "Istaashin",
+        "hatchback": "Hatchback",
+        "suv": "SUV/Offroad",
+        "coupe": "Coupé",
+        "convertible": "Saqaf furan",
+        "mpv": "Baabuur qoys",
+        "pickup": "Bikaab"
+      },
+      "drivetrain": {
+        "fwd": "Taayirada hore",
+        "rwd": "Taayirada dambe",
+        "awd": "Afarta taayir"
+      },
+      "ownership": {
+        "freehold": "Lahaansho buuxda",
+        "cooperative": "Iskaashato",
+        "shares": "Saami"
       }
     }
   },
@@ -268,7 +301,12 @@
       "fuel": "Shidaalka",
       "propertyType": "Nooca guriga",
       "employmentType": "Nooca shaqada",
-      "price": "Qiimaha"
+      "price": "Qiimaha",
+      "gearbox": "Gearka",
+      "bodyType": "Qaabka jirka",
+      "drivetrain": "Wadista taayirada",
+      "ownership": "Nooca lahaanshaha",
+      "make": "Sumadda"
     },
     "priceRanges": {
       "0-999": "Ka yar 1 000 kr",
@@ -279,7 +317,20 @@
     },
     "distance": "{km} km u jira",
     "unavailable": "Raadintu hadda ma shaqaynayso. Fadlan dib isku day dhowaan.",
-    "nearMe": "Meel ii dhow"
+    "nearMe": "Meel ii dhow",
+    "ranges": {
+      "year": "Sanadka",
+      "mileage": "Masaafada",
+      "area": "Bedka",
+      "bedrooms": "Qolalka jiifka",
+      "guests": "Martida"
+    },
+    "rangeFrom": "{filter} laga bilaabo {value}",
+    "rangeTo": "{filter} ilaa {value}",
+    "removeFilter": "Ka saar shaandhada {filter}",
+    "showResults": "{total, plural, =0 {Wax natiijo ah ma jiraan} one {Muuji # natiijo} other {Muuji # natiijo}}",
+    "closeFilters": "Xir shaandhooyinka",
+    "showAll": "Muuji dhammaan ({count})"
   },
   "listing": {
     "noPrice": "Mushahar heshiis ah",
@@ -317,7 +368,7 @@
     "title": "Cinwaanka",
     "titleHint": "3–120 xaraf",
     "description": "Sharaxaad",
-    "price": "Qiimaha (kr)",
+    "price": "Qiimaha",
     "place": "Goobta",
     "choosePlace": "Dooro goob",
     "images": "Sawirro",
@@ -348,6 +399,25 @@
         "too_large": "Sawirku wuu ka weyn yahay 10 MB.",
         "generic": "Sawirka lama soo gelin karin."
       }
+    },
+    "pickCategory": "Maxaad rabtaa inaad soo dhigto?",
+    "pickSubcategory": "Halkee bay ku habboon tahay {category}?",
+    "change": "Beddel",
+    "optional": "ikhtiyaari",
+    "mainImage": "Sawirka ugu weyn",
+    "sections": {
+      "images": "Sawirro",
+      "about": "Ku saabsan xayeysiiska",
+      "details": "Faahfaahin",
+      "priceAndPlace": "Qiimaha iyo goobta",
+      "place": "Goobta"
+    },
+    "titlePlaceholder": {
+      "torget": "Tusaale: Baaskiil buur 29\", wax yar la isticmaalay",
+      "bil": "Tusaale: Volkswagen Golf 1.5 TSI",
+      "eiendom": "Tusaale: Abaartamaan 3 qol leh oo balakoon leh",
+      "jobb": "Tusaale: Horumariye full-stack",
+      "reise": "Tusaale: Aqal buur oo raaxo leh"
     }
   },
   "my": {
@@ -534,5 +604,44 @@
     "light": "Iftiin",
     "dark": "Mugdi",
     "hint": "Raac qalabkaaga, ama had iyo jeer isticmaal iftiin ama mugdi."
+  },
+  "categoryPage": {
+    "searchIn": "Ka raadi {category}",
+    "seeAll": "Arag dhammaan {total} xayeysiis",
+    "subcategoriesTitle": "Qaybaha",
+    "listings": "{count, plural, =0 {Xayeysiis ma jiro} one {# xayeysiis} other {# xayeysiis}}",
+    "shortcutsTitle": "Raadinta caanka ah",
+    "makesTitle": "Sumadaha caanka ah",
+    "latestTitle": "Kuwa ugu cusub ee {category}",
+    "shortcuts": {
+      "torget": {
+        "new": "Cusub",
+        "under500": "Ka yar 500 kr",
+        "furniture": "Alaab guri"
+      },
+      "bil": {
+        "electric": "Baabuur koronto",
+        "automatic": "Gear toos ah",
+        "awd": "Afarta taayir",
+        "recent": "Ugu badnaan 3 sano",
+        "lowMileage": "Ka yar 50 000 km"
+      },
+      "eiendom": {
+        "apartments": "Abaartamano",
+        "houses": "Guryo",
+        "threeBedrooms": "Ugu yaraan 3 qol",
+        "freehold": "Lahaansho buuxda"
+      },
+      "jobb": {
+        "fullTime": "Waqti buuxa",
+        "partTime": "Waqti dhiman",
+        "internship": "Tababar shaqo"
+      },
+      "reise": {
+        "bigGroups": "6 qof ama ka badan",
+        "cabins": "Aqallo"
+      }
+    },
+    "newListing": "Xayeysiis ku dhig {category}"
   }
 }

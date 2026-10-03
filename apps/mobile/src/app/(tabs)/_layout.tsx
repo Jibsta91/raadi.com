@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
-import { useCallback, useEffect, useState, type ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
+import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Glass } from '../../components/ui';
 import { useI18n } from '../../i18n';
@@ -11,6 +11,8 @@ import { useRealtime } from '../../lib/realtime';
 import { fonts, radius, space, useTheme } from '../../theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
+
+const BAR_PADDING = space.sm;
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
 const ICONS: Record<string, [IconName, IconName]> = {
@@ -20,60 +22,143 @@ const ICONS: Record<string, [IconName, IconName]> = {
   account: ['person-circle', 'person-circle-outline'],
 };
 
-/** Floating "glass" pill: the active tab shows its label, the others only their icon. */
+/**
+ * Floating "glass" bar with a sliding highlight. Tap a tab and the highlight glides to it, or put a
+ * finger on the bar and slide sideways: the highlight follows the finger and the tab under it is chosen
+ * on release (like iOS's segmented controls). Built on React Native's PanResponder and Animated, so it
+ * needs no native gesture library and works the same in Expo Go and the web build.
+ */
 function GlassTabBar({ state, descriptors, navigation }: TabBarProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const count = state.routes.length;
+  const bar = useRef<View>(null);
+  const [frame, setFrame] = useState({ x: 0, slot: 0 });
+  const [hover, setHover] = useState<number | null>(null);
+  const position = useRef(new Animated.Value(0)).current;
+  const shown = hover ?? state.index;
+
+  const measure = () =>
+    bar.current?.measureInWindow((x, _y, width) =>
+      setFrame({ x: x + BAR_PADDING, slot: (width - 2 * BAR_PADDING) / count }),
+    );
+
+  const glideTo = useCallback(
+    (index: number) =>
+      Animated.spring(position, {
+        toValue: index * frame.slot,
+        useNativeDriver: Platform.OS !== 'web',
+        speed: 20,
+        bounciness: 6,
+      }).start(),
+    [position, frame.slot],
+  );
+
+  // Follow the focused tab, however it changed (tap, drag, deep link, back navigation).
+  useEffect(() => glideTo(state.index), [glideTo, state.index]);
+
+  const select = useCallback(
+    (index: number) => {
+      const route = state.routes[index];
+      if (!route) return;
+      const event = navigation.emit({
+        type: 'tabPress',
+        target: route.key,
+        canPreventDefault: true,
+      });
+      if (index !== state.index && !event.defaultPrevented) navigation.navigate(route.name);
+    },
+    [navigation, state.index, state.routes],
+  );
+
+  // Pill position (left edge, px) for a finger at pageX, kept inside the bar.
+  const follow = useCallback(
+    (pageX: number) => {
+      const max = (count - 1) * frame.slot;
+      const left = Math.min(Math.max(pageX - frame.x - frame.slot / 2, 0), max);
+      position.setValue(left);
+      setHover(Math.round(left / frame.slot));
+      return left;
+    },
+    [count, frame, position],
+  );
+
+  const pan = useMemo(
+    () =>
+      PanResponder.create({
+        // Taps stay with the tabs; a mostly sideways move on the bar becomes a slide.
+        onMoveShouldSetPanResponder: (_, g) =>
+          Math.abs(g.dx) > 6 && Math.abs(g.dx) > Math.abs(g.dy),
+        onPanResponderGrant: (e) => follow(e.nativeEvent.pageX),
+        onPanResponderMove: (e) => follow(e.nativeEvent.pageX),
+        onPanResponderRelease: (e) => {
+          const index = Math.round(follow(e.nativeEvent.pageX) / frame.slot);
+          setHover(null);
+          if (index === state.index) glideTo(index);
+          else select(index);
+        },
+        onPanResponderTerminate: () => {
+          setHover(null);
+          glideTo(state.index);
+        },
+      }),
+    [follow, frame.slot, glideTo, select, state.index],
+  );
+
   return (
     <View
       pointerEvents="box-none"
       style={[styles.wrap, { bottom: Math.max(insets.bottom, space.md) }]}
     >
-      <Glass style={styles.bar} testID="tab-bar">
-        {state.routes.map((route, index) => {
-          const focused = state.index === index;
-          const options = descriptors[route.key]?.options;
-          const label = options?.title ?? route.name;
-          const badge = options?.tabBarBadge;
-          const [active, inactive] = ICONS[route.name] ?? ['ellipse', 'ellipse-outline'];
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-            if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
-          };
-          return (
-            <Pressable
-              key={route.key}
-              role="tab"
-              aria-selected={focused}
-              aria-label={badge ? `${label}, ${badge}` : label}
-              testID={`tab-${route.name}`}
-              onPress={onPress}
+      <View ref={bar} onLayout={measure} style={styles.barFrame} {...pan.panHandlers}>
+        <Glass style={styles.bar} testID="tab-bar">
+          {frame.slot > 0 ? (
+            <Animated.View
+              pointerEvents="none"
               style={[
-                styles.tab,
-                focused && { backgroundColor: theme.ink, paddingHorizontal: space.lg },
+                styles.pill,
+                {
+                  width: frame.slot,
+                  backgroundColor: theme.ink,
+                  transform: [{ translateX: position }],
+                },
               ]}
-            >
-              <Ionicons
-                name={focused ? active : inactive}
-                size={22}
-                color={focused ? theme.inkText : theme.subtle}
-              />
-              {focused ? (
-                <Text style={[styles.label, { color: theme.inkText }]}>{label}</Text>
-              ) : null}
-              {badge ? (
-                <View style={[styles.badge, { backgroundColor: theme.accent }]}>
-                  <Text style={[styles.badgeText, { color: theme.accentText }]}>{badge}</Text>
+            />
+          ) : null}
+          {state.routes.map((route, index) => {
+            const focused = state.index === index;
+            const lit = shown === index;
+            const options = descriptors[route.key]?.options;
+            const label = options?.title ?? route.name;
+            const badge = options?.tabBarBadge;
+            const [active, inactive] = ICONS[route.name] ?? ['ellipse', 'ellipse-outline'];
+            const color = lit ? theme.inkText : theme.subtle;
+            return (
+              <Pressable
+                key={route.key}
+                role="tab"
+                aria-selected={focused}
+                aria-label={badge ? `${label}, ${badge}` : label}
+                testID={`tab-${route.name}`}
+                onPress={() => select(index)}
+                style={styles.tab}
+              >
+                <View>
+                  <Ionicons name={lit ? active : inactive} size={22} color={color} />
+                  {badge ? (
+                    <View style={[styles.badge, { backgroundColor: theme.accent }]}>
+                      <Text style={[styles.badgeText, { color: theme.accentText }]}>{badge}</Text>
+                    </View>
+                  ) : null}
                 </View>
-              ) : null}
-            </Pressable>
-          );
-        })}
-      </Glass>
+                <Text numberOfLines={1} style={[styles.label, { color }]}>
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </Glass>
+      </View>
     </View>
   );
 }
@@ -117,30 +202,27 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', left: space.lg, right: space.lg, alignItems: 'center' },
+  barFrame: { width: '100%', maxWidth: 420 },
   bar: {
-    width: '100%',
-    maxWidth: 420,
     height: 68,
     borderRadius: 34,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingHorizontal: space.sm,
+    paddingHorizontal: BAR_PADDING,
   },
-  tab: {
-    minWidth: 48,
-    height: 48,
+  pill: {
+    position: 'absolute',
+    left: BAR_PADDING,
+    top: 8,
+    bottom: 8,
     borderRadius: radius.pill,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
   },
-  label: { fontFamily: fonts.semibold, fontSize: 14 },
+  tab: { flex: 1, height: 52, alignItems: 'center', justifyContent: 'center', gap: 2 },
+  label: { fontFamily: fonts.semibold, fontSize: 11 },
   badge: {
     position: 'absolute',
-    top: 4,
-    right: 2,
+    top: -6,
+    right: -12,
     minWidth: 18,
     height: 18,
     borderRadius: 9,

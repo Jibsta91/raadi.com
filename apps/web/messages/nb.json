@@ -32,7 +32,7 @@
       },
       "bil": {
         "name": "Bil",
-        "description": "Biler, motorsykler, båter og andre kjøretøy."
+        "description": "Biler, varebiler, motorsykler og bobiler."
       },
       "eiendom": {
         "name": "Eiendom",
@@ -160,12 +160,12 @@
       "reise": "Reise"
     },
     "subcategories": {
-      "elektronikk": "Elektronikk",
-      "mobler": "Møbler",
-      "klaer": "Klær",
-      "sport": "Sport og friluft",
-      "barn": "Barn",
-      "hobby": "Hobby og musikk",
+      "elektronikk": "Elektronikk og hvitevarer",
+      "mobler": "Møbler og interiør",
+      "klaer": "Klær, kosmetikk og tilbehør",
+      "sport": "Sport og friluftsliv",
+      "barn": "Foreldre og barn",
+      "hobby": "Fritid, hobby og underholdning",
       "personbil": "Personbiler",
       "varebil": "Varebiler",
       "motorsykkel": "Motorsykler",
@@ -182,7 +182,16 @@
       "transport": "Transport",
       "hytteutleie": "Hytteutleie",
       "leilighet": "Leiligheter",
-      "pakkereise": "Pakkereiser"
+      "pakkereise": "Pakkereiser",
+      "hage": "Hage, oppussing og hus",
+      "antikviteter": "Antikviteter og kunst",
+      "dyr": "Dyr og utstyr",
+      "kjoretoyutstyr": "Utstyr til bil, båt og MC",
+      "nybygg": "Nye boliger",
+      "naering": "Næringseiendom",
+      "kontor": "Kontor og administrasjon",
+      "industri": "Industri og produksjon",
+      "reiseliv": "Hotell og restaurant"
     },
     "attributes": {
       "condition": "Tilstand",
@@ -197,7 +206,10 @@
       "bedrooms": "Soverom",
       "employer": "Arbeidsgiver",
       "employmentType": "Stillingstype",
-      "guests": "Gjester"
+      "guests": "Gjester",
+      "bodyType": "Karosseri",
+      "drivetrain": "Hjuldrift",
+      "ownership": "Eierform"
     },
     "values": {
       "condition": {
@@ -221,13 +233,34 @@
         "house": "Enebolig",
         "townhouse": "Rekkehus",
         "cabin": "Hytte",
-        "plot": "Tomt"
+        "plot": "Tomt",
+        "commercial": "Næringslokale"
       },
       "employmentType": {
         "full_time": "Fast heltid",
         "part_time": "Deltid",
         "temporary": "Vikariat",
         "internship": "Praksisplass"
+      },
+      "bodyType": {
+        "sedan": "Sedan",
+        "station_wagon": "Stasjonsvogn",
+        "hatchback": "Kombi 5-dørs",
+        "suv": "SUV/Offroad",
+        "coupe": "Coupé",
+        "convertible": "Cabriolet",
+        "mpv": "Flerbruksbil",
+        "pickup": "Pickup"
+      },
+      "drivetrain": {
+        "fwd": "Forhjulsdrift",
+        "rwd": "Bakhjulsdrift",
+        "awd": "Firehjulsdrift"
+      },
+      "ownership": {
+        "freehold": "Selveier",
+        "cooperative": "Andel",
+        "shares": "Aksje"
       }
     }
   },
@@ -268,7 +301,12 @@
       "fuel": "Drivstoff",
       "propertyType": "Boligtype",
       "employmentType": "Stillingstype",
-      "price": "Pris"
+      "price": "Pris",
+      "gearbox": "Girkasse",
+      "bodyType": "Karosseri",
+      "drivetrain": "Hjuldrift",
+      "ownership": "Eierform",
+      "make": "Merke"
     },
     "priceRanges": {
       "0-999": "Under 1 000 kr",
@@ -279,7 +317,20 @@
     },
     "distance": "{km} km unna",
     "unavailable": "Søket er midlertidig utilgjengelig. Prøv igjen om litt.",
-    "nearMe": "Nær meg"
+    "nearMe": "Nær meg",
+    "ranges": {
+      "year": "Årsmodell",
+      "mileage": "Kilometerstand",
+      "area": "Areal",
+      "bedrooms": "Soverom",
+      "guests": "Gjester"
+    },
+    "rangeFrom": "{filter} fra {value}",
+    "rangeTo": "{filter} til {value}",
+    "removeFilter": "Fjern filteret {filter}",
+    "showResults": "{total, plural, =0 {Ingen treff} one {Vis # treff} other {Vis # treff}}",
+    "closeFilters": "Lukk filtre",
+    "showAll": "Vis alle ({count})"
   },
   "listing": {
     "noPrice": "Lønn etter avtale",
@@ -317,7 +368,7 @@
     "title": "Tittel",
     "titleHint": "3–120 tegn",
     "description": "Beskrivelse",
-    "price": "Pris (kr)",
+    "price": "Pris",
     "place": "Sted",
     "choosePlace": "Velg sted",
     "images": "Bilder",
@@ -348,6 +399,25 @@
         "too_large": "Bildet er større enn 10 MB.",
         "generic": "Bildet kunne ikke lastes opp."
       }
+    },
+    "pickCategory": "Hva vil du legge ut?",
+    "pickSubcategory": "Hvor passer annonsen i {category}?",
+    "change": "Endre",
+    "optional": "valgfritt",
+    "mainImage": "Hovedbilde",
+    "sections": {
+      "images": "Bilder",
+      "about": "Om annonsen",
+      "details": "Detaljer",
+      "priceAndPlace": "Pris og sted",
+      "place": "Sted"
+    },
+    "titlePlaceholder": {
+      "torget": "F.eks. Terrengsykkel 29\", lite brukt",
+      "bil": "F.eks. Volkswagen Golf 1.5 TSI",
+      "eiendom": "F.eks. Lys 3-roms med balkong",
+      "jobb": "F.eks. Fullstack-utvikler",
+      "reise": "F.eks. Koselig hytte i fjellet"
     }
   },
   "my": {
@@ -534,5 +604,44 @@
     "light": "Lys",
     "dark": "Mørk",
     "hint": "Følg enheten din, eller bruk alltid lyst eller mørkt."
+  },
+  "categoryPage": {
+    "searchIn": "Søk i {category}",
+    "seeAll": "Se alle {total} annonser",
+    "subcategoriesTitle": "Kategorier",
+    "listings": "{count, plural, =0 {Ingen annonser} one {# annonse} other {# annonser}}",
+    "shortcutsTitle": "Populære søk",
+    "makesTitle": "Populære merker",
+    "latestTitle": "Nyeste i {category}",
+    "shortcuts": {
+      "torget": {
+        "new": "Helt nytt",
+        "under500": "Under 500 kr",
+        "furniture": "Møbler og interiør"
+      },
+      "bil": {
+        "electric": "Elbiler",
+        "automatic": "Automatgir",
+        "awd": "Firehjulsdrift",
+        "recent": "Maks 3 år gamle",
+        "lowMileage": "Under 50 000 km"
+      },
+      "eiendom": {
+        "apartments": "Leiligheter",
+        "houses": "Eneboliger",
+        "threeBedrooms": "Minst 3 soverom",
+        "freehold": "Selveier"
+      },
+      "jobb": {
+        "fullTime": "Fast heltid",
+        "partTime": "Deltid",
+        "internship": "Praksisplass"
+      },
+      "reise": {
+        "bigGroups": "Plass til 6 eller flere",
+        "cabins": "Hytter"
+      }
+    },
+    "newListing": "Legg ut annonse i {category}"
   }
 }

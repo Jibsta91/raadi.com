@@ -8,6 +8,15 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Category front pages (`/nb/bil`, `/nb/torget`, …) with subcategory tiles and counts, popular searches,
+  popular car makes and the newest listings. In the app, category chips open an equivalent screen (ADR-0024).
+- Search filters that follow the category: car make, body type, drivetrain and gearbox; property ownership;
+  "from – to" ranges for year, mileage, area, bedrooms and guests. Active filters show as removable chips,
+  and on phones the filters open as a full-screen sheet.
+- More subcategories, following FINN's groups (garden and renovation, antiques and art, animals, vehicle
+  equipment, new homes, commercial property, office, industry, hospitality), and optional attributes for body
+  type, drivetrain and ownership.
+- The app shows a listing's details (key info) and its category path.
 - `./raadi dns` and `./raadi cert` manage raadiso.com through GoDaddy's DNS API: A records for a server, and a
   Let's Encrypt wildcard certificate by DNS-01, ready for production (ADR-0023, docs/domain.md).
 - Phone mode: `./raadi phone` serves the stack to a phone on the same Wi-Fi as `https://dev.raadiso.com`,
@@ -21,6 +30,8 @@ Each release also has generated notes on GitHub.
 
 ### Changed
 
+- Creating a listing starts by choosing a category, then a subcategory, from tiles; the form is split into
+  numbered sections (photos, about, details, price and place), with units shown next to the fields.
 - The product is now called **Raadiso**, after its domain raadiso.com: web, app, e-mails, login pages and
   receipts. Code keeps the working name `raadi` (ADR-0023).
 - The login and e-mail theme uses the Fjord Glass colours.

@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
+  Animated,
   Pressable,
   ScrollView,
   Share,
@@ -20,9 +21,12 @@ import { Badge, Body, Button, Field, Glass, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import type { Messages } from '../../i18n/messages';
 import { unwrap, useApi, useLoad } from '../../lib/api';
+import { attributeRows } from '../../lib/attributes';
 import { useAuth } from '../../lib/auth/context';
+import { isCategory, isSubcategoryOf } from '../../lib/categories';
+import { useKeyboardLift } from '../../lib/keyboard';
 import { config } from '../../lib/config';
-import { formatAge, formatPrice } from '../../lib/format';
+import { formatAge, formatPrice, intlLocale } from '../../lib/format';
 import { absoluteUrl } from '../../lib/urls';
 import { fonts, radius, space, useTheme } from '../../theme';
 
@@ -120,6 +124,9 @@ export default function ListingScreen() {
   const { width } = useWindowDimensions();
   const [photo, setPhoto] = useState(0);
   const [composing, setComposing] = useState(false);
+  const barBottom = Math.max(insets.bottom, space.md);
+  // The contact form lives in the bottom bar: lift it above the keyboard while typing.
+  const keyboardLift = useKeyboardLift(barBottom);
   const listing = useLoad(
     async () =>
       unwrap(await api.listings.GET('/api/v1/listings/{id}', { params: { path: { id } } })),
@@ -152,6 +159,7 @@ export default function ListingScreen() {
   const photoHeight = Math.round(pageWidth * 0.95);
   const promoted = item.promotedUntil !== null && new Date(item.promotedUntil) > new Date();
   const canContact = !item.viewer?.isOwner && item.status === 'active';
+  const details = attributeRows(item.attributes, m.taxonomy, intlLocale[locale]);
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
     setPhoto(Math.round(e.nativeEvent.contentOffset.x / pageWidth));
 
@@ -197,6 +205,22 @@ export default function ListingScreen() {
             ) : null}
             {promoted ? <Badge label={m.listing.promoted} testID="promoted" /> : null}
           </View>
+          {isCategory(item.category) && isSubcategoryOf(item.category, item.subcategory) ? (
+            <Pressable
+              role="link"
+              testID="listing-crumb"
+              onPress={() =>
+                router.push({
+                  pathname: '/search',
+                  params: { category: item.category, subcategory: item.subcategory },
+                })
+              }
+            >
+              <Text style={[styles.crumb, { color: theme.muted }]}>
+                {m.categories[item.category]} › {m.taxonomy.subcategories[item.subcategory]}
+              </Text>
+            </Pressable>
+          ) : null}
           <Text
             role="heading"
             aria-level={1}
@@ -248,6 +272,26 @@ export default function ListingScreen() {
             </View>
           </View>
 
+          {details.length > 0 ? (
+            <View
+              testID="listing-details"
+              style={[
+                styles.details,
+                { backgroundColor: theme.surface, borderColor: theme.border },
+              ]}
+            >
+              <Text style={[styles.detailsTitle, { color: theme.text }]}>{m.listing.details}</Text>
+              <View style={styles.detailGrid}>
+                {details.map((d) => (
+                  <View key={d.key} style={styles.detail}>
+                    <Text style={[styles.detailLabel, { color: theme.muted }]}>{d.label}</Text>
+                    <Text style={[styles.detailValue, { color: theme.text }]}>{d.value}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
           <Body>{item.description}</Body>
           {item.viewer?.isOwner ? (
             <Badge label={m.listing.yours} tone="neutral" testID="own-listing" />
@@ -271,20 +315,29 @@ export default function ListingScreen() {
       </View>
 
       {canContact ? (
-        <Glass style={[styles.bottomBar, { bottom: Math.max(insets.bottom, space.md) }]}>
-          {composing && auth.status === 'signedIn' ? (
-            <Compose listingId={item.id} onCancel={() => setComposing(false)} />
-          ) : (
-            <Button
-              testID={auth.status === 'signedIn' ? 'contact-open' : 'contact-login'}
-              label={auth.status === 'signedIn' ? m.contact.title : m.contact.login}
-              icon={
-                <Ionicons name="chatbubble-ellipses-outline" size={20} color={theme.accentText} />
-              }
-              onPress={() => (auth.status === 'signedIn' ? setComposing(true) : void auth.signIn())}
-            />
-          )}
-        </Glass>
+        <Animated.View
+          style={[
+            styles.bottomBar,
+            { bottom: barBottom, transform: [{ translateY: keyboardLift }] },
+          ]}
+        >
+          <Glass style={styles.bottomBarGlass}>
+            {composing && auth.status === 'signedIn' ? (
+              <Compose listingId={item.id} onCancel={() => setComposing(false)} />
+            ) : (
+              <Button
+                testID={auth.status === 'signedIn' ? 'contact-open' : 'contact-login'}
+                label={auth.status === 'signedIn' ? m.contact.title : m.contact.login}
+                icon={
+                  <Ionicons name="chatbubble-ellipses-outline" size={20} color={theme.accentText} />
+                }
+                onPress={() =>
+                  auth.status === 'signedIn' ? setComposing(true) : void auth.signIn()
+                }
+              />
+            )}
+          </Glass>
+        </Animated.View>
       ) : null}
     </View>
   );
@@ -325,6 +378,13 @@ const styles = StyleSheet.create({
     gap: space.md,
   },
   badges: { flexDirection: 'row', gap: space.sm },
+  crumb: { fontFamily: fonts.medium, fontSize: 13 },
+  details: { gap: space.md, padding: space.lg, borderRadius: radius.lg - 2, borderWidth: 1 },
+  detailsTitle: { fontFamily: fonts.semibold, fontSize: 16 },
+  detailGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: space.md },
+  detail: { width: '50%', gap: 2, paddingRight: space.sm },
+  detailLabel: { fontFamily: fonts.medium, fontSize: 12 },
+  detailValue: { fontFamily: fonts.semibold, fontSize: 15 },
   title: { fontFamily: fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.8 },
   price: {
     fontFamily: fonts.displayHeavy,
@@ -353,13 +413,8 @@ const styles = StyleSheet.create({
   avatarText: { fontFamily: fonts.bold, fontSize: 18 },
   sellerName: { fontFamily: fonts.semibold, fontSize: 16 },
   grow: { flex: 1 },
-  bottomBar: {
-    position: 'absolute',
-    left: space.lg,
-    right: space.lg,
-    borderRadius: radius.xl - 2,
-    padding: space.sm + 2,
-  },
+  bottomBar: { position: 'absolute', left: space.lg, right: space.lg },
+  bottomBarGlass: { borderRadius: radius.xl - 2, padding: space.sm + 2 },
   compose: { gap: space.sm + 2 },
   composeActions: { flexDirection: 'row', gap: space.sm },
 });

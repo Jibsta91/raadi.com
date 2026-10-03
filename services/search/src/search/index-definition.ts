@@ -4,7 +4,7 @@
  * and moves the alias (SearchIndex.ensureIndex). Fields that are not in the
  * stored documents need a re-read of the topic (docs/runbooks/event-pipeline.md).
  */
-export const INDEX_VERSION = 2;
+export const INDEX_VERSION = 3;
 
 export const indexBody = {
   settings: {
@@ -63,6 +63,9 @@ export const indexBody = {
           gearbox: { type: 'keyword' },
           propertyType: { type: 'keyword' },
           employmentType: { type: 'keyword' },
+          bodyType: { type: 'keyword' },
+          drivetrain: { type: 'keyword' },
+          ownership: { type: 'keyword' },
           make: { type: 'keyword', normalizer: 'lower' },
           model: { type: 'keyword', normalizer: 'lower' },
           employer: { type: 'keyword', normalizer: 'lower' },

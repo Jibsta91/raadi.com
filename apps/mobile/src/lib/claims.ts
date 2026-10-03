@@ -13,8 +13,10 @@ function base64UrlDecode(segment: string): string {
   const base64 = segment.replace(/-/g, '+').replace(/_/g, '/');
   const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
   const binary = atob(padded);
-  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
+  // UTF-8 without TextDecoder, which Hermes (React Native's engine) does not provide.
+  return decodeURIComponent(
+    Array.from(binary, (c) => `%${c.charCodeAt(0).toString(16).padStart(2, '0')}`).join(''),
+  );
 }
 
 export function readClaims(jwt: string): IdClaims | null {

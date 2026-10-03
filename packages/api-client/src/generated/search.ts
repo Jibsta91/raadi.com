@@ -88,6 +88,11 @@ export interface components {
                 fuel: components["schemas"]["FacetValue"][];
                 propertyType: components["schemas"]["FacetValue"][];
                 employmentType: components["schemas"]["FacetValue"][];
+                gearbox: components["schemas"]["FacetValue"][];
+                bodyType: components["schemas"]["FacetValue"][];
+                drivetrain: components["schemas"]["FacetValue"][];
+                ownership: components["schemas"]["FacetValue"][];
+                make: components["schemas"]["FacetValue"][];
                 price: {
                     key: string;
                     from?: number;
@@ -138,6 +143,22 @@ export interface operations {
                 fuel?: string;
                 propertyType?: string;
                 employmentType?: string;
+                gearbox?: string;
+                bodyType?: string;
+                drivetrain?: string;
+                ownership?: string;
+                /** @description Comma-separated car makes (case-insensitive) */
+                make?: string;
+                yearMin?: number;
+                yearMax?: number;
+                mileageMin?: number;
+                mileageMax?: number;
+                areaMin?: number;
+                areaMax?: number;
+                bedroomsMin?: number;
+                bedroomsMax?: number;
+                guestsMin?: number;
+                guestsMax?: number;
                 priceMin?: number;
                 priceMax?: number;
                 /** @description Place id (centre of a radius search) */

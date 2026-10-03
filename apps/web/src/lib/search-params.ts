@@ -1,5 +1,15 @@
+import { FACET_ATTRIBUTES, RANGE_PARAMS } from '@raadi/catalog';
+
 /** Helpers for building search URLs from the current (flat) query. */
 export type Params = Record<string, string>;
+
+/** Filters that only make sense inside one category (attribute facets and ranges). */
+export const CATEGORY_FILTERS = [
+  ...new Set([
+    ...Object.values(FACET_ATTRIBUTES).flat(),
+    ...RANGE_PARAMS.flatMap((p) => [`${p}Min`, `${p}Max`]),
+  ]),
+];
 
 export function toggleValue(params: Params, key: string, value: string): Params {
   const current = (params[key] ?? '').split(',').filter(Boolean);
@@ -8,7 +18,7 @@ export function toggleValue(params: Params, key: string, value: string): Params 
   // Changing the category invalidates subcategory and category-specific facets.
   if (key === 'category') {
     delete rest.subcategory;
-    for (const k of ['condition', 'fuel', 'propertyType', 'employmentType']) delete rest[k];
+    for (const k of CATEGORY_FILTERS) delete rest[k];
   }
   return next.length ? { ...rest, [key]: next.join(',') } : withoutKey(rest, key);
 }

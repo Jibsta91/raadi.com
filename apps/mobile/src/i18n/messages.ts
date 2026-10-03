@@ -1,6 +1,7 @@
 // UI text in the app's three languages. Wording follows the web app's message catalogues
 // (apps/web/messages) so both clients say the same thing.
 import type { Locale } from '../lib/format';
+import { taxonomyMessages } from './taxonomy';
 
 const en = {
   tabs: { home: 'Home', search: 'Search', messages: 'Messages', account: 'Account' },
@@ -41,6 +42,12 @@ const en = {
     results: '{count} results',
     noResults: 'Nothing matched your search.',
   },
+  category: {
+    subcategories: 'Categories',
+    listings: '{count} listings',
+    seeAll: 'See all {count} listings',
+  },
+  taxonomy: taxonomyMessages.en,
   listing: {
     seller: 'Seller',
     sold: 'Sold',
@@ -50,6 +57,7 @@ const en = {
     verified: 'Verified with BankID',
     notVerified: 'Not verified',
     reviews: 'Reviews',
+    details: 'Details',
   },
   contact: {
     title: 'Contact the seller',
@@ -122,6 +130,12 @@ const nb: Messages = {
     results: '{count} treff',
     noResults: 'Ingen annonser passet til søket.',
   },
+  category: {
+    subcategories: 'Kategorier',
+    listings: '{count} annonser',
+    seeAll: 'Se alle {count} annonser',
+  },
+  taxonomy: taxonomyMessages.nb,
   listing: {
     seller: 'Selger',
     sold: 'Solgt',
@@ -131,6 +145,7 @@ const nb: Messages = {
     verified: 'Verifisert med BankID',
     notVerified: 'Ikke verifisert',
     reviews: 'Omtaler',
+    details: 'Nøkkelinfo',
   },
   contact: {
     title: 'Kontakt selgeren',
@@ -207,6 +222,12 @@ const so: Messages = {
     results: '{count} natiijo',
     noResults: 'Wax xayeysiis ah oo raadintaada la jaanqaada lama helin.',
   },
+  category: {
+    subcategories: 'Qaybaha',
+    listings: '{count} xayeysiis',
+    seeAll: 'Arag dhammaan {count} xayeysiis',
+  },
+  taxonomy: taxonomyMessages.so,
   listing: {
     seller: 'Iibiyaha',
     sold: 'La iibiyay',
@@ -216,6 +237,7 @@ const so: Messages = {
     verified: 'Lagu xaqiijiyay BankID',
     notVerified: 'Lama xaqiijin',
     reviews: 'Faallooyin',
+    details: 'Faahfaahin',
   },
   contact: {
     title: 'La xiriir iibiyaha',
