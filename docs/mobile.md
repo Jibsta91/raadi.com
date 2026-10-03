@@ -27,6 +27,11 @@ The native app runs in Expo Go on a phone on the same Wi-Fi as the laptop
    ./raadi secret-set godaddy_pat
    ```
 
+   For an **iPhone** you also need a free Expo account: since Expo Go 57, Expo Go on a physical iPhone
+   opens only projects served by an Expo CLI signed in to the same account. Create an access token at
+   expo.dev (Account settings → Access tokens), store it with `./raadi secret-set expo_token`, and sign in
+   to Expo Go with that account. Without the token, Metro stays offline (Android and simulators still work).
+
 2. **Each time:** `./raadi phone`. This:
    - points `dev.raadiso.com` and `*.dev.raadiso.com` at the laptop's current LAN address (private
      addresses only, and only when they changed);
@@ -44,6 +49,8 @@ Notes:
 
 - While phone mode runs, the stack (with its demo passwords) is reachable from your LAN. Use it on a
   network you trust.
+- Fedora's firewall blocks ports 80 and 443 from the network by default. Open them for this session with
+  `sudo firewall-cmd --add-service=http --add-service=https`.
 - Some routers block DNS answers that point at private addresses ("DNS rebinding protection"). If the
   phone cannot resolve `dev.raadiso.com`, allow the domain in the router's settings, or set the phone's
   DNS to a public resolver.
