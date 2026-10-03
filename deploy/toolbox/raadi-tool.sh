@@ -64,7 +64,7 @@ HELP
     ;;
   e2e) install_deps; pnpm --filter e2e e2e "$@" ;;
   security)
-    trivy fs --scanners vuln,secret --severity HIGH,CRITICAL --exit-code 1 --skip-dirs '**/node_modules' --skip-dirs '**/.next' .
+    trivy fs --scanners vuln,secret --ignorefile .trivyignore.yaml --severity HIGH,CRITICAL --exit-code 1 --skip-dirs '**/node_modules' --skip-dirs '**/.next' .
     trivy config --ignorefile .trivyignore.yaml --severity HIGH,CRITICAL --exit-code 1 --skip-dirs '**/node_modules' --skip-dirs '**/.next' .
     gitleaks dir --no-banner --redact --config .gitleaks.toml .
     osv-scanner scan source --lockfile pnpm-lock.yaml

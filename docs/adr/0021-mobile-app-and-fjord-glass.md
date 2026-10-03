@@ -51,3 +51,11 @@
 - Two token stores (keychain and BFF session) and two Keycloak clients to keep aligned.
 - Design changes touch two token files. Their values are kept identical and reviewed together.
 - The expo-router patch must be checked on every Expo upgrade.
+- Expo's build tooling brings in two packages with known issues and no fixed release yet: node-forge 1.4.0
+  (CVE-2026-85393, through the Expo CLI) and braces 3.0.3 (CVE-2026-93687, through Metro). Both run only at
+  build and development time and are not in any shipped image. The findings are accepted in
+  `.trivyignore.yaml` and `osv-scanner.toml` until 2026-11-02; re-check them then.
+- Two vulnerable transitive packages are lifted by scoped pnpm overrides in `pnpm-workspace.yaml`:
+  `decode-uri-component` 0.5.0 under `query-string` (it ships in the app; checked with encoded and malformed
+  query strings) and `uuid` 11 under `xcode` (native project generation). Drop the overrides when Expo's
+  ranges include fixed versions.
