@@ -17,6 +17,7 @@ an IDE and a browser on a 16 GB laptop (Docker Desktop with ~8–10 GB).
 | 3 (+ trust)                  | ≈ 6.2 GB across 31 containers (trust ≈ 150 MB; the BankID mock is a realm in the existing Keycloak, no new container)          |
 | 3 (+ payments)               | ≈ 6.3 GB across 33 containers (payments ≈ 115 MB, payments-mock ≈ 110 MB; the mock runs in development only)                   |
 | 3 (+ mobile web)             | ≈ 6.4 GB across 34 containers (mobile-web ≈ 60 MB of its 96 MB limit)                                                          |
+| 3 (+ push)                   | ≈ 6.5 GB across 35 containers (push-mock ≈ 70 MB of its 128 MB limit, development only; notifications ≈ 145 MB)                |
 
 Later phases add Kafka, OpenSearch and Ollama, the expensive ones. They get tight limits and small defaults (a
 3–4B instruct model, small JVM heaps). Heavy extras (OpenMetadata, full lakehouse) are under `--profile full`.

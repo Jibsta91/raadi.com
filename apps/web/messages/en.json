@@ -465,11 +465,13 @@
       "listing_promoted": "Your listing is now promoted for {days} days. The receipt is in your e-mail."
     },
     "settings": {
-      "title": "E-mail",
+      "title": "New message alerts",
       "emailMessages": "E-mail me when I get a new message",
       "emailMessagesHint": "At most one e-mail per conversation every 30 minutes. Notices about your listings are always sent.",
       "saved": "Saved",
-      "error": "Could not save. Please try again."
+      "error": "Could not save. Please try again.",
+      "pushMessages": "Send a push notification to the app when I get a new message",
+      "pushMessagesHint": "For the Raadiso app on your phone. The notification never shows the message text."
     }
   },
   "trust": {

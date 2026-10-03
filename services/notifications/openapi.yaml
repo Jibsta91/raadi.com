@@ -74,7 +74,7 @@ paths:
     get:
       tags: [notifications]
       operationId: notificationPreferences
-      summary: The caller's e-mail preferences
+      summary: The caller's e-mail and push preferences
       responses:
         '200':
           description: Preferences
@@ -85,7 +85,7 @@ paths:
     put:
       tags: [notifications]
       operationId: saveNotificationPreferences
-      summary: Change the caller's e-mail preferences
+      summary: Change the caller's e-mail and push preferences
       requestBody:
         required: true
         content:
@@ -99,6 +99,31 @@ paths:
               schema: { $ref: '#/components/schemas/Preferences' }
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/notifications/devices:
+    put:
+      tags: [notifications]
+      operationId: registerDevice
+      summary: Register this app installation for push notifications (moves the token to the caller)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Device' }
+      responses:
+        '204': { description: Registered }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/notifications/devices/{token}:
+    delete:
+      tags: [notifications]
+      operationId: removeDevice
+      summary: Stop pushing to one of the caller's devices (sign-out)
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Removed }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /healthz:
     get:
       operationId: liveness
@@ -156,6 +181,21 @@ components:
         emailMessages:
           type: boolean
           description: E-mail me about new messages. Service e-mails (moderation) are always sent.
+        pushMessages:
+          type: boolean
+          description: >-
+            Push new messages to my phone. Always present in responses; leaving it out of a PUT keeps the
+            stored value.
+    Device:
+      type: object
+      additionalProperties: false
+      required: [token, platform]
+      properties:
+        token:
+          type: string
+          pattern: '^Expo(nent)?PushToken\[[^\]]{1,200}\]$'
+          description: The app's Expo push token
+        platform: { type: string, enum: [ios, android] }
     Problem:
       type: object
       required: [type, title, status]

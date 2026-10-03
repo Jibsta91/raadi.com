@@ -66,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       fetch: (request) => fetch(request),
       socketHeaders: async () => undefined,
+      // The web build has no push notifications, so nothing needs to run before signing out.
+      beforeSignOut: () => () => undefined,
     }),
     [status, user, error, signIn, signOut],
   );

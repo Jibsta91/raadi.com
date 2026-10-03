@@ -57,6 +57,20 @@ Notes:
 - Metro runs in a container, where file changes on the host don't always arrive. After editing app code,
   reload in Expo Go (shake → Reload) or run `./raadi restart expo`.
 
+## Push notifications
+
+After sign-in the app asks for permission and registers its Expo push token with the notifications
+service (ADR-0025). New messages, removed listings, reviews and promotions then arrive as pushes, and
+tapping one opens the right screen. The switch on the account screen (and on the website's notifications
+page) turns message pushes off.
+
+- **Development:** pushes go to push-mock, never to a phone. See what was sent at
+  `http://push.raadi.localhost/messages`.
+- **On a real iPhone** (Expo Go): send through Expo's push service:
+  `PUSH_URL=https://exp.host/--/api/v2/push/send ./raadi phone`. The project must be linked
+  (`EAS_PROJECT_ID`, see above). Expo Go on Android cannot receive remote pushes; use a development build.
+- Signing out removes the phone's token; uninstalling the app makes Expo report it, and the token is deleted.
+
 ## Layout
 
 ```text
@@ -64,7 +78,8 @@ apps/mobile/src/app/          Expo Router screens: (tabs)/ home, search, message
                               messages/[id], my-listings, auth, +not-found
 apps/mobile/src/components/   ui.tsx (Fjord Glass primitives), listing-card.tsx, no-photo.tsx
 apps/mobile/src/lib/          api (typed clients, useLoad, usePaged), auth (provider.tsx for web,
-                              provider.native.tsx for devices), realtime (one shared WebSocket), storage
+                              provider.native.tsx for devices), realtime (one shared WebSocket), storage,
+                              push (push.native.tsx registers the device; push.tsx is the web no-op)
 apps/mobile/src/theme.tsx     palettes, fonts and the System / Light / Dark preference
 apps/mobile/src/i18n/         nb / en / so catalogue (wording follows apps/web/messages)
 apps/mobile/server/serve.mjs  static server for the web export

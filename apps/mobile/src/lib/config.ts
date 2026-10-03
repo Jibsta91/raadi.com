@@ -6,6 +6,7 @@ interface Extra {
   authBaseUrl: string;
   realm: string;
   clientId: string;
+  eas?: { projectId?: string };
 }
 
 const extra = Constants.expoConfig?.extra as Extra;
@@ -15,4 +16,6 @@ export const config = {
   apiBaseUrl: Platform.OS === 'web' ? '' : extra.publicBaseUrl,
   issuer: `${extra.authBaseUrl}/realms/${extra.realm}`,
   clientId: extra.clientId,
+  /** The linked Expo project; push tokens are issued per project (none: no push). */
+  easProjectId: extra.eas?.projectId,
 };

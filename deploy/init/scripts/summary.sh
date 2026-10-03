@@ -52,6 +52,7 @@ cat <<BANNER
     Traefik dashboard .. ${S}://traefik.${D}${P}/dashboard/
     Prometheus ......... ${S}://prometheus.${D}${P}
     Mailpit (emails) ... ${S}://mail.${D}${P}
+    Push mock (app) .... ${S}://push.${D}${P}/messages   (pushes to the app, in development)
 
   Demo logins (password for all: ${DEMO_USER_PASSWORD:-<seed disabled>})
     kari.nordmann@${E}   buyer/seller (nb)

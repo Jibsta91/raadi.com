@@ -32,6 +32,11 @@ export const envSchema = baseEnvSchema
     /** At most one new-message e-mail per conversation and recipient in this window. */
     EMAIL_THROTTLE_MINUTES: z.coerce.number().int().min(0).default(30),
     EMAIL_MAX_ATTEMPTS: z.coerce.number().int().min(1).default(6),
+    /** Expo's push API in production (https://exp.host/--/api/v2/push/send); push-mock in development. */
+    PUSH_URL: z.url().default('http://push-mock:4000/--/api/v2/push/send'),
+    /** At most one new-message push per conversation and recipient in this window. */
+    PUSH_THROTTLE_SECONDS: z.coerce.number().int().min(0).default(60),
+    PUSH_MAX_ATTEMPTS: z.coerce.number().int().min(1).default(5),
     /** Seller on receipts: legal name and organisation number in production. */
     RECEIPT_MERCHANT: z.string().min(1).default('Raadiso (development, no organisation number)'),
   });
@@ -44,6 +49,8 @@ export const secretsSchema = z.object({
   keycloak_client_secret: z.string().min(16),
   /** Only when the mail server needs authentication (production). */
   smtp_password: z.string().optional(),
+  /** Expo access token, when "enhanced push security" is on for the Expo project (production). */
+  push_access_token: z.string().optional(),
 });
 
 export interface AppConfig {

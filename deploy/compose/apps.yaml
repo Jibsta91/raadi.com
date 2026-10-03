@@ -292,6 +292,7 @@ services:
       SMTP_SECURE: ${SMTP_SECURE}
       SMTP_USER: ${SMTP_USER}
       SMTP_FROM: Raadiso <no-reply@${RAADI_DOMAIN}>
+      PUSH_URL: ${PUSH_URL}
     volumes:
       - type: volume
         source: secrets
@@ -415,6 +416,29 @@ services:
     deploy:
       resources:
         limits: { memory: 192M, cpus: '0.5' }
+
+  # Development stand-in for the Expo push service (ADR-0025): notifications
+  # sends pushes here; GET /messages shows what arrived (http://push.${RAADI_DOMAIN}/messages).
+  # Production sets PUSH_URL to Expo and does not run this service.
+  push-mock:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/push-mock:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-service/Dockerfile
+      target: runtime
+      args: { SERVICE: push-mock }
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: push-mock
+      PORT: '4000'
+    depends_on:
+      otel-collector: { condition: service_started }
+    healthcheck: *node-health
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '0.25' }
 
   web:
     <<: *node-service

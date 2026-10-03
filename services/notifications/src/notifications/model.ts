@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export type NotificationKind = 'listing_removed' | 'review_received' | 'listing_promoted';
 export type EmailKind = 'new_message' | 'listing_removed' | 'payment_receipt';
+export type PushKind = 'new_message' | 'listing_removed' | 'review_received' | 'listing_promoted';
 export type Locale = 'nb' | 'en' | 'so';
 
 export interface NotificationRow {
@@ -28,6 +29,20 @@ export interface EmailRow {
   sent_at: Date | null;
 }
 
+export interface PushRow {
+  id: string;
+  user_id: string;
+  kind: PushKind;
+  ref_id: string;
+  params: Record<string, string>;
+  status: 'pending' | 'sent' | 'skipped' | 'failed';
+  attempts: number;
+  next_attempt_at: Date;
+  last_error: string | null;
+  created_at: Date;
+  sent_at: Date | null;
+}
+
 export interface Notification {
   id: string;
   kind: NotificationKind;
@@ -42,9 +57,41 @@ export interface Notification {
 export interface Preferences {
   /** E-mail me about new messages (service e-mails such as moderation are always sent). */
   emailMessages: boolean;
+  /** Push new messages to my phone (other pushes follow the in-app notifications). */
+  pushMessages: boolean;
 }
 
-export const preferencesSchema = z.object({ emailMessages: z.boolean() }).strict();
+/** PUT body: older clients send only emailMessages, which leaves pushMessages as it was. */
+export const preferencesSchema = z
+  .object({ emailMessages: z.boolean(), pushMessages: z.boolean().optional() })
+  .strict();
+
+/** An Expo push token, as expo-notifications returns it. */
+export const deviceSchema = z
+  .object({
+    token: z.string().regex(/^Expo(nent)?PushToken\[[^\]]{1,200}\]$/),
+    platform: z.enum(['ios', 'android']),
+  })
+  .strict();
+
+export type Device = z.infer<typeof deviceSchema>;
+
+/**
+ * Where a push opens in the app (an Expo Router path). The app only follows
+ * paths that start with a single slash.
+ */
+export function pushPath(kind: PushKind, refId: string): string {
+  switch (kind) {
+    case 'new_message':
+      return `/messages/${refId}`;
+    case 'listing_removed':
+      return '/my-listings';
+    case 'listing_promoted':
+      return `/listings/${refId}`;
+    case 'review_received':
+      return '/account';
+  }
+}
 
 export const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
