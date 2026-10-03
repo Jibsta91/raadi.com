@@ -8,7 +8,15 @@ import {
   demoUuid,
 } from '../src/demo.js';
 import { distanceKm, findPlace, PLACES } from '../src/places.js';
-import { attributeSchemas, CATEGORIES, isSubcategoryOf, priceRequired } from '../src/taxonomy.js';
+import {
+  attributeSchemas,
+  CATEGORIES,
+  CATEGORY_KEYS,
+  FACET_ATTRIBUTES,
+  isSubcategoryOf,
+  priceRequired,
+  RANGE_ATTRIBUTES,
+} from '../src/taxonomy.js';
 
 describe('places', () => {
   it('has unique ids and plausible Norwegian coordinates', () => {
@@ -63,5 +71,24 @@ describe('demo dataset', () => {
       );
     const ids = listings.flatMap((l) => l.images.map((i) => i.id));
     assert.equal(new Set(ids).size, ids.length);
+  });
+
+  it('covers every subcategory, so each category page has listings in every tile', () => {
+    for (const [c, subs] of Object.entries(CATEGORIES))
+      for (const s of subs)
+        assert.ok(
+          listings.some((l) => l.category === c && l.subcategory === s),
+          `${c}/${s}`,
+        );
+  });
+});
+
+describe('search filters', () => {
+  it('only names attributes that the category schema has', () => {
+    for (const c of CATEGORY_KEYS) {
+      const keys = Object.keys(attributeSchemas[c].shape);
+      for (const f of FACET_ATTRIBUTES[c]) assert.ok(keys.includes(f), `${c}.${f}`);
+      for (const r of RANGE_ATTRIBUTES[c]) assert.ok(keys.includes(r.field), `${c}.${r.field}`);
+    }
   });
 });

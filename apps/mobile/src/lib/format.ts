@@ -2,7 +2,7 @@
 
 export type Locale = 'nb' | 'en' | 'so';
 
-const intlLocale: Record<Locale, string> = { nb: 'nb-NO', en: 'en-GB', so: 'so-SO' };
+export const intlLocale: Record<Locale, string> = { nb: 'nb-NO', en: 'en-GB', so: 'so-SO' };
 
 /** "12 500 kr", or `free`/`onRequest` labels supplied by the caller. */
 export function formatPrice(priceNok: number | null, locale: Locale, onRequest: string): string {

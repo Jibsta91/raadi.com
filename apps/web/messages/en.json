@@ -32,7 +32,7 @@
       },
       "bil": {
         "name": "Cars",
-        "description": "Cars, motorcycles, boats and other vehicles."
+        "description": "Cars, vans, motorcycles and motorhomes."
       },
       "eiendom": {
         "name": "Property",
@@ -160,12 +160,12 @@
       "reise": "Travel"
     },
     "subcategories": {
-      "elektronikk": "Electronics",
-      "mobler": "Furniture",
-      "klaer": "Clothes",
+      "elektronikk": "Electronics & appliances",
+      "mobler": "Furniture & interior",
+      "klaer": "Clothes, beauty & accessories",
       "sport": "Sports & outdoors",
-      "barn": "Children",
-      "hobby": "Hobbies & music",
+      "barn": "Parents & children",
+      "hobby": "Leisure, hobbies & entertainment",
       "personbil": "Cars",
       "varebil": "Vans",
       "motorsykkel": "Motorcycles",
@@ -182,7 +182,16 @@
       "transport": "Transport",
       "hytteutleie": "Cabin rentals",
       "leilighet": "Apartments",
-      "pakkereise": "Package holidays"
+      "pakkereise": "Package holidays",
+      "hage": "Garden, renovation & home",
+      "antikviteter": "Antiques & art",
+      "dyr": "Animals & supplies",
+      "kjoretoyutstyr": "Car, boat & MC equipment",
+      "nybygg": "New homes",
+      "naering": "Commercial property",
+      "kontor": "Office & administration",
+      "industri": "Industry & production",
+      "reiseliv": "Hotels & restaurants"
     },
     "attributes": {
       "condition": "Condition",
@@ -197,7 +206,10 @@
       "bedrooms": "Bedrooms",
       "employer": "Employer",
       "employmentType": "Employment",
-      "guests": "Guests"
+      "guests": "Guests",
+      "bodyType": "Body type",
+      "drivetrain": "Drivetrain",
+      "ownership": "Ownership"
     },
     "values": {
       "condition": {
@@ -221,13 +233,34 @@
         "house": "House",
         "townhouse": "Townhouse",
         "cabin": "Cabin",
-        "plot": "Plot"
+        "plot": "Plot",
+        "commercial": "Commercial"
       },
       "employmentType": {
         "full_time": "Full time",
         "part_time": "Part time",
         "temporary": "Temporary",
         "internship": "Internship"
+      },
+      "bodyType": {
+        "sedan": "Sedan",
+        "station_wagon": "Estate",
+        "hatchback": "Hatchback",
+        "suv": "SUV/Off-road",
+        "coupe": "Coupé",
+        "convertible": "Convertible",
+        "mpv": "MPV",
+        "pickup": "Pickup"
+      },
+      "drivetrain": {
+        "fwd": "Front-wheel drive",
+        "rwd": "Rear-wheel drive",
+        "awd": "Four-wheel drive"
+      },
+      "ownership": {
+        "freehold": "Freehold",
+        "cooperative": "Housing co-op",
+        "shares": "Shares"
       }
     }
   },
@@ -268,7 +301,12 @@
       "fuel": "Fuel",
       "propertyType": "Property type",
       "employmentType": "Employment",
-      "price": "Price"
+      "price": "Price",
+      "gearbox": "Gearbox",
+      "bodyType": "Body type",
+      "drivetrain": "Drivetrain",
+      "ownership": "Ownership",
+      "make": "Make"
     },
     "priceRanges": {
       "0-999": "Under 1,000 kr",
@@ -279,7 +317,20 @@
     },
     "distance": "{km} km away",
     "unavailable": "Search is temporarily unavailable. Please try again shortly.",
-    "nearMe": "Near me"
+    "nearMe": "Near me",
+    "ranges": {
+      "year": "Year",
+      "mileage": "Mileage",
+      "area": "Area",
+      "bedrooms": "Bedrooms",
+      "guests": "Guests"
+    },
+    "rangeFrom": "{filter} from {value}",
+    "rangeTo": "{filter} up to {value}",
+    "removeFilter": "Remove filter {filter}",
+    "showResults": "{total, plural, =0 {No results} one {Show # result} other {Show # results}}",
+    "closeFilters": "Close filters",
+    "showAll": "Show all ({count})"
   },
   "listing": {
     "noPrice": "Salary by agreement",
@@ -317,7 +368,7 @@
     "title": "Title",
     "titleHint": "3–120 characters",
     "description": "Description",
-    "price": "Price (kr)",
+    "price": "Price",
     "place": "Location",
     "choosePlace": "Choose a place",
     "images": "Images",
@@ -348,6 +399,25 @@
         "too_large": "The image is larger than 10 MB.",
         "generic": "The image could not be uploaded."
       }
+    },
+    "pickCategory": "What would you like to post?",
+    "pickSubcategory": "Where in {category} does it belong?",
+    "change": "Change",
+    "optional": "optional",
+    "mainImage": "Main photo",
+    "sections": {
+      "images": "Photos",
+      "about": "About the listing",
+      "details": "Details",
+      "priceAndPlace": "Price and location",
+      "place": "Location"
+    },
+    "titlePlaceholder": {
+      "torget": "E.g. Mountain bike 29\", barely used",
+      "bil": "E.g. Volkswagen Golf 1.5 TSI",
+      "eiendom": "E.g. Bright 2-bedroom flat with balcony",
+      "jobb": "E.g. Full-stack developer",
+      "reise": "E.g. Cosy mountain cabin"
     }
   },
   "my": {
@@ -534,5 +604,44 @@
     "light": "Light",
     "dark": "Dark",
     "hint": "Follow your device, or always use light or dark."
+  },
+  "categoryPage": {
+    "searchIn": "Search in {category}",
+    "seeAll": "See all {total} listings",
+    "subcategoriesTitle": "Categories",
+    "listings": "{count, plural, =0 {No listings} one {# listing} other {# listings}}",
+    "shortcutsTitle": "Popular searches",
+    "makesTitle": "Popular makes",
+    "latestTitle": "Newest in {category}",
+    "shortcuts": {
+      "torget": {
+        "new": "Brand new",
+        "under500": "Under 500 kr",
+        "furniture": "Furniture & interior"
+      },
+      "bil": {
+        "electric": "Electric cars",
+        "automatic": "Automatic",
+        "awd": "Four-wheel drive",
+        "recent": "Up to 3 years old",
+        "lowMileage": "Under 50,000 km"
+      },
+      "eiendom": {
+        "apartments": "Apartments",
+        "houses": "Houses",
+        "threeBedrooms": "3+ bedrooms",
+        "freehold": "Freehold"
+      },
+      "jobb": {
+        "fullTime": "Full time",
+        "partTime": "Part time",
+        "internship": "Internships"
+      },
+      "reise": {
+        "bigGroups": "Sleeps 6 or more",
+        "cabins": "Cabins"
+      }
+    },
+    "newListing": "Post a listing in {category}"
   }
 }

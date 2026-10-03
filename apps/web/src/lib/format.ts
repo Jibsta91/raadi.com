@@ -30,3 +30,8 @@ export function toQuery(params: Record<string, string | undefined>): string {
   const s = q.toString();
   return s ? `?${s}` : '';
 }
+
+/** Car makes are indexed lower-case; show them the way people write them (BMW, Volvo). */
+export function makeLabel(make: string): string {
+  return make.length <= 3 ? make.toUpperCase() : make.charAt(0).toUpperCase() + make.slice(1);
+}

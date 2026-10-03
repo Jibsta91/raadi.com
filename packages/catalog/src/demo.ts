@@ -6,7 +6,7 @@
  * talking to each other. Same input, same output, on every machine.
  */
 import { createHash } from 'node:crypto';
-import type { Attributes, Category, Subcategory } from './taxonomy.js';
+import { CATEGORIES, type Attributes, type Category, type Subcategory } from './taxonomy.js';
 import { PLACES, type Place } from './places.js';
 
 /** Fixed Keycloak subjects of the demo users (deploy/keycloak/realm-raadi.json). */
@@ -189,6 +189,51 @@ const TEMPLATES: Record<Subcategory, Template> = {
     'Selges grunnet flytting. Spør gjerne om flere bilder.',
     [200, 10000, 50],
   ),
+  hage: T(
+    [
+      'Gressklipper, selvgående',
+      'Hagemøbelsett i teak',
+      'Drill og slagtrekker fra Makita',
+      'Terrassevarmer',
+      'Varmepumpe, nesten ny',
+      'Høytrykksspyler',
+    ],
+    'Fungerer som den skal. Kan vises etter avtale.',
+    [200, 15000, 50],
+  ),
+  antikviteter: T(
+    [
+      'Gammel kiste med rosemaling',
+      'Maleri, olje på lerret',
+      'Porsjonsfat fra Porsgrund',
+      'Bestefars lommeur',
+      'Kobberkjele fra 1800-tallet',
+    ],
+    'Pent bevart. Se bildene for detaljer.',
+    [300, 25000, 100],
+  ),
+  dyr: T(
+    [
+      'Hundebur, stort',
+      'Akvarium 200 liter med utstyr',
+      'Kattetre i tre etasjer',
+      'Hestedekken str. 145',
+      'Kaninbur med løpegård',
+    ],
+    'Rengjort og klar for nytt hjem. Selges uten dyr.',
+    [100, 6000, 50],
+  ),
+  kjoretoyutstyr: T(
+    [
+      'Vinterhjul 17" på felg',
+      'Takboks fra Thule',
+      'Sykkelstativ til hengerfeste',
+      'MC-hjelm str. M',
+      'Påhengsmotor 5 hk',
+    ],
+    'Lite brukt. Passer de fleste modeller.',
+    [300, 15000, 100],
+  ),
   personbil: T(
     [
       'Volkswagen Golf 1.5 TSI',
@@ -250,6 +295,16 @@ const TEMPLATES: Record<Subcategory, Template> = {
     'Ferdig regulert. Vann og avløp i nærheten.',
     [400000, 2500000, 10000],
   ),
+  nybygg: T(
+    ['Nye leiligheter i byggetrinn 2', 'Nye rekkehus ved skogen', 'Prosjekt: moderne eneboliger'],
+    'Innflytting neste år. Velg kjøkken og fliser selv.',
+    [3500000, 9000000, 10000],
+  ),
+  naering: T(
+    ['Kontorlokale i sentrum', 'Lagerhall med kontor', 'Butikklokale på gateplan'],
+    'Fleksibel planløsning. Parkering i kjeller.',
+    [1500000, 20000000, 10000],
+  ),
   it: T(
     ['Fullstack-utvikler', 'Plattformingeniør (DevOps)', 'IT-konsulent', 'Dataingeniør'],
     'Vi søker en engasjert kollega til et voksende team. Fleksibel arbeidstid og hjemmekontor.',
@@ -280,6 +335,21 @@ const TEMPLATES: Record<Subcategory, Template> = {
     'Gode betingelser og moderne bilpark.',
     [0, 0, 1],
   ),
+  kontor: T(
+    ['Regnskapsmedarbeider', 'Kundekonsulent', 'HR-rådgiver', 'Resepsjonist'],
+    'Hyggelige kolleger og gode utviklingsmuligheter.',
+    [0, 0, 1],
+  ),
+  industri: T(
+    ['Industrimekaniker', 'Prosessoperatør', 'Sveiser'],
+    'Skiftarbeid med gode tillegg. Fagbrev er en fordel.',
+    [0, 0, 1],
+  ),
+  reiseliv: T(
+    ['Kokk', 'Servitør', 'Hotellresepsjonist'],
+    'Travel og trivelig arbeidsplass i sesongen.',
+    [0, 0, 1],
+  ),
   hytteutleie: T(
     ['Koselig hytte i fjellet', 'Hytte ved sjøen, ledig i sommer', 'Tømmerhytte med badstue'],
     'Sengetøy kan leies. Pris per natt.',
@@ -297,13 +367,7 @@ const TEMPLATES: Record<Subcategory, Template> = {
   ),
 };
 
-const SUBCATEGORIES: Record<Category, readonly Subcategory[]> = {
-  torget: ['elektronikk', 'mobler', 'klaer', 'sport', 'barn', 'hobby'],
-  bil: ['personbil', 'varebil', 'motorsykkel', 'bobil'],
-  eiendom: ['salg', 'utleie', 'fritid', 'tomt'],
-  jobb: ['it', 'helse', 'bygg', 'undervisning', 'handel', 'transport'],
-  reise: ['hytteutleie', 'leilighet', 'pakkereise'],
-};
+const SUBCATEGORIES: Record<Category, readonly Subcategory[]> = CATEGORIES;
 
 const CATEGORY_WEIGHTS: Array<[Category, number]> = [
   ['torget', 0.45],
@@ -367,6 +431,12 @@ function attributesFor(
             ? 'petrol'
             : pick(rng, ['petrol', 'diesel', 'electric', 'hybrid'] as const),
         gearbox: pick(rng, ['manual', 'automatic'] as const),
+        ...(sub === 'personbil'
+          ? {
+              bodyType: pick(rng, ['sedan', 'station_wagon', 'hatchback', 'suv'] as const),
+              drivetrain: pick(rng, ['fwd', 'fwd', 'rwd', 'awd'] as const),
+            }
+          : {}),
       };
     }
     case 'eiendom':
@@ -376,9 +446,15 @@ function attributesFor(
             ? 'plot'
             : sub === 'fritid'
               ? 'cabin'
-              : pick(rng, ['apartment', 'house', 'townhouse'] as const),
-        areaM2: sub === 'tomt' ? between(rng, 400, 2000, 10) : between(rng, 25, 220),
-        ...(sub === 'tomt' ? {} : { bedrooms: between(rng, 0, 5) }),
+              : sub === 'naering'
+                ? 'commercial'
+                : pick(rng, ['apartment', 'house', 'townhouse'] as const),
+        areaM2:
+          sub === 'tomt' || sub === 'naering' ? between(rng, 80, 2000, 10) : between(rng, 25, 220),
+        ...(sub === 'tomt' || sub === 'naering' ? {} : { bedrooms: between(rng, 0, 5) }),
+        ...(sub === 'salg' || sub === 'nybygg'
+          ? { ownership: pick(rng, ['freehold', 'freehold', 'cooperative', 'shares'] as const) }
+          : {}),
       };
     case 'jobb':
       return {

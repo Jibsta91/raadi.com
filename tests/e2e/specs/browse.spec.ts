@@ -5,22 +5,22 @@ test('front page shows the latest listings', async ({ page }) => {
   await expect(page.getByTestId('latest-listings').getByTestId('listing-card')).toHaveCount(8);
 });
 
-test('browse: home → category → facet → listing detail', async ({ page }) => {
+test('browse: home → category page → subcategory → listing detail', async ({ page }) => {
   await page.goto('/en');
   await page.getByTestId('category-bil').click();
 
-  await expect(page).toHaveURL(/\/en\/search\?category=bil$/);
-  await expect(page.getByTestId('facet-category-bil')).toHaveAttribute('aria-checked', 'true');
-  const total = Number((await page.getByTestId('result-count').innerText()).replace(/\D/g, ''));
-  expect(total).toBeGreaterThan(0);
+  // The category's own front page (FINN-style): subcategory tiles with counts.
+  await expect(page).toHaveURL(/\/en\/bil$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cars');
+  const tile = page.getByTestId('subcategory-tiles').getByRole('link').first();
+  const tileCount = Number((await tile.innerText()).match(/(\d+) listings?/)?.[1]);
+  expect(tileCount).toBeGreaterThan(0);
+  await tile.click();
 
-  // Narrow down with the first subcategory facet.
-  const facet = page.getByTestId('facet-subcategory').getByRole('checkbox').first();
-  const facetCount = Number((await facet.locator('span').last().innerText()).trim());
-  await facet.click();
-  await expect(page).toHaveURL(/subcategory=/);
-  await expect(page.getByTestId('result-count')).toHaveText(new RegExp(`^${facetCount} results?$`));
-  expect(facetCount).toBeLessThanOrEqual(total);
+  await expect(page).toHaveURL(/\/en\/search\?category=bil&subcategory=/);
+  await expect(page.getByTestId('facet-category-bil')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('result-count')).toHaveText(new RegExp(`^${tileCount} results?$`));
+  await expect(page.getByTestId('crumb-category')).toHaveText('Cars');
 
   const card = page.getByTestId('listing-card').first();
   const title = await card.getByTestId('listing-card-title').innerText();
