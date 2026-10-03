@@ -152,7 +152,16 @@ export class AuthController {
   async forward(@Req() req: Req, @Res() reply: FastifyReply): Promise<void> {
     const sid = req.cookies[this.cfg.env.SESSION_COOKIE_NAME];
     const session = sid ? await this.sessions.get(sid) : null;
-    if (!sid || !session) return void reply.status(200).send();
+    if (!sid || !session) {
+      // No browser session: pass the caller's own bearer token (the native app's) back unchanged.
+      // Traefik drops request headers listed in authResponseHeaders unless the answer carries them,
+      // so without this the app's token never reached the services. They validate it themselves.
+      const bearer = req.headers.authorization;
+      if (typeof bearer === 'string' && /^Bearer [\w.~+/-]+=*$/.test(bearer)) {
+        return void reply.status(200).header('authorization', bearer).send();
+      }
+      return void reply.status(200).send();
+    }
 
     const method = String(req.headers['x-forwarded-method'] ?? 'GET');
     if (!isCsrfSafe(method, req.headers, this.cfg.allowedOrigins)) {

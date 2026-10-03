@@ -71,6 +71,14 @@ api -X POST "$KC/admin/realms/$REALM/roles/default-roles-${REALM}/composites" \
   --data-binary "[$user_role]" >/dev/null
 info "default role includes 'user'"
 
+# Imported users with explicit realmRoles miss the default role, and with it offline_access, which the
+# app needs to stay signed in (ADR-0021). Grant it to the demo users; repeating the grant is harmless.
+default_role="$(api "$KC/admin/realms/$REALM/roles/default-roles-${REALM}")"
+while read -r id; do
+  api -X POST "$KC/admin/realms/$REALM/users/$id/role-mappings/realm" --data-binary "[$default_role]" >/dev/null
+done < <(jq -r '.users // [] | .[].id' <<<"$realm")
+info "demo users have the default role"
+
 # Service accounts get their client roles here (the realm import cannot express
 # them, and overwriting a client recreates its service-account user).
 grant_client_role() { # <service-account client> <resource client> <role>
