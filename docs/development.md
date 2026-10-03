@@ -19,6 +19,13 @@ services ≈ 10 s). One `dev-packages` container rebuilds the shared packages (`
 After editing gateway configuration (`deploy/traefik/**`), run `./raadi restart traefik`. File-change events
 don't always cross Docker Desktop's file sharing.
 
+## Troubleshooting
+
+**`failed to solve: clamav/clamav:1.5.4: no match for platform in manifest: not found`** (or the same error for
+another image). The image does publish your platform; Docker Desktop reports this when its virtual disk is
+full while pulling. Free space (`docker system df`, `docker system prune`) or raise the disk image size in
+Docker Desktop settings, then run `docker compose up` again.
+
 ## Repository layout
 
 ```
