@@ -46,7 +46,7 @@ export async function Header({ locale }: { locale: string }) {
           {CATEGORIES.map((key) => (
             <Link
               key={key}
-              href={`/search?category=${key}`}
+              href={`/${key}`}
               prefetch={false}
               className="rounded-full px-3.5 py-2 text-sm font-medium text-subtle-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >

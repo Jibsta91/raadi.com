@@ -265,6 +265,11 @@ function emptyFacets(): SearchResult['facets'] {
     fuel: [],
     propertyType: [],
     employmentType: [],
+    gearbox: [],
+    bodyType: [],
+    drivetrain: [],
+    ownership: [],
+    make: [],
     price: [],
   };
 }

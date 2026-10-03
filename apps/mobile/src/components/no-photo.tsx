@@ -1,15 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { View } from 'react-native';
-import { isCategory, type CategoryId } from '../lib/categories';
+import { CATEGORY_ICONS, isCategory } from '../lib/categories';
 import { useTheme } from '../theme';
-
-const ICONS: Record<CategoryId, keyof typeof Ionicons.glyphMap> = {
-  torget: 'bag-handle-outline',
-  bil: 'car-outline',
-  eiendom: 'home-outline',
-  jobb: 'briefcase-outline',
-  reise: 'airplane-outline',
-};
 
 /**
  * Stand-in for a listing without photos: the category's icon on the placeholder colour, or a
@@ -37,7 +29,7 @@ export function NoPhoto({
       }}
     >
       <Ionicons
-        name={isCategory(category) ? ICONS[category] : 'image-outline'}
+        name={isCategory(category) ? CATEGORY_ICONS[category] : 'image-outline'}
         size={size}
         color={theme.muted}
         aria-hidden

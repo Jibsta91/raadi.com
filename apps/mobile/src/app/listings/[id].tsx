@@ -21,10 +21,12 @@ import { Badge, Body, Button, Field, Glass, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import type { Messages } from '../../i18n/messages';
 import { unwrap, useApi, useLoad } from '../../lib/api';
+import { attributeRows } from '../../lib/attributes';
 import { useAuth } from '../../lib/auth/context';
+import { isCategory, isSubcategoryOf } from '../../lib/categories';
 import { useKeyboardLift } from '../../lib/keyboard';
 import { config } from '../../lib/config';
-import { formatAge, formatPrice } from '../../lib/format';
+import { formatAge, formatPrice, intlLocale } from '../../lib/format';
 import { absoluteUrl } from '../../lib/urls';
 import { fonts, radius, space, useTheme } from '../../theme';
 
@@ -157,6 +159,7 @@ export default function ListingScreen() {
   const photoHeight = Math.round(pageWidth * 0.95);
   const promoted = item.promotedUntil !== null && new Date(item.promotedUntil) > new Date();
   const canContact = !item.viewer?.isOwner && item.status === 'active';
+  const details = attributeRows(item.attributes, m.taxonomy, intlLocale[locale]);
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
     setPhoto(Math.round(e.nativeEvent.contentOffset.x / pageWidth));
 
@@ -202,6 +205,22 @@ export default function ListingScreen() {
             ) : null}
             {promoted ? <Badge label={m.listing.promoted} testID="promoted" /> : null}
           </View>
+          {isCategory(item.category) && isSubcategoryOf(item.category, item.subcategory) ? (
+            <Pressable
+              role="link"
+              testID="listing-crumb"
+              onPress={() =>
+                router.push({
+                  pathname: '/search',
+                  params: { category: item.category, subcategory: item.subcategory },
+                })
+              }
+            >
+              <Text style={[styles.crumb, { color: theme.muted }]}>
+                {m.categories[item.category]} › {m.taxonomy.subcategories[item.subcategory]}
+              </Text>
+            </Pressable>
+          ) : null}
           <Text
             role="heading"
             aria-level={1}
@@ -252,6 +271,26 @@ export default function ListingScreen() {
               ) : null}
             </View>
           </View>
+
+          {details.length > 0 ? (
+            <View
+              testID="listing-details"
+              style={[
+                styles.details,
+                { backgroundColor: theme.surface, borderColor: theme.border },
+              ]}
+            >
+              <Text style={[styles.detailsTitle, { color: theme.text }]}>{m.listing.details}</Text>
+              <View style={styles.detailGrid}>
+                {details.map((d) => (
+                  <View key={d.key} style={styles.detail}>
+                    <Text style={[styles.detailLabel, { color: theme.muted }]}>{d.label}</Text>
+                    <Text style={[styles.detailValue, { color: theme.text }]}>{d.value}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null}
 
           <Body>{item.description}</Body>
           {item.viewer?.isOwner ? (
@@ -339,6 +378,13 @@ const styles = StyleSheet.create({
     gap: space.md,
   },
   badges: { flexDirection: 'row', gap: space.sm },
+  crumb: { fontFamily: fonts.medium, fontSize: 13 },
+  details: { gap: space.md, padding: space.lg, borderRadius: radius.lg - 2, borderWidth: 1 },
+  detailsTitle: { fontFamily: fonts.semibold, fontSize: 16 },
+  detailGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: space.md },
+  detail: { width: '50%', gap: 2, paddingRight: space.sm },
+  detailLabel: { fontFamily: fonts.medium, fontSize: 12 },
+  detailValue: { fontFamily: fonts.semibold, fontSize: 15 },
   title: { fontFamily: fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.8 },
   price: {
     fontFamily: fonts.displayHeavy,

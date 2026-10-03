@@ -34,6 +34,26 @@ paths:
         - { name: fuel, in: query, schema: { type: string } }
         - { name: propertyType, in: query, schema: { type: string } }
         - { name: employmentType, in: query, schema: { type: string } }
+        - { name: gearbox, in: query, schema: { type: string } }
+        - { name: bodyType, in: query, schema: { type: string } }
+        - { name: drivetrain, in: query, schema: { type: string } }
+        - { name: ownership, in: query, schema: { type: string } }
+        - {
+            name: make,
+            in: query,
+            description: Comma-separated car makes (case-insensitive),
+            schema: { type: string },
+          }
+        - { name: yearMin, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: yearMax, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: mileageMin, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: mileageMax, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: areaMin, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: areaMax, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: bedroomsMin, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: bedroomsMax, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: guestsMin, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: guestsMax, in: query, schema: { type: integer, minimum: 0 } }
         - { name: priceMin, in: query, schema: { type: integer, minimum: 0 } }
         - { name: priceMax, in: query, schema: { type: integer, minimum: 0 } }
         - {
@@ -164,7 +184,21 @@ components:
         facets:
           type: object
           required:
-            [category, subcategory, county, condition, fuel, propertyType, employmentType, price]
+            [
+              category,
+              subcategory,
+              county,
+              condition,
+              fuel,
+              propertyType,
+              employmentType,
+              gearbox,
+              bodyType,
+              drivetrain,
+              ownership,
+              make,
+              price,
+            ]
           properties:
             category: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
             subcategory: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
@@ -173,6 +207,11 @@ components:
             fuel: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
             propertyType: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
             employmentType: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            gearbox: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            bodyType: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            drivetrain: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            ownership: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+            make: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
             price:
               type: array
               items:

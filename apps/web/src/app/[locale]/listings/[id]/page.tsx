@@ -16,7 +16,16 @@ import { getSession } from '@/lib/session';
 export const dynamic = 'force-dynamic';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ENUM_ATTRIBUTES = new Set(['condition', 'fuel', 'gearbox', 'propertyType', 'employmentType']);
+const ENUM_ATTRIBUTES = new Set([
+  'condition',
+  'fuel',
+  'gearbox',
+  'bodyType',
+  'drivetrain',
+  'propertyType',
+  'ownership',
+  'employmentType',
+]);
 
 export async function generateMetadata({
   params,
@@ -52,7 +61,11 @@ export default async function ListingPage({
   return (
     <article className="space-y-6" data-testid="listing-detail">
       <nav className="text-sm text-muted-foreground" aria-label="breadcrumb">
-        <Link href={`/search?category=${listing.category}`} className="hover:underline">
+        <Link
+          href={`/${listing.category}`}
+          className="hover:underline"
+          data-testid="crumb-category"
+        >
           {t(`taxonomy.categories.${listing.category}` as never)}
         </Link>
         {' / '}

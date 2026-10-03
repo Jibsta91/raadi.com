@@ -13,8 +13,10 @@ test('a seller creates a listing with an image, marks it sold and deletes it', a
   await page.getByTestId('nav-new-listing').click();
   await expect(page).toHaveURL(/\/en\/listings\/new$/);
   const form = page.getByTestId('listing-form');
-  await form.getByTestId('field-category').selectOption('torget');
-  await form.getByTestId('field-subcategory').selectOption('sport');
+  // FINN-style pickers: category tile, then subcategory tile, then the form.
+  await form.getByTestId('pick-category-torget').click();
+  await form.getByTestId('pick-subcategory-sport').click();
+  await expect(form.getByTestId('picked-category')).toContainText('Sports & outdoors');
   await form.getByTestId('field-title').fill(title);
   await form
     .getByTestId('field-description')

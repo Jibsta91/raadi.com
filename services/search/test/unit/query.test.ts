@@ -18,6 +18,9 @@ describe('search parameters', () => {
       { category: 'boats' },
       { near: 'atlantis' },
       { priceMin: '10', priceMax: '5' },
+      { yearMin: '2020', yearMax: '2010' },
+      { bodyType: 'tank' },
+      { horsepowerMin: '100' },
       { lat: '59.9' },
       { sort: 'distance' },
       { pageSize: '500' },
@@ -25,6 +28,36 @@ describe('search parameters', () => {
     ]) {
       assert.ok(!searchParamsSchema.safeParse(bad).success, JSON.stringify(bad));
     }
+  });
+});
+
+describe('category filters', () => {
+  it('turns range parameters into range filters on the attribute', () => {
+    const body = buildSearch(parse({ category: 'bil', yearMin: '2018', mileageMax: '100000' }));
+    const filter = body.query.bool.filter;
+    assert.ok(
+      filter.some(
+        (f) =>
+          JSON.stringify(f) === JSON.stringify({ range: { 'attributes.year': { gte: 2018 } } }),
+      ),
+    );
+    assert.ok(
+      filter.some(
+        (f) =>
+          JSON.stringify(f) ===
+          JSON.stringify({ range: { 'attributes.mileageKm': { lte: 100000 } } }),
+      ),
+    );
+  });
+
+  it('matches car makes case-insensitively and counts them as a facet', () => {
+    const p = parse({ make: 'Volvo, TOYOTA' });
+    assert.deepEqual(p.make, ['volvo', 'toyota']);
+    const body = buildSearch(p);
+    assert.deepEqual(body.post_filter.bool.filter, [
+      { terms: { 'attributes.make': ['volvo', 'toyota'] } },
+    ]);
+    assert.ok(body.aggs.make && body.aggs.bodyType && body.aggs.ownership);
   });
 });
 

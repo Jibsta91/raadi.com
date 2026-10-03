@@ -118,7 +118,7 @@ export default async function HomePage({
           {CATEGORIES.map(({ key, Icon, tile, icon, body, large }) => (
             <Link
               key={key}
-              href={`/search?category=${key}`}
+              href={`/${key}`}
               data-testid={`category-${key}`}
               className={cn(
                 'flex flex-col justify-between rounded-[2rem] p-6 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',

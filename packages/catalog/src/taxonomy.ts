@@ -1,33 +1,34 @@
 import { z } from 'zod';
+import { CATEGORY_KEYS, type Category } from './categories.js';
 
-/**
- * Marketplace taxonomy. Keys are stable identifiers (ASCII slugs) used in
- * URLs, events and the search index; display names live in the web app's
- * message catalogues (nb/en/so).
- */
-export const CATEGORIES = {
-  torget: ['elektronikk', 'mobler', 'klaer', 'sport', 'barn', 'hobby'],
-  bil: ['personbil', 'varebil', 'motorsykkel', 'bobil'],
-  eiendom: ['salg', 'utleie', 'fritid', 'tomt'],
-  jobb: ['it', 'helse', 'bygg', 'undervisning', 'handel', 'transport'],
-  reise: ['hytteutleie', 'leilighet', 'pakkereise'],
-} as const;
+export * from './categories.js';
 
-export type Category = keyof typeof CATEGORIES;
-export type Subcategory = (typeof CATEGORIES)[Category][number];
-
-export const CATEGORY_KEYS = Object.keys(CATEGORIES) as Category[];
 export const categorySchema = z.enum(CATEGORY_KEYS as [Category, ...Category[]]);
-
-export function isSubcategoryOf(category: Category, subcategory: string): boolean {
-  return (CATEGORIES[category] as readonly string[]).includes(subcategory);
-}
 
 export const CONDITIONS = ['new', 'like_new', 'good', 'fair'] as const;
 export const FUELS = ['petrol', 'diesel', 'electric', 'hybrid'] as const;
 export const GEARBOXES = ['manual', 'automatic'] as const;
-export const PROPERTY_TYPES = ['apartment', 'house', 'townhouse', 'cabin', 'plot'] as const;
+export const PROPERTY_TYPES = [
+  'apartment',
+  'house',
+  'townhouse',
+  'cabin',
+  'plot',
+  'commercial',
+] as const;
 export const EMPLOYMENT_TYPES = ['full_time', 'part_time', 'temporary', 'internship'] as const;
+export const BODY_TYPES = [
+  'sedan',
+  'station_wagon',
+  'hatchback',
+  'suv',
+  'coupe',
+  'convertible',
+  'mpv',
+  'pickup',
+] as const;
+export const DRIVETRAINS = ['fwd', 'rwd', 'awd'] as const;
+export const OWNERSHIPS = ['freehold', 'cooperative', 'shares'] as const;
 
 const year = z
   .number()
@@ -46,6 +47,8 @@ export const attributeSchemas = {
       mileageKm: z.number().int().min(0).max(2_000_000),
       fuel: z.enum(FUELS),
       gearbox: z.enum(GEARBOXES),
+      bodyType: z.enum(BODY_TYPES).optional(),
+      drivetrain: z.enum(DRIVETRAINS).optional(),
     })
     .strict(),
   eiendom: z
@@ -53,6 +56,7 @@ export const attributeSchemas = {
       propertyType: z.enum(PROPERTY_TYPES),
       areaM2: z.number().int().min(1).max(100_000),
       bedrooms: z.number().int().min(0).max(50).optional(),
+      ownership: z.enum(OWNERSHIPS).optional(),
     })
     .strict(),
   jobb: z
@@ -70,10 +74,35 @@ export type Attributes = { [C in Category]: z.infer<(typeof attributeSchemas)[C]
 export const priceRequired = (category: Category): boolean => category !== 'jobb';
 
 /** Attribute keys exposed as search facets, per category. */
-export const FACET_ATTRIBUTES: Record<Category, readonly string[]> = {
+export const FACET_ATTRIBUTES = {
   torget: ['condition'],
-  bil: ['fuel', 'gearbox'],
-  eiendom: ['propertyType'],
+  bil: ['make', 'fuel', 'gearbox', 'bodyType', 'drivetrain'],
+  eiendom: ['propertyType', 'ownership'],
   jobb: ['employmentType'],
   reise: [],
-};
+} as const satisfies Record<Category, readonly string[]>;
+
+export type FacetAttribute = (typeof FACET_ATTRIBUTES)[Category][number];
+
+/**
+ * Numeric attributes searchable as a range, per category. Each becomes the
+ * query parameters `<param>Min` and `<param>Max` (FINN-style "fra – til").
+ */
+export const RANGE_ATTRIBUTES = {
+  torget: [],
+  bil: [
+    { param: 'year', field: 'year' },
+    { param: 'mileage', field: 'mileageKm' },
+  ],
+  eiendom: [
+    { param: 'area', field: 'areaM2' },
+    { param: 'bedrooms', field: 'bedrooms' },
+  ],
+  jobb: [],
+  reise: [{ param: 'guests', field: 'guests' }],
+} as const satisfies Record<Category, ReadonlyArray<{ param: string; field: string }>>;
+
+export type RangeParam = (typeof RANGE_ATTRIBUTES)[Category][number]['param'];
+export const RANGE_PARAMS = [
+  ...new Set(Object.values(RANGE_ATTRIBUTES).flatMap((r) => r.map((a) => a.param))),
+] as RangeParam[];

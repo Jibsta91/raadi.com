@@ -1,16 +1,25 @@
-import { COUNTIES, type County } from '@raadi/catalog';
+import {
+  CATEGORY_KEYS,
+  COUNTIES,
+  FACET_ATTRIBUTES,
+  RANGE_ATTRIBUTES,
+  type Category,
+  type County,
+} from '@raadi/catalog';
 import type { SearchQuery } from '@raadi/api-client';
 import { Button } from '@raadi/ui';
-import { SearchX } from 'lucide-react';
+import { ChevronRight, SearchX } from 'lucide-react';
 import type { Metadata } from 'next';
-import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { ListingCard } from '@/components/listings/listing-card';
+import { ActiveFilters, facetChips, paramChip } from '@/components/search/active-filters';
 import { FacetGroup } from '@/components/search/facet-group';
+import { FilterPanel } from '@/components/search/filter-panel';
 import { SearchControls } from '@/components/search/search-controls';
 import { Link } from '@/i18n/navigation';
 import { searchListings, ServiceUnavailableError } from '@/lib/api';
-import { flatParams } from '@/lib/format';
-import { href, type Params, withParams } from '@/lib/search-params';
+import { flatParams, makeLabel } from '@/lib/format';
+import { CATEGORY_FILTERS, href, type Params, selected, withParams } from '@/lib/search-params';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,10 +28,7 @@ const PASSTHROUGH = [
   'category',
   'subcategory',
   'county',
-  'condition',
-  'fuel',
-  'propertyType',
-  'employmentType',
+  ...CATEGORY_FILTERS,
   'priceMin',
   'priceMax',
   'near',
@@ -31,7 +37,10 @@ const PASSTHROUGH = [
   'radiusKm',
   'sort',
   'page',
-] as const;
+];
+/** Units shown next to range inputs and in chips (the same in every language). */
+const RANGE_UNITS: Record<string, string> = { mileage: 'km', area: 'm²' };
+const RANGE_KEYS = ['priceMin', 'priceMax', ...CATEGORY_FILTERS.filter((k) => /M(in|ax)$/.test(k))];
 
 export async function generateMetadata({
   searchParams,
@@ -52,11 +61,18 @@ export default async function SearchPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations();
+  const [t, format] = await Promise.all([getTranslations(), getFormatter()]);
   const all = flatParams(await searchParams);
   const current: Params = Object.fromEntries(
-    Object.entries(all).filter(([k]) => (PASSTHROUGH as readonly string[]).includes(k)),
+    Object.entries(all).filter(([k]) => PASSTHROUGH.includes(k)),
   );
+  // With exactly one category chosen, the sidebar shows that category's own filters (FINN-style).
+  const categories = selected(current, 'category');
+  const only =
+    categories.length === 1 && (CATEGORY_KEYS as readonly string[]).includes(categories[0]!)
+      ? (categories[0] as Category)
+      : undefined;
+  const subcategories = selected(current, 'subcategory');
 
   let result;
   try {
@@ -79,11 +95,45 @@ export default async function SearchPage({
         return t(`taxonomy.subcategories.${value}` as never);
       case 'county':
         return COUNTIES[value as County] ?? value;
+      case 'make':
+        return makeLabel(value);
       default:
         return t(`taxonomy.values.${facet}.${value}` as never);
     }
   };
   const filtered = Object.keys(current).some((k) => k !== 'q' && k !== 'sort' && k !== 'page');
+  const facets = [
+    'category',
+    ...(only || subcategories.length ? ['subcategory'] : []),
+    'county',
+    ...(only ? FACET_ATTRIBUTES[only] : []),
+  ] as Array<Exclude<keyof typeof result.facets, 'price'>>;
+  const ranges = [
+    { param: 'price', unit: 'kr' },
+    ...(only ? RANGE_ATTRIBUTES[only] : []).map((r) => ({
+      param: r.param,
+      unit: RANGE_UNITS[r.param] ?? '',
+    })),
+  ];
+  const rangeTitle = (param: string) =>
+    param === 'price' ? t('search.price') : t(`search.ranges.${param}` as never);
+  const bound = (param: string, which: 'Min' | 'Max', unit: string) => {
+    const value = current[`${param}${which}`] ?? '';
+    const n = param === 'year' ? value : format.number(Number(value));
+    return t(which === 'Min' ? 'search.rangeFrom' : 'search.rangeTo', {
+      filter: rangeTitle(param),
+      value: unit ? `${n} ${unit}` : n,
+    });
+  };
+  const chips = [
+    ...(['category', 'subcategory', 'county', ...CATEGORY_FILTERS] as const).flatMap((key) =>
+      RANGE_KEYS.includes(key) ? [] : facetChips(current, key, label(key)),
+    ),
+    ...ranges.flatMap((r) => [
+      ...paramChip(current, `${r.param}Min`, bound(r.param, 'Min', r.unit)),
+      ...paramChip(current, `${r.param}Max`, bound(r.param, 'Max', r.unit)),
+    ]),
+  ];
 
   return (
     <div className="space-y-6">
@@ -111,30 +161,24 @@ export default async function SearchPage({
         </Button>
       </form>
 
-      <div className="grid gap-8 md:grid-cols-[16rem_1fr]">
-        <aside aria-label={t('search.filters')} className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">{t('search.filters')}</h2>
-            {filtered ? (
+      <div className="grid gap-4 md:grid-cols-[16rem_1fr] md:gap-8">
+        <FilterPanel
+          title={t('search.filters')}
+          showResults={t('search.showResults', { total: result.total })}
+          active={chips.length}
+          closeLabel={t('search.closeFilters')}
+          clear={
+            filtered ? (
               <Link
                 href={href(current.q ? { q: current.q } : {})}
-                className="text-sm text-primary hover:underline"
+                className="px-2 text-sm text-primary hover:underline"
               >
                 {t('search.clearFilters')}
               </Link>
-            ) : null}
-          </div>
-          {(
-            [
-              'category',
-              'subcategory',
-              'county',
-              'condition',
-              'fuel',
-              'propertyType',
-              'employmentType',
-            ] as const
-          ).map((facet) => (
+            ) : null
+          }
+        >
+          {facets.map((facet) => (
             <FacetGroup
               key={facet}
               name={facet}
@@ -142,52 +186,80 @@ export default async function SearchPage({
               values={result.facets[facet]}
               params={current}
               label={label(facet)}
+              showAll={(count) => t('search.showAll', { count })}
             />
           ))}
           <form
             action={`/${locale}/search`}
             method="get"
-            className="space-y-2"
+            className="space-y-4 pt-2"
             data-testid="price-filter"
           >
-            <fieldset>
-              <legend className="mb-2 text-sm font-semibold">{t('search.price')}</legend>
-              {Object.entries(current)
-                .filter(([k]) => !['priceMin', 'priceMax', 'page'].includes(k))
-                .map(([k, v]) => (
-                  <input key={k} type="hidden" name={k} value={v} />
-                ))}
-              <div className="flex gap-2">
-                <input
-                  name="priceMin"
-                  type="number"
-                  min={0}
-                  inputMode="numeric"
-                  aria-label={t('search.priceMin')}
-                  placeholder={t('search.priceMin')}
-                  defaultValue={current.priceMin}
-                  className="h-10 w-full field border-input px-3 text-sm"
-                />
-                <input
-                  name="priceMax"
-                  type="number"
-                  min={0}
-                  inputMode="numeric"
-                  aria-label={t('search.priceMax')}
-                  placeholder={t('search.priceMax')}
-                  defaultValue={current.priceMax}
-                  className="h-10 w-full field border-input px-3 text-sm"
-                />
-              </div>
-              <Button type="submit" variant="outline" size="sm" className="mt-2 w-full">
-                {t('search.apply')}
-              </Button>
-            </fieldset>
+            {Object.entries(current)
+              .filter(([k]) => !RANGE_KEYS.includes(k) && k !== 'page')
+              .map(([k, v]) => (
+                <input key={k} type="hidden" name={k} value={v} />
+              ))}
+            {ranges.map((r) => (
+              <fieldset key={r.param} data-testid={`range-${r.param}`}>
+                <legend className="mb-2 text-sm font-semibold">
+                  {rangeTitle(r.param)}
+                  {r.unit ? (
+                    <span className="font-normal text-muted-foreground"> ({r.unit})</span>
+                  ) : null}
+                </legend>
+                <div className="flex gap-2">
+                  {(['Min', 'Max'] as const).map((which) => (
+                    <input
+                      key={which}
+                      name={`${r.param}${which}`}
+                      type="number"
+                      min={0}
+                      inputMode="numeric"
+                      aria-label={`${rangeTitle(r.param)} ${t(`search.price${which}`)}`}
+                      placeholder={t(`search.price${which}`)}
+                      defaultValue={current[`${r.param}${which}`]}
+                      className="h-10 w-full field border-input px-3 text-sm"
+                    />
+                  ))}
+                </div>
+              </fieldset>
+            ))}
+            <Button type="submit" variant="outline" size="sm" className="w-full">
+              {t('search.apply')}
+            </Button>
           </form>
-        </aside>
+        </FilterPanel>
 
         <section aria-labelledby="results-heading" className="space-y-4">
+          {only ? (
+            <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
+              <ol className="flex flex-wrap items-center gap-1">
+                <li>
+                  <Link href={`/${only}`} className="hover:underline" data-testid="crumb-category">
+                    {t(`taxonomy.categories.${only}` as never)}
+                  </Link>
+                </li>
+                {subcategories.length === 1 ? (
+                  <>
+                    <li aria-hidden>
+                      <ChevronRight className="size-3.5" />
+                    </li>
+                    <li className="text-foreground">
+                      {t(`taxonomy.subcategories.${subcategories[0]}` as never)}
+                    </li>
+                  </>
+                ) : null}
+              </ol>
+            </nav>
+          ) : null}
           <SearchControls params={current} />
+          <ActiveFilters
+            chips={chips}
+            clear={current.q ? { q: current.q } : {}}
+            clearLabel={t('search.clearFilters')}
+            removeLabel={(filter) => t('search.removeFilter', { filter })}
+          />
           <h1 id="results-heading" className="text-xl font-semibold" data-testid="result-count">
             {t('search.results', { total: result.total })}
           </h1>

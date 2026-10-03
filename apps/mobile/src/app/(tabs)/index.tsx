@@ -72,7 +72,7 @@ export default function Home() {
                 key={id}
                 testID={`category-${id}`}
                 label={m.categories[id]}
-                onPress={() => router.push({ pathname: '/search', params: { category: id } })}
+                onPress={() => router.push({ pathname: '/categories/[id]', params: { id } })}
               />
             ))}
           </ScrollView>

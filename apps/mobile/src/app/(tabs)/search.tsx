@@ -8,7 +8,7 @@ import { ListingTile } from '../../components/listing-card';
 import { Body, Chip, Field, LargeTitle, Status } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
 import { unwrap, useApi } from '../../lib/api';
-import { CATEGORIES, isCategory } from '../../lib/categories';
+import { CATEGORIES, isCategory, isSubcategoryOf, subcategoriesOf } from '../../lib/categories';
 import { space, tabBarSpace, useTheme } from '../../theme';
 
 const PAGE_SIZE = 24;
@@ -18,9 +18,12 @@ export default function Search() {
   const api = useApi();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ q?: string; category?: string }>();
+  const params = useLocalSearchParams<{ q?: string; category?: string; subcategory?: string }>();
   const query = params.q ?? '';
   const category = isCategory(params.category) ? params.category : undefined;
+  const subcategory = isSubcategoryOf(category, params.subcategory)
+    ? params.subcategory
+    : undefined;
   const [text, setText] = useState(query);
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [total, setTotal] = useState<number>();
@@ -31,12 +34,12 @@ export default function Search() {
 
   useEffect(() => setText(query), [query]);
 
-  // A new query or category starts again at page 1.
+  // A new query or filter starts again at page 1.
   useEffect(() => {
     setHits([]);
     setTotal(undefined);
     setPage(1);
-  }, [query, category, nonce]);
+  }, [query, category, subcategory, nonce]);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,7 +47,9 @@ export default function Search() {
     setError(false);
     api.search
       .GET('/api/v1/search/listings', {
-        params: { query: { q: query || undefined, category, page, pageSize: PAGE_SIZE } },
+        params: {
+          query: { q: query || undefined, category, subcategory, page, pageSize: PAGE_SIZE },
+        },
       })
       .then((res) => {
         const result = unwrap(res);
@@ -57,7 +62,7 @@ export default function Search() {
     return () => {
       cancelled = true;
     };
-  }, [api, query, category, page, nonce]);
+  }, [api, query, category, subcategory, page, nonce]);
 
   const more = () => {
     if (!loading && total !== undefined && hits.length < total) setPage((p) => p + 1);
@@ -99,7 +104,7 @@ export default function Search() {
             <Chip
               label={m.home.all}
               selected={!category}
-              onPress={() => router.setParams({ category: '' })}
+              onPress={() => router.setParams({ category: '', subcategory: '' })}
             />
             {CATEGORIES.map((id) => (
               <Chip
@@ -107,10 +112,29 @@ export default function Search() {
                 testID={`filter-${id}`}
                 label={m.categories[id]}
                 selected={category === id}
-                onPress={() => router.setParams({ category: id })}
+                onPress={() => router.setParams({ category: id, subcategory: '' })}
               />
             ))}
           </ScrollView>
+          {category ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chips}
+              style={styles.bleed}
+              testID="subcategory-filters"
+            >
+              {subcategoriesOf(category).map((id) => (
+                <Chip
+                  key={id}
+                  testID={`filter-sub-${id}`}
+                  label={m.taxonomy.subcategories[id]}
+                  selected={subcategory === id}
+                  onPress={() => router.setParams({ subcategory: subcategory === id ? '' : id })}
+                />
+              ))}
+            </ScrollView>
+          ) : null}
           {total !== undefined ? (
             <Body muted testID="search-total">
               {fill(m.search.results, { count: total })}

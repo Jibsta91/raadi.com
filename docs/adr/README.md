@@ -28,3 +28,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0021](0021-mobile-app-and-fjord-glass.md)        | Mobile app (Expo, per-platform sign-in, web build under /m); Fjord Glass look   | Accepted |
 | [0022](0022-phone-mode.md)                        | Phone mode: own domain on the LAN, Let's Encrypt via DNS-01, Metro for Expo Go  | Accepted |
 | [0023](0023-domain-dns-and-tls.md)                | Domain raadiso.com at GoDaddy, Let's Encrypt by DNS-01; brand "Raadiso"         | Accepted |
+| [0024](0024-category-pages-and-filters.md)        | Categories like FINN: category pages, filters per category, guided new listing  | Accepted |
