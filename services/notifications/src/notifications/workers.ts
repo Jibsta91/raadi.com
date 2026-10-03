@@ -17,8 +17,9 @@ const SEND_INTERVAL_MS = 5_000;
 
 /**
  * Background work: the event consumer (group "notifications") and the
- * e-mail sender loop. The consumer only writes rows; sending happens here,
- * so a slow or failing mail server never blocks event processing.
+ * push and e-mail sender loop. The consumer only writes rows; sending happens
+ * here, so a slow or failing mail server or push service never blocks event
+ * processing.
  */
 @Injectable()
 export class NotificationWorkers implements OnApplicationBootstrap, OnApplicationShutdown {
@@ -57,7 +58,13 @@ export class NotificationWorkers implements OnApplicationBootstrap, OnApplicatio
       .createObservableGauge('raadi.notifications.email_queue', {
         description: 'E-mails waiting to be sent (including those waiting for a retry)',
       })
-      .addCallback(async (r) => r.observe(await repo.pendingCount().catch(() => 0)));
+      .addCallback(async (r) => r.observe(await repo.pendingCount('emails').catch(() => 0)));
+    metrics
+      .getMeter('notifications')
+      .createObservableGauge('raadi.notifications.push_queue', {
+        description: 'Pushes waiting to be sent (including those waiting for a retry)',
+      })
+      .addCallback(async (r) => r.observe(await repo.pendingCount('pushes').catch(() => 0)));
   }
 
   async onApplicationBootstrap(): Promise<void> {
@@ -71,6 +78,14 @@ export class NotificationWorkers implements OnApplicationBootstrap, OnApplicatio
   }
 
   private async sendRound(): Promise<void> {
+    // Pushes first: they are the time-sensitive channel. Each queue fails on its own.
+    try {
+      while ((await this.notifications.sendDuePushes()) > 0) {
+        /* keep draining while there is a backlog */
+      }
+    } catch (err) {
+      this.logger.warn({ err }, 'push round failed');
+    }
     try {
       while ((await this.notifications.sendDue()) > 0) {
         /* keep draining while there is a backlog */

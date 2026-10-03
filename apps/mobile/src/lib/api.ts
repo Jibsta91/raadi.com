@@ -1,6 +1,7 @@
 import {
   createListingsClient,
   createMessagingClient,
+  createNotificationsClient,
   createSearchClient,
   createTrustClient,
 } from '@raadi/api-client';
@@ -17,6 +18,7 @@ export function useApi() {
       listings: createListingsClient(options),
       search: createSearchClient(options),
       messaging: createMessagingClient(options),
+      notifications: createNotificationsClient(options),
       trust: createTrustClient(options),
     };
   }, [auth.fetch]);

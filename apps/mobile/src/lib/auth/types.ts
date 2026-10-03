@@ -15,4 +15,9 @@ export interface Auth {
   fetch: (request: Request) => Promise<Response>;
   /** Extra headers for the messaging WebSocket handshake (native only). */
   socketHeaders: () => Promise<Record<string, string> | undefined>;
+  /**
+   * Registers work to run when the user signs out, while the session still works (removing this
+   * device's push token). Returns an unsubscribe function. Each task gets a few seconds at most.
+   */
+  beforeSignOut: (task: () => Promise<void>) => () => void;
 }

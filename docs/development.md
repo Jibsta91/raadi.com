@@ -33,6 +33,7 @@ services/notifications   NestJS: e-mail queue (SMTP, Keycloak lookups) and in-ap
 services/trust           NestJS: reviews after a sale (event-fed eligibility) and BankID verification (OIDC)
 services/payments        NestJS: promoted listings; Vipps/Stripe adapters, idempotent orders, webhooks, reconciliation
 services/payments-mock   NestJS: Vipps ePayment-compatible test PSP with a hosted approve page (development only)
+services/push-mock      Node: Expo push API-compatible stand-in with an inbox for tests (development only)
 services/*               further domain services (Phase 3)
 ai/*                     Python AI pillars (Phase 4)
 packages/service-kit     telemetry, logging, OpenBao, JWT guard, errors, resilience, health, shutdown,

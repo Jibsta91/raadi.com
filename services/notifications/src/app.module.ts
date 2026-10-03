@@ -21,7 +21,8 @@ import { Lifecycle } from './lifecycle.js';
 import { UserDirectory } from './notifications/directory.js';
 import { NotificationsController } from './notifications/notifications.controller.js';
 import { NotificationsRepository } from './notifications/notifications.repository.js';
-import { MAILER, NotificationsService } from './notifications/notifications.service.js';
+import { MAILER, NotificationsService, PUSHER } from './notifications/notifications.service.js';
+import { PushClient } from './notifications/push.js';
 import { NotificationWorkers } from './notifications/workers.js';
 import { APP_CONFIG, PG_POOL } from './tokens.js';
 
@@ -84,6 +85,10 @@ export class AppModule {
             greetingTimeout: 10_000,
             socketTimeout: 20_000,
           }),
+        },
+        {
+          provide: PUSHER,
+          useValue: new PushClient({ url: env.PUSH_URL, accessToken: secrets.push_access_token }),
         },
         NotificationsRepository,
         NotificationsService,

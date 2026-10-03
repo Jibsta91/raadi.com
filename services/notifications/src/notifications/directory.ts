@@ -56,6 +56,17 @@ export class UserDirectory {
     }
   }
 
+  /** The user's language for a push, or null if the user no longer exists or is disabled. */
+  async locale(userId: string): Promise<Locale | null> {
+    try {
+      const user = await this.breaker.fire(userId);
+      return user.enabled ? toLocale(user.attributes?.locale?.[0]) : null;
+    } catch (error) {
+      if (error instanceof UserGone) return null;
+      throw error;
+    }
+  }
+
   async ping(): Promise<void> {
     await this.accessToken();
   }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -12,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { type AuthenticatedRequest, Roles, ZodValidationPipe } from '@raadi/service-kit';
 import type { z } from 'zod';
-import { listQuerySchema, type Preferences, preferencesSchema } from './model.js';
+import { type Device, deviceSchema, listQuerySchema, preferencesSchema } from './model.js';
 import { NotificationsService } from './notifications.service.js';
 
 @Controller('api/v1/notifications')
@@ -56,8 +57,28 @@ export class NotificationsController {
   @Put('preferences')
   savePreferences(
     @Req() req: AuthenticatedRequest,
-    @Body(new ZodValidationPipe(preferencesSchema)) body: Preferences,
+    @Body(new ZodValidationPipe(preferencesSchema)) body: z.infer<typeof preferencesSchema>,
   ) {
     return this.notifications.savePreferences(req.principal!, body);
+  }
+
+  /** The app registers its push token after sign-in (and again on every start). */
+  @Put('devices')
+  @HttpCode(204)
+  async registerDevice(
+    @Req() req: AuthenticatedRequest,
+    @Body(new ZodValidationPipe(deviceSchema)) body: Device,
+  ): Promise<void> {
+    await this.notifications.registerDevice(req.principal!, body);
+  }
+
+  /** Sign-out on a device: stop pushing to it. The token is URL-encoded. */
+  @Delete('devices/:token')
+  @HttpCode(204)
+  async removeDevice(
+    @Req() req: AuthenticatedRequest,
+    @Param('token') token: string,
+  ): Promise<void> {
+    await this.notifications.removeDevice(req.principal!, token);
   }
 }

@@ -23,6 +23,12 @@ http:
       entryPoints: [web, websecure]
       service: payments-mock
       middlewares: [security-headers, ratelimit-default]
+    # What the push mock received (ADR-0025): read-only, GET /messages only.
+    push-mock:
+      rule: Host(`push.{{ $d }}`) && Method(`GET`) && Path(`/messages`)
+      entryPoints: [web, websecure]
+      service: push-mock
+      middlewares: [security-headers, ratelimit-default]
     prometheus:
       rule: Host(`prometheus.{{ $d }}`)
       entryPoints: [web, websecure]
@@ -38,6 +44,9 @@ http:
     payments-mock:
       loadBalancer:
         servers: [{ url: "http://payments-mock:4000" }]
+    push-mock:
+      loadBalancer:
+        servers: [{ url: "http://push-mock:4000" }]
     prometheus:
       loadBalancer:
         servers: [{ url: "http://prometheus:9090" }]

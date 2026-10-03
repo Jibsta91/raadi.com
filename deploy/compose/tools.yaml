@@ -22,6 +22,7 @@ x-workspace: &workspace
     - nm-trust:/workspace/services/trust/node_modules
     - nm-payments:/workspace/services/payments/node_modules
     - nm-payments-mock:/workspace/services/payments-mock/node_modules
+    - nm-push-mock:/workspace/services/push-mock/node_modules
     - nm-service-kit:/workspace/packages/service-kit/node_modules
     - nm-ui:/workspace/packages/ui/node_modules
     - nm-api-client:/workspace/packages/api-client/node_modules
@@ -76,6 +77,7 @@ volumes:
   nm-trust: {}
   nm-payments: {}
   nm-payments-mock: {}
+  nm-push-mock: {}
   nm-service-kit: {}
   nm-ui: {}
   nm-api-client: {}

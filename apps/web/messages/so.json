@@ -465,11 +465,13 @@
       "listing_promoted": "Xayeysiiskaaga hadda waa la horumariyay {days} maalmood. Rasiidka waxaa lagu diray iimaylkaaga."
     },
     "settings": {
-      "title": "Iimayl",
+      "title": "Ogeysiisyada fariimaha cusub",
       "emailMessages": "Ii soo dir iimayl marka fariin cusub ii timaado",
       "emailMessagesHint": "Ugu badnaan hal iimayl wada sheekaysi kasta 30-kii daqiiqo. Ogeysiisyada xayeysiisyadaada mar walba waa la soo diraa.",
       "saved": "Waa la keydiyay",
-      "error": "Lama keydin karin. Fadlan isku day mar kale."
+      "error": "Lama keydin karin. Fadlan isku day mar kale.",
+      "pushMessages": "Ii soo dir ogeysiis push ah app-ka marka fariin cusub ii timaado",
+      "pushMessagesHint": "Waxay khuseysaa app-ka Raadiso ee taleefankaaga. Ogeysiisku marnaba ma muujiyo qoraalka fariinta."
     }
   },
   "trust": {

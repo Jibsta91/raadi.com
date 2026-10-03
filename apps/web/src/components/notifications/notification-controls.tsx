@@ -59,44 +59,53 @@ export function NotificationLink({
   );
 }
 
-/** E-mail preference toggle; saved immediately. */
+type Channel = 'emailMessages' | 'pushMessages';
+
+/** E-mail and push preferences for new messages; each toggle is saved immediately. */
 export function EmailPreferences({ initial }: { initial: NotificationPreferences }) {
   const t = useTranslations('notifications.settings');
-  const [prefs, setPrefs] = useState(initial);
+  const [prefs, setPrefs] = useState({ ...initial, pushMessages: initial.pushMessages ?? true });
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
-  async function toggle(emailMessages: boolean) {
-    setPrefs({ emailMessages });
+  async function toggle(channel: Channel, value: boolean) {
+    const previous = prefs;
+    const next = { ...prefs, [channel]: value };
+    setPrefs(next);
     setState('saving');
     const res = await fetch('/api/v1/notifications/preferences', {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ emailMessages }),
+      body: JSON.stringify(next),
     }).catch(() => null);
     if (res?.ok) return setState('saved');
-    setPrefs({ emailMessages: !emailMessages });
+    setPrefs(previous);
     setState('error');
   }
+
+  const option = (channel: Channel, testId: string) => (
+    <label className="flex items-start gap-3">
+      <input
+        type="checkbox"
+        className="mt-1 size-4"
+        checked={prefs[channel]}
+        disabled={state === 'saving'}
+        onChange={(e) => void toggle(channel, e.target.checked)}
+        data-testid={testId}
+      />
+      <span>
+        <span className="block text-sm font-medium">{t(channel)}</span>
+        <span className="block text-xs text-muted-foreground">{t(`${channel}Hint`)}</span>
+      </span>
+    </label>
+  );
 
   return (
     <section aria-labelledby="email-settings" className="space-y-3 rounded-lg border p-4">
       <h2 id="email-settings" className="font-semibold">
         {t('title')}
       </h2>
-      <label className="flex items-start gap-3">
-        <input
-          type="checkbox"
-          className="mt-1 size-4"
-          checked={prefs.emailMessages}
-          disabled={state === 'saving'}
-          onChange={(e) => void toggle(e.target.checked)}
-          data-testid="pref-email-messages"
-        />
-        <span>
-          <span className="block text-sm font-medium">{t('emailMessages')}</span>
-          <span className="block text-xs text-muted-foreground">{t('emailMessagesHint')}</span>
-        </span>
-      </label>
+      {option('emailMessages', 'pref-email-messages')}
+      {option('pushMessages', 'pref-push-messages')}
       <p role="status" className="text-xs text-muted-foreground" data-testid="pref-status">
         {state === 'saved' ? t('saved') : state === 'error' ? t('error') : ''}
       </p>
