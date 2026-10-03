@@ -41,7 +41,7 @@ cat <<BANNER
     Verify with BankID . ${PUBLIC_BASE_URL}/en/account   (test person 01897000011, demo password)
     Promote a listing .. ${PUBLIC_BASE_URL}/en/my/listings   (test payments at pay.${RAADI_DOMAIN})
     Status page ........ ${PUBLIC_BASE_URL}/en/status
-    Mobile app (web) ... ${PUBLIC_BASE_URL}/m/   (phones: Expo Go, see docs/mobile.md)
+    Mobile app (web) ... ${PUBLIC_BASE_URL}/m/   (phones: see docs/mobile.md)
 
   Operations
     Grafana ............ ${GRAFANA_BASE_URL}   (log in with a platform admin below;

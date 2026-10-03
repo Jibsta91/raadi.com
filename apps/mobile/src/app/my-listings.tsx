@@ -5,12 +5,14 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Badge, Status } from '../components/ui';
 import { NoPhoto } from '../components/no-photo';
 import { useI18n } from '../i18n';
-import { unwrap, useApi, useLoad } from '../lib/api';
+import { unwrap, useApi, usePaged } from '../lib/api';
 import { useAuth } from '../lib/auth/context';
 import { config } from '../lib/config';
 import { formatPrice } from '../lib/format';
 import { absoluteUrl } from '../lib/urls';
 import { fonts, radius, space, useTheme } from '../theme';
+
+const PAGE_SIZE = 50;
 
 function Row({ listing }: { listing: Listing }) {
   const { m, locale } = useI18n();
@@ -50,11 +52,13 @@ export default function MyListings() {
   const { m } = useI18n();
   const api = useApi();
   const auth = useAuth();
-  const mine = useLoad(
-    async () =>
+  const mine = usePaged(
+    async (offset) =>
       auth.status === 'signedIn'
         ? unwrap(
-            await api.listings.GET('/api/v1/listings/mine', { params: { query: { limit: 50 } } }),
+            await api.listings.GET('/api/v1/listings/mine', {
+              params: { query: { limit: PAGE_SIZE, offset } },
+            }),
           )
         : undefined,
     [api, auth.status],
@@ -63,12 +67,14 @@ export default function MyListings() {
   return (
     <FlatList
       contentContainerStyle={styles.list}
-      data={mine.data?.items ?? []}
+      data={mine.items}
       keyExtractor={(l) => l.id}
       renderItem={({ item }) => <Row listing={item} />}
+      onEndReached={mine.more}
+      onEndReachedThreshold={0.5}
       ListEmptyComponent={
         <Status
-          loading={mine.loading}
+          loading={mine.loading && mine.items.length === 0}
           error={mine.error}
           empty={m.account.myListingsEmpty}
           onRetry={mine.reload}
