@@ -1,6 +1,6 @@
 {
   "realm": "${REALM}",
-  "displayName": "Raadi",
+  "displayName": "Raadiso",
   "enabled": true,
   "sslRequired": "external",
   "registrationAllowed": true,

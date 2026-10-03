@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # GoDaddy DNS records API v3 with a Personal Access Token (scopes domains.domain:read and
-# domains.dns:update), for phone mode (ADR-0022). Source after lib.sh; needs PHONE_DNS_ZONE.
+# domains.dns:update), for phone mode and production (ADR-0022, ADR-0023). Source after lib.sh; needs DNS_ZONE.
 # The PAT comes from the secrets volume (./raadi secret-set godaddy_pat), never from the environment.
 
-GD_ZONE="${PHONE_DNS_ZONE:?PHONE_DNS_ZONE is required}"
+GD_ZONE="${DNS_ZONE:?DNS_ZONE is required}"
 GD_PAT_FILE="${MASTER_DIR}/godaddy_pat"
 [[ -s "$GD_PAT_FILE" ]] || die "missing secret godaddy_pat: run ./raadi secret-set godaddy_pat"
 

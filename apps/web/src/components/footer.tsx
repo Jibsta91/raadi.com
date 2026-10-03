@@ -13,7 +13,7 @@ export async function Footer({ theme }: { theme: ThemePreference }) {
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 text-sm text-muted-foreground sm:px-8 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-1">
           <span className="font-display text-xl font-extrabold tracking-[-0.04em] text-foreground">
-            raadi<span className="text-primary">.</span>
+            raadiso<span className="text-primary">.</span>
           </span>
           <span>{t('tagline')}</span>
         </div>

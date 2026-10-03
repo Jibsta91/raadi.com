@@ -49,7 +49,7 @@ export default function Home() {
       ListHeaderComponent={
         <View style={styles.header}>
           <Text role="heading" aria-level={1} style={[styles.wordmark, { color: theme.text }]}>
-            raadi<Text style={{ color: theme.accent }}>.</Text>
+            raadiso<Text style={{ color: theme.accent }}>.</Text>
           </Text>
           <Field
             testID="home-search"

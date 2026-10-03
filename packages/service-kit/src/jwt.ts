@@ -72,5 +72,5 @@ export function displayName(claims: Record<string, unknown>): string {
   const given = typeof claims.given_name === 'string' ? claims.given_name.trim() : '';
   const family = typeof claims.family_name === 'string' ? claims.family_name.trim() : '';
   if (given) return family ? `${given} ${family[0]!.toUpperCase()}.` : given;
-  return 'Raadi-bruker';
+  return 'Raadiso-bruker';
 }

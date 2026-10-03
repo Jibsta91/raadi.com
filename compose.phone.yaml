@@ -16,15 +16,16 @@ services:
     build:
       context: .
       dockerfile: deploy/init/Dockerfile
-    command: ['/opt/raadi/bin/phone-dns.sh']
+    command: ['/opt/raadi/bin/dns-point.sh']
     restart: 'no'
     logging: *logging
     user: '0:0'
     security_opt: ['no-new-privileges:true']
     environment:
-      PHONE_DOMAIN: ${PHONE_DOMAIN}
-      PHONE_DNS_ZONE: ${PHONE_DNS_ZONE}
-      LAN_IP: ${LAN_IP:?run ./raadi phone}
+      DNS_NAME: ${PHONE_DOMAIN}
+      DNS_ZONE: ${DNS_ZONE}
+      TARGET_IP: ${LAN_IP:?run ./raadi phone}
+      ADDRESS_KIND: private
     volumes:
       - secrets:/secrets:ro
     depends_on:
@@ -38,14 +39,16 @@ services:
   phone-cert:
     image: ${RAADI_IMAGE_PREFIX}/init:${RAADI_VERSION}
     pull_policy: build
-    command: ['/opt/raadi/bin/phone-cert.sh']
+    command: ['/opt/raadi/bin/acme-cert.sh']
     restart: 'no'
     logging: *logging
     user: '0:0'
     security_opt: ['no-new-privileges:true']
     environment:
-      PHONE_DOMAIN: ${PHONE_DOMAIN}
-      PHONE_DNS_ZONE: ${PHONE_DNS_ZONE}
+      CERT_DOMAIN: ${PHONE_DOMAIN}
+      CERT_NAME: phone
+      DNS_ZONE: ${DNS_ZONE}
+      INSTALL: '1'
     volumes:
       - secrets:/secrets:ro
       - certs:/certs

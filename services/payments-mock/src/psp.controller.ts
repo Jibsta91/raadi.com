@@ -100,13 +100,13 @@ export class PspController {
       `<button style="${style}">${label}</button></form>`;
     const open = p.state === 'CREATED';
     const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>Raadi Pay (test)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Raadiso Pay (test)</title>
 <style>body{font-family:system-ui,sans-serif;background:#f6fafa;margin:0;display:grid;place-items:center;min-height:100vh}
 main{background:#fff;border-radius:12px;box-shadow:0 2px 12px #0002;padding:2rem;max-width:24rem;width:90%}
 h1{font-size:1.1rem;color:#0b6a70;margin:0 0 1rem}.amount{font-size:2rem;font-weight:700}
 .note{font-size:.8rem;color:#4b5b60;margin-top:1.5rem}button{width:100%;padding:.75rem;border-radius:8px;
 border:1px solid #0b6a70;font-size:1rem;margin-top:.5rem;cursor:pointer}</style></head><body><main>
-<h1>Raadi Pay — test payment</h1>
+<h1>Raadiso Pay — test payment</h1>
 <p>${esc(p.description)}</p><p class="amount" data-testid="pay-amount">kr ${kr}</p>
 ${
   open

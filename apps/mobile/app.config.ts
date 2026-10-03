@@ -6,7 +6,7 @@ const publicBaseUrl = process.env.PUBLIC_BASE_URL ?? 'http://raadi.localhost';
 const authBaseUrl = process.env.AUTH_BASE_URL ?? 'http://auth.raadi.localhost';
 
 const config: ExpoConfig = {
-  name: 'Raadi',
+  name: 'Raadiso',
   slug: 'raadi',
   version: '0.1.0',
   scheme: 'raadi',

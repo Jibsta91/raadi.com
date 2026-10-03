@@ -1,9 +1,10 @@
-# Raadi
+# Raadiso
 
-Raadi ("search" in Somali) is an open-source classifieds marketplace for Norway, in the spirit of Finn.no. It
-has a web app, a mobile app, domain microservices and four AI pillars: governance, cybersecurity, data
-management and IaC operations. All of it is 100% OSI-licensed and runs fully offline on a laptop, with
-**Docker as the only prerequisite**.
+Raadiso ([raadiso.com](https://raadiso.com); from _raadi_, "search" in Somali) is an open-source classifieds
+marketplace for Norway, in the spirit of Finn.no. In the code it keeps its working name, `raadi` (packages,
+the `./raadi` command, the Keycloak realm). It has a web app, a mobile app, domain microservices and four
+AI pillars: governance, cybersecurity, data management and IaC operations. All of it is 100% OSI-licensed and
+runs fully offline on a laptop, with **Docker as the only prerequisite**.
 
 ## Quickstart
 
@@ -31,13 +32,13 @@ All demo users share the password **`raadi-demo-pass`** (development only; produ
 | `moderator@raadi.localhost`     | moderator (Grafana viewer)     |
 | `admin@raadi.localhost`         | platform admin (Grafana admin) |
 
-**Sign up.** "Sign up" in the header opens the Raadi-branded registration page. The confirmation e-mail lands in
+**Sign up.** "Sign up" in the header opens the Raadiso-branded registration page. The confirmation e-mail lands in
 Mailpit (http://mail.raadi.localhost); after confirming you choose a password, accept the terms and see a
 welcome page.
 
 **BankID (test).** "Verify with BankID" on the account page goes to a mock BankID provider (the `bankid-mock`
 realm in Keycloak). Sign in there as one of the synthetic test people `01897000011`, `02897000022`,
-`03897000033`, `04897000044` or `05897000055`, with the same password. Each test person can verify one Raadi
+`03897000033`, `04897000044` or `05897000055`, with the same password. Each test person can verify one Raadiso
 account at a time.
 
 Generated infrastructure credentials are never committed. Read them with `./raadi secret <name>`, for example

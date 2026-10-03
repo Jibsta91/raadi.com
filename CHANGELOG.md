@@ -8,6 +8,8 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- `./raadi dns` and `./raadi cert` manage raadiso.com through GoDaddy's DNS API: A records for a server, and a
+  Let's Encrypt wildcard certificate by DNS-01, ready for production (ADR-0023, docs/domain.md).
 - Phone mode: `./raadi phone` serves the stack to a phone on the same Wi-Fi as `https://dev.raadiso.com`,
   with LAN DNS through GoDaddy, a Let's Encrypt certificate (DNS-01) and Metro for Expo Go (ADR-0022).
   `./raadi secret-set` stores secrets you supply, behind a hidden prompt.
@@ -19,6 +21,9 @@ Each release also has generated notes on GitHub.
 
 ### Changed
 
+- The product is now called **Raadiso**, after its domain raadiso.com: web, app, e-mails, login pages and
+  receipts. Code keeps the working name `raadi` (ADR-0023).
+- The login and e-mail theme uses the Fjord Glass colours.
 - My listings, notifications and profile reviews use the rounded card lists, and unread notifications are
   marked with a dot.
 - The website's header has category links and an account menu (My listings, Account, Log out); language and
@@ -27,6 +32,8 @@ Each release also has generated notes on GitHub.
 
 ### Fixed
 
+- The native app's requests were rejected (401): the gateway dropped its bearer token when there was no browser
+  session. Demo users also lacked `offline_access`, so the app could not stay signed in.
 - The identity BFF could reuse a spent refresh token when two requests refreshed at once.
 
 ## [0.3.0-alpha.2] — 2026-10-02

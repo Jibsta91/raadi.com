@@ -38,6 +38,12 @@ Secrets & TLS
                      grafana_admin_password, openbao_root_token)
   secret-set <name>  store a secret you supply (input hidden), e.g. godaddy_pat
   ca-cert            export the dev CA to deploy/certs/raadi-dev-ca.crt
+Domain (raadiso.com via GoDaddy, docs/domain.md)
+  dns <server-ip> [domain] [--dry-run]
+                     point domain and *.domain (default $DNS_ZONE) at a public server address
+  cert [domain] [--install]
+                     get or renew the Let's Encrypt wildcard for domain (default $DNS_ZONE);
+                     --install makes it Traefik's certificate (on the server)
 Phone (docs/mobile.md)
   phone              serve the stack on this Wi-Fi as https://$PHONE_DOMAIN and start
                      Metro for Expo Go; ./raadi up returns to raadi.localhost
@@ -92,6 +98,17 @@ case "$cmd" in
       umask 077; mkdir -p /secrets/_master; cat > "/secrets/_master/$1"' _ "$name"
     unset value
     echo "stored ${name}"
+    ;;
+  dns)
+    ip="${1:?usage: ./raadi dns <server-ip> [domain] [--dry-run]}"; shift
+    name="$(sed -n 's/^DNS_ZONE=//p' .env)"; dry=0
+    for arg in "$@"; do [[ "$arg" == --dry-run ]] && dry=1 || name="$arg"; done
+    TARGET_IP="$ip" DNS_NAME="$name" DRY_RUN="$dry" "${DC[@]}" --progress quiet --profile ops run --rm --no-deps dns
+    ;;
+  cert)
+    domain="$(sed -n 's/^DNS_ZONE=//p' .env)"; install=0
+    for arg in "$@"; do [[ "$arg" == --install ]] && install=1 || domain="$arg"; done
+    CERT_DOMAIN="$domain" INSTALL="$install" "${DC[@]}" --progress quiet --profile ops run --rm --no-deps acme-cert
     ;;
   phone)
     lan_ip="${LAN_IP:-$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "src") print $(i + 1)}')}"

@@ -27,7 +27,7 @@ export async function generateMetadata({
   const listing = UUID.test(id) ? await getListing(id) : null;
   return listing
     ? { title: listing.title, description: listing.description.slice(0, 160) }
-    : { title: 'Raadi' };
+    : { title: 'Raadiso' };
 }
 
 export default async function ListingPage({

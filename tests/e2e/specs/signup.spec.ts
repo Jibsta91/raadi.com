@@ -47,7 +47,7 @@ test('a new user signs up, accepts the terms, confirms the e-mail and is welcome
     ).toBeVisible();
     if (await verify.isVisible()) {
       const text = await latestMail(page, email);
-      expect(text).toContain('Welcome to Raadi');
+      expect(text).toContain('Welcome to Raadiso');
       const link = /https?:\/\/\S+action-token\S+/.exec(text)?.[0];
       expect(link).toBeTruthy();
       await page.goto(link!);
@@ -72,7 +72,7 @@ test('a new user signs up, accepts the terms, confirms the e-mail and is welcome
 
   // First login goes through the welcome page, then on to where the user started.
   await expect(page).toHaveURL(/\/en\/welcome\?next=%2Fen$/);
-  await expect(page.getByTestId('welcome')).toContainText('Welcome to Raadi, Test!');
+  await expect(page.getByTestId('welcome')).toContainText('Welcome to Raadiso, Test!');
   await expect(page.getByTestId('verify-bankid')).toBeVisible();
   await page.getByTestId('welcome-continue').click();
   await expect(page).toHaveURL(/\/en$/);

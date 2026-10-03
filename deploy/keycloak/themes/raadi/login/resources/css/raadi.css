@@ -1,10 +1,11 @@
-/* Raadi brand on top of keycloak.v2 / PatternFly 5 (same colours as the web app).
+/* Raadiso brand ("Fjord Glass", ADR-0021) on top of keycloak.v2 / PatternFly 5: the web app's colours.
    Explicit colours: PatternFly remaps its own variables inside some components. */
 :root {
-  --raadi-primary: #0b6a70;
-  --raadi-primary-hover: #08525a;
-  --raadi-muted: #4b5b60;
-  --raadi-bg: #f6fafa;
+  --raadi-primary: #3b5bff;
+  --raadi-primary-hover: #2f4fe0;
+  --raadi-primary-text: #ffffff;
+  --raadi-muted: #5b6170;
+  --raadi-bg: #f3f4f7;
   --keycloak-card-top-color: var(--raadi-primary);
   --pf-v5-global--primary-color--100: var(--raadi-primary);
   --pf-v5-global--primary-color--200: var(--raadi-primary-hover);
@@ -12,10 +13,11 @@
   --pf-v5-global--link--Color--hover: var(--raadi-primary-hover);
 }
 .pf-v5-theme-dark {
-  --raadi-primary: #3fb8b2;
-  --raadi-primary-hover: #66c9c4;
-  --raadi-muted: #9fb3b8;
-  --raadi-bg: #121a1e;
+  --raadi-primary: #7b93ff;
+  --raadi-primary-hover: #9aabff;
+  --raadi-primary-text: #0b1230;
+  --raadi-muted: #9aa3ae;
+  --raadi-bg: #0b0d12;
 }
 .pf-v5-c-login {
   background: var(--raadi-bg);
@@ -24,6 +26,9 @@
   --pf-v5-c-button--m-primary--BackgroundColor: var(--raadi-primary);
   --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--raadi-primary-hover);
   --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--raadi-primary-hover);
+  --pf-v5-c-button--m-primary--Color: var(--raadi-primary-text);
+  --pf-v5-c-button--m-primary--hover--Color: var(--raadi-primary-text);
+  border-radius: 999px;
 }
 /* keycloak.v2 styles the realm name as white, uppercase, letter-spaced text. */
 #kc-header-wrapper {
