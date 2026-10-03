@@ -53,7 +53,9 @@ export function useLoad<T>(load: () => Promise<T | undefined>, deps: DependencyL
     return () => {
       cancelled = true;
     };
-    // The dependency list is the caller's, like useEffect's own.
+    // The dependency list is the caller's, like useEffect's own; ESLint checks it at each call
+    // site instead (additionalHooks in eslint.config.js).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, nonce]);
 
   const reload = useCallback(() => setNonce((n) => n + 1), []);
@@ -90,6 +92,7 @@ export function usePaged<T>(
   latest.current = load;
 
   // New inputs start again at the first page.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- the caller's list (checked at call sites)
   useEffect(() => setOffset(0), deps);
 
   useEffect(() => {
@@ -110,7 +113,8 @@ export function usePaged<T>(
     return () => {
       cancelled = true;
     };
-    // The dependency list is the caller's, like useEffect's own.
+    // The dependency list is the caller's, like useEffect's own (checked at call sites).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, offset, nonce]);
 
   const reload = useCallback(() => {
