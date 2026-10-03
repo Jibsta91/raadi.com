@@ -14,6 +14,7 @@ up() {
 
 declare -A urls=(
   [web]="${PUBLIC_BASE_URL}/"
+  [mobile-web]="${PUBLIC_BASE_URL}/m/"
   [auth]="${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM:-raadi}/.well-known/openid-configuration"
   [grafana]="${GRAFANA_BASE_URL}/api/health"
   [search]="${PUBLIC_BASE_URL}/api/v1/search/listings?pageSize=1"
@@ -40,6 +41,7 @@ cat <<BANNER
     Verify with BankID . ${PUBLIC_BASE_URL}/en/account   (test person 01897000011, demo password)
     Promote a listing .. ${PUBLIC_BASE_URL}/en/my/listings   (test payments at pay.${RAADI_DOMAIN})
     Status page ........ ${PUBLIC_BASE_URL}/en/status
+    Mobile app (web) ... ${PUBLIC_BASE_URL}/m/   (phones: see docs/mobile.md)
 
   Operations
     Grafana ............ ${GRAFANA_BASE_URL}   (log in with a platform admin below;

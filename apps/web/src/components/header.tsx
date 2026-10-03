@@ -1,17 +1,30 @@
 import { Button } from '@raadi/ui';
-import { Bell, MessageCircle, Plus, Search } from 'lucide-react';
+import { Bell, LayoutList, LogOut, MessageCircle, Plus, Search, UserRound } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { unreadCount, unreadNotifications } from '@/lib/api';
 import { getSession } from '@/lib/session';
-import { LocaleSwitcher } from './locale-switcher';
+import { AccountMenu } from './account-menu';
+
+const CATEGORIES = ['torget', 'bil', 'eiendom', 'jobb', 'reise'] as const;
+
+const iconButton =
+  'relative flex size-11 items-center justify-center rounded-full border bg-card text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-5';
+const countBadge =
+  'absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground';
+const menuItem =
+  'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4 [&_svg]:text-muted-foreground';
 
 // The header and footer appear on every page, and their targets are dynamic,
 // per-user pages. Prefetching them would cost about ten full server renders per
 // page view (each with a session lookup and the unread counts) for results that
 // go stale immediately, so these links have prefetch={false}.
 export async function Header({ locale }: { locale: string }) {
-  const [t, session] = await Promise.all([getTranslations('nav'), getSession()]);
+  const [t, tHome, session] = await Promise.all([
+    getTranslations('nav'),
+    getTranslations('home'),
+    getSession(),
+  ]);
   const [unread, alerts] = session.authenticated
     ? await Promise.all([unreadCount(), unreadNotifications()])
     : [0, 0];
@@ -19,99 +32,125 @@ export async function Header({ locale }: { locale: string }) {
   const signupHref = `/auth/login?signup=1&returnTo=${encodeURIComponent(`/${locale}`)}&locale=${locale}`;
 
   return (
-    <header className="border-b bg-card">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+    <header className="sticky top-0 z-40 border-b bg-glass-header backdrop-blur-xl backdrop-saturate-150">
+      <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 sm:px-8 lg:gap-6">
         <Link
           prefetch={false}
           href="/"
-          className="text-2xl font-extrabold tracking-tight text-primary"
+          className="rounded-lg font-display text-[28px] font-extrabold leading-none tracking-[-0.04em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Raadi"
         >
-          raadi
+          raadi<span className="text-primary">.</span>
         </Link>
-        <nav className="flex items-center gap-2" aria-label={t('main')}>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/search" prefetch={false} data-testid="nav-search">
-              <Search aria-hidden />
-              <span className="hidden sm:inline">{t('search')}</span>
+        <nav aria-label={t('categories')} className="hidden gap-1 lg:flex">
+          {CATEGORIES.map((key) => (
+            <Link
+              key={key}
+              href={`/search?category=${key}`}
+              prefetch={false}
+              className="rounded-full px-3.5 py-2 text-sm font-medium text-subtle-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {tHome(`categories.${key}.name`)}
             </Link>
-          </Button>
-          <LocaleSwitcher label={t('language')} />
-          <Button asChild size="sm">
-            <Link href="/listings/new" prefetch={false} data-testid="nav-new-listing">
-              <Plus aria-hidden />
+          ))}
+        </nav>
+        <nav className="ml-auto flex items-center gap-2" aria-label={t('main')}>
+          <Link
+            href="/search"
+            prefetch={false}
+            data-testid="nav-search"
+            className={iconButton}
+            aria-label={t('search')}
+          >
+            <Search aria-hidden />
+          </Link>
+          {session.authenticated ? (
+            <>
+              <Link
+                href="/messages"
+                prefetch={false}
+                data-testid="nav-messages"
+                className={iconButton}
+                aria-label={t('messages')}
+              >
+                <MessageCircle aria-hidden />
+                {unread > 0 ? (
+                  <span
+                    className={countBadge}
+                    data-testid="nav-unread"
+                    aria-label={t('unread', { count: unread })}
+                  >
+                    {unread > 99 ? '99+' : unread}
+                  </span>
+                ) : null}
+              </Link>
+              <Link
+                prefetch={false}
+                href="/notifications"
+                data-testid="nav-notifications"
+                className={iconButton}
+                aria-label={t('notifications')}
+              >
+                <Bell aria-hidden />
+                {alerts > 0 ? (
+                  <span className={countBadge} data-testid="nav-alerts">
+                    {alerts > 99 ? '99+' : alerts}
+                  </span>
+                ) : null}
+              </Link>
+            </>
+          ) : null}
+          <Button asChild variant="ink" className="max-sm:size-11 max-sm:px-0">
+            <Link
+              href="/listings/new"
+              prefetch={false}
+              data-testid="nav-new-listing"
+              aria-label={t('newListing')}
+            >
+              <Plus aria-hidden className="size-[18px]!" />
               <span className="hidden sm:inline">{t('newListing')}</span>
             </Link>
           </Button>
           {session.authenticated ? (
-            <>
-              <Button asChild variant="ghost" size="sm">
-                <Link
-                  href="/messages"
-                  prefetch={false}
-                  data-testid="nav-messages"
-                  className="relative"
-                >
-                  <MessageCircle aria-hidden />
-                  <span className="hidden sm:inline">{t('messages')}</span>
-                  {unread > 0 ? (
-                    <span
-                      className="absolute -right-1 -top-1 min-w-5 rounded-full bg-destructive px-1 text-center text-xs font-bold text-white"
-                      data-testid="nav-unread"
-                      aria-label={t('unread', { count: unread })}
-                    >
-                      {unread > 99 ? '99+' : unread}
-                    </span>
-                  ) : null}
-                </Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm">
-                <Link
-                  prefetch={false}
-                  href="/notifications"
-                  data-testid="nav-notifications"
-                  className="relative"
-                  aria-label={t('notifications')}
-                >
-                  <Bell aria-hidden />
-                  {alerts > 0 ? (
-                    <span
-                      className="absolute -right-1 -top-1 min-w-5 rounded-full bg-destructive px-1 text-center text-xs font-bold text-white"
-                      data-testid="nav-alerts"
-                    >
-                      {alerts > 99 ? '99+' : alerts}
-                    </span>
-                  ) : null}
-                </Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/my/listings" prefetch={false} data-testid="nav-my-listings">
-                  {t('myListings')}
-                </Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/account" prefetch={false} data-testid="nav-account">
-                  {session.user.name ?? session.user.email}
-                </Link>
-              </Button>
-              <form action="/auth/logout" method="post">
-                <Button type="submit" variant="outline" size="sm" data-testid="nav-logout">
+            <AccountMenu name={session.user.name ?? session.user.email} label={t('accountMenu')}>
+              <p className="truncate px-3 pb-2 pt-1 text-xs text-muted-foreground">
+                {session.user.email}
+              </p>
+              <Link href="/account" prefetch={false} className={menuItem}>
+                <UserRound aria-hidden />
+                {t('account')}
+              </Link>
+              <Link
+                href="/my/listings"
+                prefetch={false}
+                data-testid="nav-my-listings"
+                className={menuItem}
+              >
+                <LayoutList aria-hidden />
+                {t('myListings')}
+              </Link>
+              <form action="/auth/logout" method="post" className="mt-1 border-t pt-1">
+                <button type="submit" data-testid="nav-logout" className={menuItem}>
+                  <LogOut aria-hidden />
                   {t('logout')}
-                </Button>
+                </button>
               </form>
-            </>
+            </AccountMenu>
           ) : (
             <>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" className="max-sm:hidden">
                 <a href={loginHref} data-testid="nav-login">
                   {t('login')}
                 </a>
               </Button>
-              <Button asChild size="sm">
+              <Button asChild variant="ghost" className="max-sm:hidden">
                 <a href={signupHref} data-testid="nav-signup">
                   {t('signup')}
                 </a>
               </Button>
+              <a href={loginHref} className={`${iconButton} sm:hidden`} aria-label={t('login')}>
+                <UserRound aria-hidden />
+              </a>
             </>
           )}
         </nav>

@@ -11,6 +11,7 @@ const OSI = new Set([
   'BSD-3-Clause',
   '0BSD',
   'MPL-2.0',
+  'OFL-1.1',
   'BlueOak-1.0.0',
   'Python-2.0',
   'Unlicense',

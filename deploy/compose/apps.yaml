@@ -456,6 +456,34 @@ services:
       resources:
         limits: { memory: 384M, cpus: '1.0' }
 
+  # The Expo app's web export under /m (ADR-0021): what Playwright tests; phones run the native app.
+  mobile-web:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/mobile-web:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/mobile-web/Dockerfile
+      target: runtime
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: mobile-web
+    healthcheck:
+      test:
+        [
+          'CMD',
+          '/nodejs/bin/node',
+          '-e',
+          "fetch('http://127.0.0.1:8080/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    deploy:
+      resources:
+        limits: { memory: 96M, cpus: '0.25' }
+
 networks:
   scan:
     internal: true

@@ -16,10 +16,13 @@
     "messages": "Messages",
     "unread": "{count, plural, one {# unread message} other {# unread messages}}",
     "notifications": "Notifications",
-    "signup": "Sign up"
+    "signup": "Sign up",
+    "account": "Account",
+    "accountMenu": "Account menu",
+    "categories": "Categories"
   },
   "home": {
-    "heroTitle": "Find it. Sell it. Raadi.",
+    "heroTitle": "Find it. Sell it. <brand>Raadi.</brand>",
     "heroSubtitle": "A safe, open marketplace for everything from second-hand furniture to your next home or job.",
     "categoriesTitle": "Categories",
     "categories": {
@@ -132,7 +135,8 @@
     "privacy": "Privacy",
     "status": "Status",
     "openSource": "Apache-2.0",
-    "terms": "Terms"
+    "terms": "Terms",
+    "links": "About Raadi"
   },
   "notFound": {
     "title": "Page not found",
@@ -523,5 +527,12 @@
       "rateLimited": "Too many attempts. Please try again later.",
       "provider": "The payment provider is unavailable right now. Please try again in a moment."
     }
+  },
+  "theme": {
+    "label": "Appearance",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark",
+    "hint": "Follow your device, or always use light or dark."
   }
 }

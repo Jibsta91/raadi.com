@@ -39,7 +39,7 @@ export function SearchControls({ params }: { params: Params }) {
         <span className="font-medium">{t('near')}</span>
         <select
           data-testid="filter-near"
-          className="h-9 rounded-md border border-input bg-background px-2"
+          className="h-10 field border-input px-3"
           value={params.near ?? (params.lat ? '__me' : '')}
           onChange={(e) => {
             const v = e.target.value;
@@ -67,7 +67,7 @@ export function SearchControls({ params }: { params: Params }) {
           <span className="font-medium">{t('radius')}</span>
           <select
             data-testid="filter-radius"
-            className="h-9 rounded-md border border-input bg-background px-2"
+            className="h-10 field border-input px-3"
             value={params.radiusKm ?? '50'}
             onChange={(e) => go({ radiusKm: e.target.value })}
           >
@@ -83,7 +83,7 @@ export function SearchControls({ params }: { params: Params }) {
         <span className="font-medium">{t('sortLabel')}</span>
         <select
           data-testid="sort"
-          className="h-9 rounded-md border border-input bg-background px-2"
+          className="h-10 field border-input px-3"
           value={params.sort ?? 'relevance'}
           onChange={(e) =>
             go({ sort: e.target.value === 'relevance' ? undefined : e.target.value })

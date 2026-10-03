@@ -1,46 +1,67 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/bricolage-grotesque';
 @source "../../../../packages/ui/src";
 
-/* Design tokens (shadcn/ui convention). Light/dark follow the OS setting. */
+/*
+ * "Fjord Glass" design tokens (ADR-0021), shared with the app (apps/mobile/src/theme.tsx), in the
+ * shadcn/ui naming convention. Each colour is light-dark(light, dark): the OS picks unless the user
+ * chose Light or Dark, in which case the `theme` cookie sets <html data-theme> on the server, so the
+ * first paint is already right. Fonts are bundled (OFL-1.1); nothing is fetched at runtime (ADR-0009).
+ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(0.99 0.003 200);
-  --foreground: oklch(0.2 0.02 230);
-  --card: oklch(1 0 0);
+  color-scheme: light dark;
+  --radius: 1rem;
+  --background: light-dark(#f3f4f7, #0b0d12);
+  --foreground: light-dark(#0e1116, #eef0f3);
+  --card: light-dark(#ffffff, #151821);
   --card-foreground: var(--foreground);
-  --primary: oklch(0.47 0.1 195);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.95 0.015 195);
-  --secondary-foreground: oklch(0.3 0.04 210);
-  --muted: oklch(0.96 0.008 210);
-  --muted-foreground: oklch(0.5 0.02 230);
-  --accent: oklch(0.94 0.03 195);
-  --accent-foreground: oklch(0.25 0.04 210);
-  --destructive: oklch(0.58 0.2 27);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.6 0.14 155);
-  --success-foreground: oklch(0.99 0 0);
-  --border: oklch(0.91 0.01 220);
-  --input: oklch(0.91 0.01 220);
-  --ring: oklch(0.47 0.1 195);
+  --primary: light-dark(#3b5bff, #7b93ff);
+  --primary-foreground: light-dark(#ffffff, #0b1230);
+  --secondary: light-dark(#e8eaef, #1f2430);
+  --secondary-foreground: light-dark(#0e1116, #eef0f3);
+  --muted: light-dark(#e8eaef, #1f2430);
+  --muted-foreground: light-dark(#5b6170, #9aa3ae);
+  --subtle-foreground: light-dark(#474d5a, #c3c8d2);
+  --accent: light-dark(#e8eaef, #1f2430);
+  --accent-foreground: light-dark(#0e1116, #eef0f3);
+  --ink: light-dark(#0e1116, #eef0f3);
+  --ink-foreground: light-dark(#ffffff, #0b0d12);
+  --highlight: #d4f55a;
+  --highlight-foreground: #1a2200;
+  --soft: light-dark(#dfe6ff, #1c2546);
+  --soft-foreground: light-dark(#13205a, #dfe6ff);
+  --destructive: light-dark(#c2261f, #ff7b72);
+  --destructive-foreground: light-dark(#ffffff, #0b0d12);
+  --success: light-dark(#1f7a3f, #56d364);
+  --success-foreground: light-dark(#ffffff, #0b0d12);
+  --placeholder: light-dark(#dfe3ec, #1f2430);
+  --border: light-dark(rgb(14 17 22 / 0.08), rgb(255 255 255 / 0.1));
+  --input: light-dark(rgb(14 17 22 / 0.14), rgb(255 255 255 / 0.16));
+  --ring: light-dark(#3b5bff, #7b93ff);
+  --glass: light-dark(rgb(255 255 255 / 0.72), rgb(21 24 33 / 0.72));
+  --glass-border: light-dark(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.08));
+  --glass-header: light-dark(rgb(243 244 247 / 0.72), rgb(11 13 18 / 0.72));
+  --shadow-color: light-dark(rgb(30 45 110 / 0.25), rgb(0 0 0 / 0.6));
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.18 0.015 230);
-    --foreground: oklch(0.96 0.005 220);
-    --card: oklch(0.22 0.015 230);
-    --primary: oklch(0.72 0.11 190);
-    --primary-foreground: oklch(0.18 0.02 230);
-    --secondary: oklch(0.28 0.02 220);
-    --secondary-foreground: oklch(0.94 0.01 220);
-    --muted: oklch(0.26 0.015 230);
-    --muted-foreground: oklch(0.72 0.015 220);
-    --accent: oklch(0.3 0.03 200);
-    --accent-foreground: oklch(0.96 0.005 220);
-    --border: oklch(0.32 0.015 230);
-    --input: oklch(0.32 0.015 230);
-    --ring: oklch(0.72 0.11 190);
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* `dark:` utilities follow the same rule as the palette (Tailwind's default is the OS only). */
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme='light']), :root:not([data-theme='light']) *) {
+      @slot;
+    }
   }
 }
 
@@ -55,20 +76,35 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-soft: var(--soft);
+  --color-soft-foreground: var(--soft-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-placeholder: var(--placeholder);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
+  --color-glass-header: var(--glass-header);
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Geist Variable', ui-sans-serif, sans-serif;
+  --shadow-float: 0 24px 60px -20px var(--shadow-color);
 }
 
 @layer base {
@@ -76,6 +112,30 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+  h1,
+  h2 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@utility glass {
+  background-color: var(--glass);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+}
+
+/* Text inputs, selects and textareas. Border colour comes from the caller (border-input, or
+   border-destructive on a validation error). */
+@utility field {
+  border-width: 1px;
+  border-radius: calc(var(--radius) - 4px);
+  background-color: var(--card);
+  color: var(--foreground);
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
   }
 }

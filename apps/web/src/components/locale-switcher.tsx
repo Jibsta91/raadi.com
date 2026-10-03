@@ -18,7 +18,7 @@ export function LocaleSwitcher({ label }: { label: string }) {
       <span className="sr-only">{label}</span>
       <select
         data-testid="locale-switcher"
-        className="h-9 rounded-md border border-input bg-background px-2"
+        className="h-11 rounded-full border border-input bg-card px-4 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         value={locale}
         disabled={pending}
         onChange={(e) =>

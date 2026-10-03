@@ -103,7 +103,7 @@ export default async function SearchPage({
           defaultValue={current.q ?? ''}
           placeholder={t('search.placeholder')}
           data-testid="search-input"
-          className="h-11 flex-1 rounded-md border border-input bg-background px-3"
+          className="h-12 flex-1 rounded-full border border-input bg-card px-5 text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
           maxLength={200}
         />
         <Button type="submit" size="lg" data-testid="search-submit">
@@ -166,7 +166,7 @@ export default async function SearchPage({
                   aria-label={t('search.priceMin')}
                   placeholder={t('search.priceMin')}
                   defaultValue={current.priceMin}
-                  className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                  className="h-10 w-full field border-input px-3 text-sm"
                 />
                 <input
                   name="priceMax"
@@ -176,7 +176,7 @@ export default async function SearchPage({
                   aria-label={t('search.priceMax')}
                   placeholder={t('search.priceMax')}
                   defaultValue={current.priceMax}
-                  className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                  className="h-10 w-full field border-input px-3 text-sm"
                 />
               </div>
               <Button type="submit" variant="outline" size="sm" className="mt-2 w-full">
@@ -198,7 +198,10 @@ export default async function SearchPage({
               <p>{t('search.noResultsHint')}</p>
             </div>
           ) : (
-            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" role="list">
+            <ul
+              className="grid grid-cols-2 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 xl:grid-cols-3"
+              role="list"
+            >
               {result.items.map((hit) => (
                 <li key={hit.id} className="flex">
                   <ListingCard hit={hit} />

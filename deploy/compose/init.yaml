@@ -138,6 +138,7 @@ services:
     depends_on:
       traefik: { condition: service_healthy }
       web: { condition: service_healthy }
+      mobile-web: { condition: service_healthy }
       identity-bff: { condition: service_healthy }
       keycloak-init: { condition: service_completed_successfully }
       grafana: { condition: service_healthy }

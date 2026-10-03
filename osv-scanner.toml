@@ -1,0 +1,10 @@
+# Accepted osv-scanner findings; keep in step with .trivyignore.yaml.
+[[IgnoredVulns]]
+id = "CVE-2026-85393"
+ignoreUntil = 2026-11-02T00:00:00Z
+reason = "node-forge 1.4.0 via Expo CLI build tooling only, not shipped; no fixed release yet (ADR-0021)."
+
+[[IgnoredVulns]]
+id = "CVE-2026-93687"
+ignoreUntil = 2026-11-02T00:00:00Z
+reason = "braces 3.0.3 via Metro (Expo's bundler) at build time only, not shipped; no fixed release yet (ADR-0021)."

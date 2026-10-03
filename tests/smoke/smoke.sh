@@ -83,6 +83,22 @@ expect_status 200 "web health endpoint"
 req GET "$PUBLIC/auth/forward"
 expect_status 404 "token-handler endpoint is not publicly routable"
 
+section "Mobile app, web build (/m, ADR-0021)"
+req GET "$PUBLIC/m/"
+expect_status 200 "app shell renders (/m/)"
+[[ "$(header content-security-policy)" == *"script-src 'self';"* ]] && ok "app has its own strict CSP" \
+  || fail "app CSP" "got: $(header content-security-policy)"
+bundle=$(grep -oE '/m/_expo/static/js/web/[^"]+\.js' "$BODY" | head -1)
+if [[ -n "$bundle" ]]; then
+  req GET "$PUBLIC$bundle"
+  [[ "$status" == 200 && "$(header content-type)" == *javascript* ]] && ok "app bundle is served ($bundle)" \
+    || fail "app bundle" "HTTP $status, $(header content-type)"
+else
+  fail "app shell references its bundle"
+fi
+req GET "$PUBLIC/m/my-listings"
+expect_status 200 "client routes are served by the app (/m/my-listings)"
+
 section "Identity provider"
 req GET "$AUTH/realms/$REALM/.well-known/openid-configuration"
 expect_status 200 "OIDC discovery"

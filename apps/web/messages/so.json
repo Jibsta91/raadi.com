@@ -16,10 +16,13 @@
     "messages": "Fariimaha",
     "unread": "{count, plural, one {# fariin aan la akhrin} other {# fariimood oo aan la akhrin}}",
     "notifications": "Ogeysiisyo",
-    "signup": "Is diiwaan geli"
+    "signup": "Is diiwaan geli",
+    "account": "Akoon",
+    "accountMenu": "Liiska akoonka",
+    "categories": "Qaybaha"
   },
   "home": {
-    "heroTitle": "Raadi. Hel. Iibi.",
+    "heroTitle": "<brand>Raadi.</brand> Hel. Iibi.",
     "heroSubtitle": "Suuq furan oo ammaan ah oo wax walba laga helo, laga bilaabo alaab la isticmaalay ilaa gurigaaga ama shaqadaada xigta.",
     "categoriesTitle": "Qaybaha",
     "categories": {
@@ -132,7 +135,8 @@
     "privacy": "Asturnaanta",
     "status": "Xaaladda",
     "openSource": "Apache-2.0",
-    "terms": "Shuruudaha"
+    "terms": "Shuruudaha",
+    "links": "Ku saabsan Raadi"
   },
   "notFound": {
     "title": "Bogga lama helin",
@@ -523,5 +527,12 @@
       "rateLimited": "Isku dayo aad u badan. Fadlan isku day mar dambe.",
       "provider": "Bixiyaha lacagta hadda lama heli karo. Fadlan isku day wax yar kadib."
     }
+  },
+  "theme": {
+    "label": "Muuqaalka",
+    "system": "Nidaamka",
+    "light": "Iftiin",
+    "dark": "Mugdi",
+    "hint": "Raac qalabkaaga, ama had iyo jeer isticmaal iftiin ama mugdi."
   }
 }

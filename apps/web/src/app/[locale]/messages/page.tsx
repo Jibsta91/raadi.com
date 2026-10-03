@@ -1,5 +1,5 @@
 import { Badge } from '@raadi/ui';
-import { MessageCircle } from 'lucide-react';
+import { Image as ImageIcon, MessageCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
@@ -37,7 +37,11 @@ export default async function InboxPage({ params }: { params: Promise<{ locale: 
           <p>{t('empty')}</p>
         </div>
       ) : (
-        <ul className="divide-y rounded-lg border" role="list" data-testid="conversation-list">
+        <ul
+          className="divide-y overflow-hidden rounded-3xl border bg-card"
+          role="list"
+          data-testid="conversation-list"
+        >
           {items.map((c) => (
             <li key={c.id}>
               <Link
@@ -49,10 +53,12 @@ export default async function InboxPage({ params }: { params: Promise<{ locale: 
                   <img
                     src={c.listing.image.thumb}
                     alt=""
-                    className="h-14 w-16 rounded object-cover"
+                    className="h-14 w-16 rounded-xl object-cover"
                   />
                 ) : (
-                  <div className="h-14 w-16 rounded bg-muted" />
+                  <div className="flex h-14 w-16 items-center justify-center rounded-xl bg-placeholder">
+                    <ImageIcon aria-hidden className="size-5 text-muted-foreground" />
+                  </div>
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="flex items-baseline justify-between gap-2">

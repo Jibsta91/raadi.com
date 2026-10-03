@@ -16,10 +16,13 @@
     "messages": "Meldinger",
     "unread": "{count, plural, one {# ulest melding} other {# uleste meldinger}}",
     "notifications": "Varsler",
-    "signup": "Opprett konto"
+    "signup": "Opprett konto",
+    "account": "Konto",
+    "accountMenu": "Kontomeny",
+    "categories": "Kategorier"
   },
   "home": {
-    "heroTitle": "Finn det. Selg det. Raadi.",
+    "heroTitle": "Finn det. Selg det. <brand>Raadi.</brand>",
     "heroSubtitle": "En trygg og åpen markedsplass for alt fra brukte møbler til ditt neste hjem eller din neste jobb.",
     "categoriesTitle": "Kategorier",
     "categories": {
@@ -132,7 +135,8 @@
     "privacy": "Personvern",
     "status": "Status",
     "openSource": "Apache-2.0",
-    "terms": "Vilkår"
+    "terms": "Vilkår",
+    "links": "Om Raadi"
   },
   "notFound": {
     "title": "Fant ikke siden",
@@ -523,5 +527,12 @@
       "rateLimited": "For mange forsøk. Prøv igjen senere.",
       "provider": "Betalingsleverandøren er ikke tilgjengelig akkurat nå. Prøv igjen om litt."
     }
+  },
+  "theme": {
+    "label": "Utseende",
+    "system": "System",
+    "light": "Lys",
+    "dark": "Mørk",
+    "hint": "Følg enheten din, eller bruk alltid lyst eller mørkt."
   }
 }

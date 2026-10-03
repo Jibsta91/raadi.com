@@ -1,27 +1,28 @@
 import type { SearchHit } from '@raadi/api-client';
-import { ImageOff, MapPin } from 'lucide-react';
+import { Briefcase, Car, House, ImageOff, Plane, ShoppingBag, type LucideIcon } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { formatPrice } from '@/lib/format';
 
-/** A result tile: image, price, title, place (and distance when searching near a place). */
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  torget: ShoppingBag,
+  bil: Car,
+  eiendom: House,
+  jobb: Briefcase,
+  reise: Plane,
+};
+
+/** A result tile: photo with a glass price chip, then title and place (and distance near a place). */
 export async function ListingCard({ hit }: { hit: SearchHit }) {
   const [t, locale] = await Promise.all([getTranslations(), getLocale()]);
+  const NoPhoto = CATEGORY_ICONS[hit.category] ?? ImageOff;
   return (
     <Link
       href={`/listings/${hit.id}`}
-      className="group flex w-full flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring"
+      className="group flex w-full flex-col gap-2.5 rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
       data-testid="listing-card"
     >
-      <div className="relative aspect-[4/3] bg-muted">
-        {hit.promoted ? (
-          <span
-            className="absolute left-2 top-2 z-10 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground"
-            data-testid="listing-card-promoted"
-          >
-            {t('listing.promoted')}
-          </span>
-        ) : null}
+      <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-placeholder">
         {hit.image ? (
           /* Plain <img>: imgproxy already serves sized, signed variants. */
           <img
@@ -31,24 +32,38 @@ export async function ListingCard({ hit }: { hit: SearchHit }) {
             alt=""
             loading="lazy"
             decoding="async"
-            className="size-full object-cover transition-transform group-hover:scale-[1.02]"
+            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
-          <ImageOff aria-hidden className="absolute inset-0 m-auto size-8 text-muted-foreground" />
+          <NoPhoto
+            aria-hidden
+            strokeWidth={1.5}
+            className="absolute inset-0 m-auto size-10 text-muted-foreground"
+          />
         )}
-      </div>
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        <p className="text-lg font-bold" data-testid="listing-card-price">
+        {hit.promoted ? (
+          <span
+            className="absolute left-3 top-3 rounded-full bg-highlight px-2.5 py-1 text-xs font-bold text-highlight-foreground"
+            data-testid="listing-card-promoted"
+          >
+            {t('listing.promoted')}
+          </span>
+        ) : null}
+        <p
+          className="glass absolute bottom-2.5 left-2.5 rounded-full px-3 py-1 text-sm font-bold tabular-nums sm:bottom-3 sm:left-3 sm:py-1.5 sm:text-base"
+          data-testid="listing-card-price"
+        >
           {hit.priceNok === null ? t('listing.noPrice') : formatPrice(hit.priceNok, locale)}
         </p>
-        <h3 className="line-clamp-2 text-sm font-medium" data-testid="listing-card-title">
+      </div>
+      <div className="flex flex-col gap-0.5 px-1">
+        <h3
+          className="line-clamp-2 text-[15px] font-semibold leading-snug sm:text-[17px]"
+          data-testid="listing-card-title"
+        >
           {hit.title}
         </h3>
-        <p
-          className="mt-auto flex items-center gap-1 pt-1 text-xs text-muted-foreground"
-          data-testid="listing-card-location"
-        >
-          <MapPin aria-hidden className="size-3" />
+        <p className="text-sm text-muted-foreground" data-testid="listing-card-location">
           {hit.location.name}
           {hit.distanceKm !== undefined
             ? ` · ${t('search.distance', { km: Math.round(hit.distanceKm) })}`
@@ -61,7 +76,10 @@ export async function ListingCard({ hit }: { hit: SearchHit }) {
 
 export function ListingGrid({ children }: { children: React.ReactNode }) {
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" role="list">
+    <ul
+      className="grid grid-cols-2 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 lg:grid-cols-4"
+      role="list"
+    >
       {children}
     </ul>
   );

@@ -7,3 +7,20 @@ misconfigurations:
     statement: >-
       Developer-only images (never deployed). They run as root to use the Docker
       socket (Testcontainers, compose) and to write build output into bind mounts.
+vulnerabilities:
+  - id: CVE-2026-85393
+    paths:
+      - pnpm-lock.yaml
+    statement: >-
+      node-forge 1.4.0 comes only through Expo's CLI build tooling (@expo/cli,
+      @expo/code-signing-certificates); it is not in any shipped image. No fixed
+      release yet: re-check when it expires (ADR-0021).
+    expired_at: 2026-11-02
+  - id: CVE-2026-93687
+    paths:
+      - pnpm-lock.yaml
+    statement: >-
+      braces 3.0.3 comes only through Metro, Expo's bundler (micromatch via
+      metro-file-map), at build and development time; it is not in any shipped
+      image. No fixed release yet: re-check when it expires (ADR-0021).
+    expired_at: 2026-11-02
