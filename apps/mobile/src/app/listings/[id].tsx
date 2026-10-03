@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
+  Animated,
   Pressable,
   ScrollView,
   Share,
@@ -21,6 +22,7 @@ import { useI18n } from '../../i18n';
 import type { Messages } from '../../i18n/messages';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { useAuth } from '../../lib/auth/context';
+import { useKeyboardLift } from '../../lib/keyboard';
 import { config } from '../../lib/config';
 import { formatAge, formatPrice } from '../../lib/format';
 import { absoluteUrl } from '../../lib/urls';
@@ -120,6 +122,9 @@ export default function ListingScreen() {
   const { width } = useWindowDimensions();
   const [photo, setPhoto] = useState(0);
   const [composing, setComposing] = useState(false);
+  const barBottom = Math.max(insets.bottom, space.md);
+  // The contact form lives in the bottom bar: lift it above the keyboard while typing.
+  const keyboardLift = useKeyboardLift(barBottom);
   const listing = useLoad(
     async () =>
       unwrap(await api.listings.GET('/api/v1/listings/{id}', { params: { path: { id } } })),
@@ -271,20 +276,29 @@ export default function ListingScreen() {
       </View>
 
       {canContact ? (
-        <Glass style={[styles.bottomBar, { bottom: Math.max(insets.bottom, space.md) }]}>
-          {composing && auth.status === 'signedIn' ? (
-            <Compose listingId={item.id} onCancel={() => setComposing(false)} />
-          ) : (
-            <Button
-              testID={auth.status === 'signedIn' ? 'contact-open' : 'contact-login'}
-              label={auth.status === 'signedIn' ? m.contact.title : m.contact.login}
-              icon={
-                <Ionicons name="chatbubble-ellipses-outline" size={20} color={theme.accentText} />
-              }
-              onPress={() => (auth.status === 'signedIn' ? setComposing(true) : void auth.signIn())}
-            />
-          )}
-        </Glass>
+        <Animated.View
+          style={[
+            styles.bottomBar,
+            { bottom: barBottom, transform: [{ translateY: keyboardLift }] },
+          ]}
+        >
+          <Glass style={styles.bottomBarGlass}>
+            {composing && auth.status === 'signedIn' ? (
+              <Compose listingId={item.id} onCancel={() => setComposing(false)} />
+            ) : (
+              <Button
+                testID={auth.status === 'signedIn' ? 'contact-open' : 'contact-login'}
+                label={auth.status === 'signedIn' ? m.contact.title : m.contact.login}
+                icon={
+                  <Ionicons name="chatbubble-ellipses-outline" size={20} color={theme.accentText} />
+                }
+                onPress={() =>
+                  auth.status === 'signedIn' ? setComposing(true) : void auth.signIn()
+                }
+              />
+            )}
+          </Glass>
+        </Animated.View>
       ) : null}
     </View>
   );
@@ -353,13 +367,8 @@ const styles = StyleSheet.create({
   avatarText: { fontFamily: fonts.bold, fontSize: 18 },
   sellerName: { fontFamily: fonts.semibold, fontSize: 16 },
   grow: { flex: 1 },
-  bottomBar: {
-    position: 'absolute',
-    left: space.lg,
-    right: space.lg,
-    borderRadius: radius.xl - 2,
-    padding: space.sm + 2,
-  },
+  bottomBar: { position: 'absolute', left: space.lg, right: space.lg },
+  bottomBarGlass: { borderRadius: radius.xl - 2, padding: space.sm + 2 },
   compose: { gap: space.sm + 2 },
   composeActions: { flexDirection: 'row', gap: space.sm },
 });
