@@ -25,3 +25,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0018](0018-reviews-and-trust.md)                 | Reviews only after a real deal; BankID over OIDC, no national ID stored         | Accepted |
 | [0019](0019-sign-up.md)                           | Sign-up: Keycloak's hosted registration with a Raadi theme                      | Accepted |
 | [0020](0020-payments.md)                          | Payments: provider adapters, idempotent orders, signed webhooks, reconciliation | Accepted |
+| [0021](0021-mobile-app-and-fjord-glass.md)        | Mobile app (Expo, per-platform sign-in, web build under /m); Fjord Glass look   | Accepted |

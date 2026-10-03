@@ -1,0 +1,13 @@
+diff --git a/build/fork/getStateFromPath-forks.js b/build/fork/getStateFromPath-forks.js
+index 63374a73c024945b5b7dc9db410ebb248f1b67e1..a4194aea586441af6968e150a0f422a054fa4ab7 100644
+--- a/build/fork/getStateFromPath-forks.js
++++ b/build/fork/getStateFromPath-forks.js
+@@ -177,7 +177,7 @@ function spreadParamsAcrossAllStates(state, params) {
+ function stripBaseUrl(path, baseUrl = process.env.EXPO_BASE_URL) {
+     if (process.env.NODE_ENV !== 'development') {
+         if (baseUrl) {
+-            return path.replace(/^\/+/g, '/').replace(new RegExp(`^\\/?${(0, escape_string_regexp_1.default)(baseUrl)}`, 'g'), '');
++            return path.replace(/^\/+/g, '/').replace(new RegExp(`^\\/?${(0, escape_string_regexp_1.default)(baseUrl)}(?=[/?#]|$)`), '');
+         }
+     }
+     return path;

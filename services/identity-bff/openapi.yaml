@@ -58,6 +58,13 @@ paths:
       tags: [auth]
       operationId: logout
       summary: End the session and sign out of Keycloak
+      parameters:
+        - {
+            name: returnTo,
+            in: query,
+            schema: { type: string, maxLength: 512 },
+            description: Relative path Keycloak returns to after logout (default /),
+          }
       responses:
         '303': { description: Redirect to the identity provider's end-session endpoint }
         '403': { $ref: '#/components/responses/Problem' }

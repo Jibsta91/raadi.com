@@ -13,6 +13,12 @@ export async function login(page: Page, email: string): Promise<void> {
   await expect(page.getByTestId('nav-account')).toBeVisible();
 }
 
+/** Opens the header's account menu (My listings, Account, Log out live there). */
+export async function openAccountMenu(page: Page): Promise<void> {
+  await page.getByTestId('nav-account').click();
+  await expect(page.getByTestId('nav-logout')).toBeVisible();
+}
+
 /** Card prices in display order (whole kroner; "Price on request" cards skipped). */
 export async function cardPrices(cards: Locator): Promise<number[]> {
   const texts = await cards.getByTestId('listing-card-price').allInnerTexts();

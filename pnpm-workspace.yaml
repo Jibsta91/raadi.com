@@ -3,3 +3,11 @@ packages:
   - services/*
   - packages/*
   - tests/*
+# expo-router strips the web base URL (/m) without a path boundary, so /my-listings became /y-listings in
+# exported builds. The patch adds the boundary; drop it once upstream fixes stripBaseUrl.
+patchedDependencies:
+  expo-router@57.0.24: patches/expo-router@57.0.24.patch
+# Security fixes for Expo's dependencies (ADR-0021), scoped to the package that pulls each in.
+overrides:
+  xcode>uuid: 11.1.1
+  query-string>decode-uri-component: 0.5.0

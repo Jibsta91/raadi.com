@@ -1,0 +1,38 @@
+// Pure helpers shared by the screens; unit-tested in test/format.test.ts.
+
+export type Locale = 'nb' | 'en' | 'so';
+
+const intlLocale: Record<Locale, string> = { nb: 'nb-NO', en: 'en-GB', so: 'so-SO' };
+
+/** "12 500 kr", or `free`/`onRequest` labels supplied by the caller. */
+export function formatPrice(priceNok: number | null, locale: Locale, onRequest: string): string {
+  if (priceNok === null) return onRequest;
+  const amount = new Intl.NumberFormat(intlLocale[locale], { maximumFractionDigits: 0 }).format(
+    priceNok,
+  );
+  return `${amount} kr`;
+}
+
+/** Short relative time ("5 min", "3 t", "2 d") or a date for anything older than a week. */
+export function formatAge(iso: string, locale: Locale, now: Date = new Date()): string {
+  const then = new Date(iso);
+  const seconds = Math.round((then.getTime() - now.getTime()) / 1000);
+  const rtf = new Intl.RelativeTimeFormat(intlLocale[locale], { numeric: 'auto', style: 'short' });
+  const abs = Math.abs(seconds);
+  if (abs < 60) return rtf.format(0, 'second');
+  if (abs < 3600) return rtf.format(Math.round(seconds / 60), 'minute');
+  if (abs < 86_400) return rtf.format(Math.round(seconds / 3600), 'hour');
+  if (abs < 7 * 86_400) return rtf.format(Math.round(seconds / 86_400), 'day');
+  return new Intl.DateTimeFormat(intlLocale[locale], { dateStyle: 'medium' }).format(then);
+}
+
+/** Pick the app language from the device's preferred locales; Norwegian variants map to nb. */
+export function pickLocale(preferred: readonly string[]): Locale {
+  for (const tag of preferred) {
+    const lang = tag.toLowerCase().split(/[-_]/)[0];
+    if (lang === 'nb' || lang === 'no' || lang === 'nn') return 'nb';
+    if (lang === 'en') return 'en';
+    if (lang === 'so') return 'so';
+  }
+  return 'nb';
+}

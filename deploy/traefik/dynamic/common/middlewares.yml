@@ -31,6 +31,21 @@ http:
           base-uri 'self';
           object-src 'none'
 
+    # The Expo app's web export (/m) has no inline scripts; react-native-web injects <style> elements.
+    mobile-csp:
+      headers:
+        contentSecurityPolicy: >-
+          default-src 'self';
+          script-src 'self';
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data: blob:;
+          connect-src 'self';
+          font-src 'self';
+          frame-ancestors 'none';
+          form-action 'self' {{ env "AUTH_BASE_URL" }};
+          base-uri 'self';
+          object-src 'none'
+
     # Per-client-IP rate limits (token bucket).
     ratelimit-default:
       rateLimit:

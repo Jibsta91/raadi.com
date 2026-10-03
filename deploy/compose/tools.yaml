@@ -12,6 +12,7 @@ x-workspace: &workspace
     - .:/workspace
     - nm-root:/workspace/node_modules
     - nm-web:/workspace/apps/web/node_modules
+    - nm-mobile:/workspace/apps/mobile/node_modules
     - nm-identity-bff:/workspace/services/identity-bff/node_modules
     - nm-listings:/workspace/services/listings/node_modules
     - nm-media:/workspace/services/media/node_modules
@@ -65,6 +66,7 @@ services:
 volumes:
   nm-root: {}
   nm-web: {}
+  nm-mobile: {}
   nm-identity-bff: {}
   nm-listings: {}
   nm-media: {}

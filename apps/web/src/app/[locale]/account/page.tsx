@@ -8,14 +8,17 @@ import {
   CardTitle,
 } from '@raadi/ui';
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
+import { ThemeSwitcher } from '@/components/theme-switcher';
 import { RemoveVerification, VerifyButton } from '@/components/trust/verification';
 import { VerifiedBadge } from '@/components/trust/verified-badge';
 import { Link } from '@/i18n/navigation';
 import { myTrust } from '@/lib/api';
 import { env } from '@/lib/env';
 import { getMe, getSession } from '@/lib/session';
+import { parseTheme, THEME_COOKIE } from '@/lib/theme';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('account');
@@ -39,12 +42,14 @@ export default async function AccountPage({
   if (!session.authenticated) {
     redirect(`/auth/login?returnTo=${encodeURIComponent(`/${locale}/account`)}&locale=${locale}`);
   }
-  const [t, tt, format, me, trust] = await Promise.all([
+  const [t, tt, tTheme, format, me, trust, jar] = await Promise.all([
     getTranslations('account'),
     getTranslations('trust'),
+    getTranslations('theme'),
     getFormatter(),
     getMe(),
     myTrust().catch(() => null),
+    cookies(),
   ]);
   const user = session.user;
   const date = (iso: string | null | undefined) =>
@@ -98,7 +103,7 @@ export default async function AccountPage({
               role="status"
               data-testid="verification-outcome"
               data-outcome={outcome}
-              className={outcome === 'ok' ? 'text-sm text-emerald-700' : 'text-sm text-destructive'}
+              className={outcome === 'ok' ? 'text-sm text-success' : 'text-sm text-destructive'}
             >
               {tt(`outcomes.${outcome}`)}
             </p>
@@ -131,6 +136,18 @@ export default async function AccountPage({
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>{tTheme('label')}</CardTitle>
+          <CardDescription>{tTheme('hint')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ThemeSwitcher
+            initial={parseTheme(jar.get(THEME_COOKIE)?.value)}
+            testId="account-theme-switcher"
+          />
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>{t('securityTitle')}</CardTitle>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -6,6 +7,7 @@ import type { ReactNode } from 'react';
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { routing } from '@/i18n/routing';
+import { parseTheme, THEME_COOKIE, themeAttribute } from '@/lib/theme';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -31,23 +33,24 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const t = await getTranslations('nav');
+  const [t, jar] = await Promise.all([getTranslations('nav'), cookies()]);
+  const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
 
   return (
-    <html lang={locale}>
+    <html lang={locale} data-theme={themeAttribute(theme)}>
       <body className="flex min-h-screen flex-col">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-ink-foreground"
         >
           {t('skip')}
         </a>
         <NextIntlClientProvider>
           <Header locale={locale} />
-          <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
+          <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-8">
             {children}
           </main>
-          <Footer />
+          <Footer theme={theme} />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -43,9 +43,13 @@ export default async function ConversationPage({
       <Link href="/messages" className="text-sm text-primary hover:underline">
         ← {t('title')}
       </Link>
-      <header className="flex items-center gap-4 border-b pb-4">
+      <header className="flex items-center gap-4 rounded-3xl border bg-card p-3">
         {detail.listing.image ? (
-          <img src={detail.listing.image.thumb} alt="" className="h-16 w-20 rounded object-cover" />
+          <img
+            src={detail.listing.image.thumb}
+            alt=""
+            className="h-16 w-20 rounded-2xl object-cover"
+          />
         ) : null}
         <div>
           <h1 className="text-xl font-bold" data-testid="thread-counterpart">
@@ -71,7 +75,7 @@ export default async function ConversationPage({
         />
       ) : null}
       {eligibility && !eligibility.canReview && eligibility.reason === 'already_reviewed' ? (
-        <p className="rounded-lg border p-3 text-sm" data-testid="review-done">
+        <p className="rounded-2xl border bg-card p-4 text-sm" data-testid="review-done">
           {tt('reviewed', { name: detail.counterpart.name })}{' '}
           <Link href={`/users/${detail.counterpart.id}`} className="text-primary hover:underline">
             {tt('seeProfile')}

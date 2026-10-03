@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
-import { domain, login } from './support.js';
+import { domain, login, openAccountMenu } from './support.js';
 
 const fixture = fileURLToPath(new URL('../../fixtures/images/listing.jpg', import.meta.url));
 
@@ -46,6 +46,7 @@ test('a seller creates a listing with an image, marks it sold and deletes it', a
     });
   }).toPass({ timeout: 90_000 });
 
+  await openAccountMenu(page);
   await page.getByTestId('nav-my-listings').click();
   const mine = page.getByTestId('my-listings').getByRole('link', { name: title });
   await expect(mine).toContainText('Active');

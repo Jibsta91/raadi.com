@@ -165,7 +165,7 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
               key={m.id}
               data-testid="thread-message"
               data-from={m.fromMe ? 'me' : 'them'}
-              className={`max-w-[80%] rounded-2xl px-4 py-2 ${m.fromMe ? 'self-end bg-primary text-primary-foreground' : 'self-start bg-muted'}`}
+              className={`max-w-[80%] rounded-3xl px-4 py-2.5 ${m.fromMe ? 'self-end rounded-br-lg bg-primary text-primary-foreground' : 'self-start rounded-bl-lg border bg-card'}`}
             >
               <p className="whitespace-pre-line break-words">{m.body}</p>
               <p className="mt-1 text-right text-xs opacity-70">
@@ -178,7 +178,10 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
           ))}
         </ol>
       </div>
-      <form onSubmit={send} className="flex items-end gap-2 border-t pt-4">
+      <form
+        onSubmit={send}
+        className="flex items-end gap-2 rounded-[1.75rem] border bg-card p-2 shadow-float focus-within:border-primary"
+      >
         <label className="sr-only" htmlFor="compose">
           {t('compose')}
         </label>
@@ -188,12 +191,17 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKeyDown}
           maxLength={2000}
-          rows={2}
+          rows={1}
           placeholder={t('compose')}
           data-testid="compose-input"
-          className="flex-1 rounded-md border border-input bg-background p-2"
+          className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 focus:outline-none"
         />
-        <Button type="submit" disabled={sending || draft.trim() === ''} data-testid="compose-send">
+        <Button
+          type="submit"
+          disabled={sending || draft.trim() === ''}
+          data-testid="compose-send"
+          className="max-sm:size-11 max-sm:px-0"
+        >
           <Send aria-hidden />
           <span className="sr-only sm:not-sr-only">{t('send')}</span>
         </Button>

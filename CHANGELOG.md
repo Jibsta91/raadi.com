@@ -6,6 +6,23 @@ Each release also has generated notes on GitHub.
 
 ## [Unreleased]
 
+### Added
+
+- Mobile app (Expo): home, search, listings, live chat, my listings and account, signing in with OIDC + PKCE
+  on devices and through the BFF session in its web build, served under `/m` (ADR-0021).
+- "Fjord Glass" look for the app and the website, with bundled fonts and a System / Light / Dark setting
+  (the website renders the chosen theme on the server, so pages never flash).
+
+### Changed
+
+- The website's header has category links and an account menu (My listings, Account, Log out); language and
+  appearance moved to the footer.
+- Logging out accepts a `returnTo` path, like logging in.
+
+### Fixed
+
+- The identity BFF could reuse a spent refresh token when two requests refreshed at once.
+
 ## [0.3.0-alpha.2] — 2026-10-02
 
 Phase 3: payments for promoted listings.
