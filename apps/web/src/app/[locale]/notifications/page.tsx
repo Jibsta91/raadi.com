@@ -49,14 +49,24 @@ export default async function NotificationsPage({
           <p>{t('empty')}</p>
         </div>
       ) : (
-        <ul className="divide-y rounded-lg border" role="list" data-testid="notification-list">
+        <ul
+          className="divide-y overflow-hidden rounded-3xl border bg-card"
+          role="list"
+          data-testid="notification-list"
+        >
           {items.map((n) => (
             <li key={n.id} data-read={n.read}>
               <NotificationLink id={n.id} link={n.link} href={`/${locale}${n.link}`}>
-                <p className={n.read ? '' : 'font-semibold'}>
+                <p className={n.read ? '' : 'flex items-start gap-2 font-semibold'}>
+                  {n.read ? null : (
+                    <span aria-hidden className="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+                  )}
                   {t(`kinds.${n.kind}` as never, n.params as never)}
                 </p>
-                <time dateTime={n.createdAt} className="text-xs text-muted-foreground">
+                <time
+                  dateTime={n.createdAt}
+                  className={`text-xs text-muted-foreground ${n.read ? '' : 'pl-4'}`}
+                >
                   {format.relativeTime(new Date(n.createdAt))}
                 </time>
               </NotificationLink>
