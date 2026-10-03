@@ -8,6 +8,10 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Phone mode: `./raadi phone` serves the stack to a phone on the same Wi-Fi as `https://dev.raadiso.com`,
+  with LAN DNS through GoDaddy, a Let's Encrypt certificate (DNS-01) and Metro for Expo Go (ADR-0022).
+  `./raadi secret-set` stores secrets you supply, behind a hidden prompt.
+- App icons (iOS, Android adaptive, web) and a website favicon.
 - Mobile app (Expo): home, search, listings, live chat, my listings and account, signing in with OIDC + PKCE
   on devices and through the BFF session in its web build, served under `/m` (ADR-0021).
 - "Fjord Glass" look for the app and the website, with bundled fonts and a System / Light / Dark setting
@@ -15,6 +19,8 @@ Each release also has generated notes on GitHub.
 
 ### Changed
 
+- My listings, notifications and profile reviews use the rounded card lists, and unread notifications are
+  marked with a dot.
 - The website's header has category links and an account menu (My listings, Account, Log out); language and
   appearance moved to the footer.
 - Logging out accepts a `returnTo` path, like logging in.

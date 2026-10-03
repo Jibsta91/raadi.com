@@ -1,0 +1,132 @@
+# Phone mode: test the native app on a phone on the same Wi-Fi (docs/mobile.md, ADR-0022).
+#   ./raadi phone        (sets the variables below and starts the stack with this overlay)
+# The stack answers as https://${PHONE_DOMAIN} with a Let's Encrypt wildcard certificate, which phones
+# trust out of the box. DNS for that name points at this laptop's LAN address, and Metro serves the app
+# to Expo Go on port 8081.
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+services:
+  # Points ${PHONE_DOMAIN} and *.${PHONE_DOMAIN} at ${LAN_IP} (GoDaddy DNS API).
+  phone-dns:
+    image: ${RAADI_IMAGE_PREFIX}/init:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/init/Dockerfile
+    command: ['/opt/raadi/bin/phone-dns.sh']
+    restart: 'no'
+    logging: *logging
+    user: '0:0'
+    security_opt: ['no-new-privileges:true']
+    environment:
+      PHONE_DOMAIN: ${PHONE_DOMAIN}
+      PHONE_DNS_ZONE: ${PHONE_DNS_ZONE}
+      LAN_IP: ${LAN_IP:?run ./raadi phone}
+    volumes:
+      - secrets:/secrets:ro
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+    deploy:
+      resources:
+        limits: { memory: 64M, cpus: '0.25' }
+
+  # Gets (or renews, 30 days before expiry) the wildcard certificate with a DNS-01 challenge, so
+  # nothing has to be reachable from the internet, and hands it to Traefik as its default certificate.
+  phone-cert:
+    image: goacme/lego:v5.5.2@sha256:1944e8c36055beec47c7de6f15202b41128be75eea0ffa257f0c14d93c5155fd
+    entrypoint: ['/bin/sh', '-ec']
+    command:
+      - |
+        lego run --accept-tos --path /acme --dns godaddy --cert.name phone \
+          -d "$${PHONE_DOMAIN}" -d "*.$${PHONE_DOMAIN}" --renew-days 30 --log.format text
+        crt=$$(find /acme -name phone.crt | head -1)
+        key=$$(find /acme -name phone.key | head -1)
+        install -m 0444 -o 65532 -g 0 "$$crt" /certs/tls.crt
+        install -m 0400 -o 65532 -g 0 "$$key" /certs/tls.key
+        echo "certificate for $${PHONE_DOMAIN} installed for Traefik"
+    restart: 'no'
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    environment:
+      PHONE_DOMAIN: ${PHONE_DOMAIN}
+      GODADDY_API_KEY_FILE: /secrets/_master/godaddy_api_key
+      GODADDY_API_SECRET_FILE: /secrets/_master/godaddy_api_secret
+      GODADDY_PROPAGATION_TIMEOUT: '300'
+    volumes:
+      - secrets:/secrets:ro
+      - certs:/certs
+      - acme:/acme
+    depends_on:
+      certs-init: { condition: service_completed_successfully }
+      phone-dns: { condition: service_completed_successfully }
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '0.5' }
+
+  traefik:
+    depends_on:
+      phone-cert: { condition: service_completed_successfully }
+
+  # Metro for Expo Go. The app reads PUBLIC_BASE_URL / AUTH_BASE_URL at bundle time (app.config.ts).
+  expo:
+    image: ${RAADI_IMAGE_PREFIX}/node-dev:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-dev/Dockerfile
+    working_dir: /workspace
+    command:
+      - sh
+      - -c
+      - >-
+        pnpm install --frozen-lockfile --prefer-offline &&
+        pnpm --filter @raadi/catalog build &&
+        pnpm --filter mobile exec expo start --port 8081 --offline
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      # The address Expo Go connects to (Metro inside the container cannot see the LAN address).
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${LAN_IP:?run ./raadi phone}
+      EXPO_NO_TELEMETRY: '1'
+      # Never let Metro rewrite tsconfig.json or expo-env.d.ts in the bind-mounted checkout.
+      EXPO_NO_TYPESCRIPT_SETUP: '1'
+    ports:
+      - '${LAN_IP:?run ./raadi phone}:8081:8081'
+    volumes:
+      - .:/workspace
+      - nm-root:/workspace/node_modules
+      - nm-mobile:/workspace/apps/mobile/node_modules
+      - nm-api-client:/workspace/packages/api-client/node_modules
+      - nm-catalog:/workspace/packages/catalog/node_modules
+      - nm-config:/workspace/packages/config/node_modules
+      - pnpm-store:/pnpm/store
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:8081/status').then((r) => r.text()).then((t) => process.exit(t.includes('running') ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 180s
+    deploy:
+      resources:
+        limits: { memory: 2G, cpus: '2.0' }
+
+volumes:
+  acme: {}
+  nm-root: {}
+  nm-mobile: {}
+  nm-api-client: {}
+  nm-catalog: {}
+  nm-config: {}
+  pnpm-store: {}
