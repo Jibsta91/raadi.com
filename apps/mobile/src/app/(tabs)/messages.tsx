@@ -6,13 +6,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NoPhoto } from '../../components/no-photo';
 import { Body, Button, LargeTitle, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
-import { unwrap, useApi, useLoad } from '../../lib/api';
+import { unwrap, useApi, usePaged } from '../../lib/api';
 import { useAuth } from '../../lib/auth/context';
 import { config } from '../../lib/config';
 import { formatAge } from '../../lib/format';
 import { useRealtime } from '../../lib/realtime';
 import { absoluteUrl } from '../../lib/urls';
 import { fonts, radius, space, tabBarSpace, useTheme } from '../../theme';
+
+const PAGE_SIZE = 20;
 
 function Row({ conversation }: { conversation: Conversation }) {
   const { locale } = useI18n();
@@ -72,8 +74,13 @@ function Row({ conversation }: { conversation: Conversation }) {
 function Inbox({ top }: { top: number }) {
   const { m } = useI18n();
   const api = useApi();
-  const inbox = useLoad(
-    async () => unwrap(await api.messaging.GET('/api/v1/messaging/conversations', {})),
+  const inbox = usePaged(
+    async (offset) =>
+      unwrap(
+        await api.messaging.GET('/api/v1/messaging/conversations', {
+          params: { query: { limit: PAGE_SIZE, offset } },
+        }),
+      ),
     [api],
   );
   useRealtime((event) => event.type !== 'hello' && inbox.reload());
@@ -81,15 +88,17 @@ function Inbox({ top }: { top: number }) {
   return (
     <FlatList
       contentContainerStyle={[styles.list, { paddingTop: top, paddingBottom: tabBarSpace }]}
-      data={inbox.data?.items ?? []}
+      data={inbox.items}
       keyExtractor={(c) => c.id}
       renderItem={({ item }) => <Row conversation={item} />}
       onRefresh={inbox.reload}
+      onEndReached={inbox.more}
+      onEndReachedThreshold={0.5}
       refreshing={false}
       ListHeaderComponent={<LargeTitle>{m.messages.title}</LargeTitle>}
       ListEmptyComponent={
         <Status
-          loading={inbox.loading && !inbox.data}
+          loading={inbox.loading && inbox.items.length === 0}
           error={inbox.error}
           empty={m.messages.empty}
           onRetry={inbox.reload}

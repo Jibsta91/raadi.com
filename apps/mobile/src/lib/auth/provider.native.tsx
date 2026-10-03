@@ -75,8 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await store(res);
         setStatus('signedIn');
         return res.accessToken;
-      } catch {
-        await clear();
+      } catch (err) {
+        // Keycloak answered with an OAuth error (expired or revoked token): the session is over.
+        if (err instanceof AuthSession.TokenError) await clear();
+        // Otherwise (offline, discovery failed) keep the stored session; the next request retries.
         return null;
       }
     })().finally(() => {
@@ -96,7 +98,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (async () => {
       setUser(userFrom(await SecureStore.getItemAsync(ID_TOKEN_KEY)));
       const token = await refresh();
-      setStatus(token ? 'signedIn' : 'signedOut');
+      // Started offline with a stored session: stay signed in and refresh once the network is back.
+      const kept = !token && (await SecureStore.getItemAsync(REFRESH_KEY)) !== null;
+      setStatus(token || kept ? 'signedIn' : 'signedOut');
     })().catch(() => setStatus('signedOut'));
   }, [refresh]);
 
