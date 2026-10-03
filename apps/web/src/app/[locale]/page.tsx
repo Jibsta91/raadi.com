@@ -70,11 +70,6 @@ export default async function HomePage({
     logger.warn({ err: error }, 'latest listings unavailable');
     return null;
   });
-  // "Find it. Sell it. Raadi.": the last sentence goes on its own line, in the accent colour.
-  const title = t('heroTitle');
-  const split = title.lastIndexOf('. ', title.length - 2);
-  const [lead, brand] =
-    split > 0 ? [title.slice(0, split + 1), title.slice(split + 2)] : [title, ''];
 
   return (
     <div className="space-y-20">
@@ -82,13 +77,10 @@ export default async function HomePage({
 
       <section className="flex flex-col gap-7 pt-6 sm:pt-14">
         <h1 className="max-w-5xl text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[0.92] tracking-[-0.05em]">
-          {lead}
-          {brand ? (
-            <>
-              {' '}
-              <span className="block text-primary">{brand}</span>
-            </>
-          ) : null}
+          {/* Each language marks the brand, wherever it falls: it gets its own line and the accent. */}
+          {t.rich('heroTitle', {
+            brand: (chunks) => <span className="block text-primary">{chunks}</span>,
+          })}
         </h1>
         <p className="max-w-xl text-lg text-subtle-foreground sm:text-xl">{t('heroSubtitle')}</p>
         <form

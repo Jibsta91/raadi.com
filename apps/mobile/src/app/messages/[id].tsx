@@ -55,6 +55,12 @@ export default function ConversationScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const list = useRef<FlatList<Message>>(null);
+  // Scroll handling: follow new messages only when the reader is at the bottom, and keep the
+  // visible message in place when older history is prepended above it.
+  const atBottom = useRef(true);
+  const scrollY = useRef(0);
+  const contentHeight = useRef(0);
+  const prepending = useRef(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [composerFocused, setComposerFocused] = useState(false);
@@ -104,6 +110,7 @@ export default function ConversationScreen() {
     });
     if (!res.data) return;
     const older = res.data.messages;
+    if (older.length > 0) prepending.current = true;
     setMessages((prev) => [...older.filter((o) => !prev.some((p) => p.id === o.id)), ...prev]);
     setHasMore(res.data.hasMore);
   };
@@ -119,6 +126,7 @@ export default function ConversationScreen() {
         body: { body },
       });
       if (res.data) {
+        atBottom.current = true;
         append(res.data);
         setDraft('');
       } else {
@@ -181,7 +189,22 @@ export default function ConversationScreen() {
         data={messages}
         keyExtractor={(message) => message.id}
         renderItem={({ item }) => <Bubble message={item} />}
-        onContentSizeChange={() => list.current?.scrollToEnd({ animated: false })}
+        scrollEventThrottle={32}
+        onScroll={(e) => {
+          const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+          scrollY.current = contentOffset.y;
+          atBottom.current = contentSize.height - contentOffset.y - layoutMeasurement.height < 80;
+        }}
+        onContentSizeChange={(_, height) => {
+          const grown = height - contentHeight.current;
+          contentHeight.current = height;
+          if (prepending.current) {
+            prepending.current = false;
+            list.current?.scrollToOffset({ offset: scrollY.current + grown, animated: false });
+          } else if (atBottom.current) {
+            list.current?.scrollToEnd({ animated: false });
+          }
+        }}
         ListHeaderComponent={
           hasMore ? (
             <Button variant="secondary" label={m.messages.older} onPress={() => void loadOlder()} />

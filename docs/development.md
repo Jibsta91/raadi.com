@@ -23,7 +23,7 @@ don't always cross Docker Desktop's file sharing.
 
 ```
 apps/web                 Next.js 16 (App Router, RSC), next-intl (nb/en/so), Tailwind 4, shadcn/ui-style components
-apps/mobile              Expo app (Phase 3)
+apps/mobile              Expo app (Phase 3, docs/mobile.md)
 services/identity-bff    NestJS: OIDC login, encrypted sessions, token handler, /api/v1/identity
 services/listings        NestJS: listings CRUD, OPA marketplace rules, OpenFGA ownership, outbox events
 services/search          NestJS: OpenSearch indexer (Kafka consumer) and search/suggest API
