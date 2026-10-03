@@ -87,7 +87,7 @@ export function ReviewForm({
           maxLength={1000}
           rows={3}
           data-testid="review-comment"
-          className="w-full rounded-md border border-input bg-background p-2 text-sm"
+          className="w-full field border-input p-2 text-sm"
         />
       </label>
       <p className="text-xs text-muted-foreground">{t('form.public')}</p>

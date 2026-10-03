@@ -175,14 +175,21 @@ export class AuthController {
     if (!session.refreshToken) return null;
 
     const refreshed = await this.sessions.withRefreshLock(sid, async () => {
+      // Re-read under the lock: a request that held it just before us may already have
+      // refreshed, and the refresh token we read earlier is then spent (single use).
+      const current = await this.sessions.get(sid);
+      if (!current?.refreshToken) return null;
+      if (current.accessExpiresAt - REFRESH_SKEW_SEC > Math.floor(Date.now() / 1000)) {
+        return current.accessToken;
+      }
       try {
-        const t = await this.oidc.refresh(session.refreshToken!);
+        const t = await this.oidc.refresh(current.refreshToken);
         const next: SessionData = {
-          ...session,
-          user: { ...session.user, roles: t.roles },
+          ...current,
+          user: { ...current.user, roles: t.roles },
           accessToken: t.accessToken,
-          refreshToken: t.refreshToken ?? session.refreshToken,
-          idToken: t.idToken ?? session.idToken,
+          refreshToken: t.refreshToken ?? current.refreshToken,
+          idToken: t.idToken ?? current.idToken,
           accessExpiresAt: t.accessExpiresAt,
         };
         await this.sessions.save(sid, next, t.refreshExpiresIn);

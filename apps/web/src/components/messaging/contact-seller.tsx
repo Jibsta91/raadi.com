@@ -66,7 +66,7 @@ export function ContactSeller({ listingId }: { listingId: string }) {
           maxLength={2000}
           rows={3}
           data-testid="contact-message"
-          className="w-full rounded-md border border-input bg-background p-2 text-sm"
+          className="w-full field border-input p-2 text-sm"
         />
       </label>
       {error ? (

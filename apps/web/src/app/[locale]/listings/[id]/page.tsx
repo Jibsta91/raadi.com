@@ -99,7 +99,7 @@ export default async function ListingPage({
               <Badge variant="secondary">{t('listing.sold')}</Badge>
             ) : null}
             {listing.promotedUntil && listing.status === 'active' ? (
-              <Badge data-testid="listing-promoted">
+              <Badge variant="highlight" data-testid="listing-promoted">
                 {t('listing.promotedUntil', {
                   date: format.dateTime(new Date(listing.promotedUntil), { dateStyle: 'medium' }),
                 })}

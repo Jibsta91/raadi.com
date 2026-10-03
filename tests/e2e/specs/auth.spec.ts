@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openAccountMenu } from './support.js';
 
 const domain = process.env.RAADI_DOMAIN ?? 'raadi.localhost';
 const password = process.env.DEMO_USER_PASSWORD ?? 'raadi-demo-pass';
@@ -21,6 +22,7 @@ test('demo user logs in through Keycloak, sees the account page and logs out', a
   // The session cookie is HttpOnly: page scripts cannot read it.
   expect(await page.evaluate(() => document.cookie)).not.toContain('raadi_sid');
 
+  await openAccountMenu(page);
   await page.getByTestId('nav-logout').click();
   await expect(page.getByTestId('nav-login')).toBeVisible();
 });

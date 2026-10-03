@@ -177,7 +177,7 @@ export function ListingForm({ listing }: { listing?: Listing }) {
   }
 
   const fieldClass = (path: string) =>
-    `h-10 w-full rounded-md border bg-background px-3 ${errors[path] ? 'border-destructive' : 'border-input'}`;
+    `field h-11 w-full px-4 ${errors[path] ? 'border-destructive' : 'border-input'}`;
   const hint = (path: string) =>
     errors[path] ? (
       <p className="text-sm text-destructive" id={`${id}-${path}-error`}>
@@ -262,7 +262,7 @@ export function ListingForm({ listing }: { listing?: Listing }) {
           rows={6}
           defaultValue={listing?.description}
           data-testid="field-description"
-          className={`w-full rounded-md border bg-background p-3 ${errors.description ? 'border-destructive' : 'border-input'}`}
+          className={`field w-full p-4 ${errors.description ? 'border-destructive' : 'border-input'}`}
         />
         {hint('description')}
       </label>

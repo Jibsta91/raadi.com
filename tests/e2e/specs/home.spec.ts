@@ -29,3 +29,25 @@ test('privacy page is reachable from the footer', async ({ page }) => {
   await page.getByRole('contentinfo').getByRole('link', { name: 'Privacy' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Privacy');
 });
+
+test('appearance: dark is applied at once, rendered by the server after a reload, and system resets it', async ({
+  page,
+}) => {
+  await page.goto('/en');
+  const html = page.locator('html');
+  await expect(html).not.toHaveAttribute('data-theme');
+  const footer = page.getByRole('contentinfo');
+
+  await footer.getByTestId('theme-dark').click();
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+  await expect(footer.getByTestId('theme-dark')).toHaveAttribute('aria-pressed', 'true');
+
+  // The server reads the cookie, so the first paint is already dark (no flash).
+  const response = await page.request.get('/en');
+  expect(await response.text()).toMatch(/<html[^>]*data-theme="dark"/);
+  await page.reload();
+  await expect(html).toHaveAttribute('data-theme', 'dark');
+
+  await footer.getByTestId('theme-system').click();
+  await expect(html).not.toHaveAttribute('data-theme');
+});
