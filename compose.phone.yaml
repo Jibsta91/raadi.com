@@ -36,25 +36,16 @@ services:
   # Gets (or renews, 30 days before expiry) the wildcard certificate with a DNS-01 challenge, so
   # nothing has to be reachable from the internet, and hands it to Traefik as its default certificate.
   phone-cert:
-    image: goacme/lego:v5.5.2@sha256:1944e8c36055beec47c7de6f15202b41128be75eea0ffa257f0c14d93c5155fd
-    entrypoint: ['/bin/sh', '-ec']
-    command:
-      - |
-        lego run --accept-tos --path /acme --dns godaddy --cert.name phone \
-          -d "$${PHONE_DOMAIN}" -d "*.$${PHONE_DOMAIN}" --renew-days 30 --log.format text
-        crt=$$(find /acme -name phone.crt | head -1)
-        key=$$(find /acme -name phone.key | head -1)
-        install -m 0444 -o 65532 -g 0 "$$crt" /certs/tls.crt
-        install -m 0400 -o 65532 -g 0 "$$key" /certs/tls.key
-        echo "certificate for $${PHONE_DOMAIN} installed for Traefik"
+    image: ${RAADI_IMAGE_PREFIX}/init:${RAADI_VERSION}
+    pull_policy: build
+    command: ['/opt/raadi/bin/phone-cert.sh']
     restart: 'no'
     logging: *logging
+    user: '0:0'
     security_opt: ['no-new-privileges:true']
     environment:
       PHONE_DOMAIN: ${PHONE_DOMAIN}
-      GODADDY_API_KEY_FILE: /secrets/_master/godaddy_api_key
-      GODADDY_API_SECRET_FILE: /secrets/_master/godaddy_api_secret
-      GODADDY_PROPAGATION_TIMEOUT: '300'
+      PHONE_DNS_ZONE: ${PHONE_DNS_ZONE}
     volumes:
       - secrets:/secrets:ro
       - certs:/certs

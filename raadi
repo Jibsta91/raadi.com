@@ -36,7 +36,7 @@ Quality (run in the toolbox container)
 Secrets & TLS
   secret <name>      print a generated secret (e.g. keycloak_admin_password,
                      grafana_admin_password, openbao_root_token)
-  secret-set <name>  store a secret you supply (input hidden), e.g. godaddy_api_key
+  secret-set <name>  store a secret you supply (input hidden), e.g. godaddy_pat
   ca-cert            export the dev CA to deploy/certs/raadi-dev-ca.crt
 Phone (docs/mobile.md)
   phone              serve the stack on this Wi-Fi as https://$PHONE_DOMAIN and start

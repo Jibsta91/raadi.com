@@ -5,6 +5,8 @@
 # need nothing but this image and the compose files.
 FROM openbao/openbao:2.7.1 AS bao
 FROM amacneil/dbmate:2.36.0 AS dbmate
+# ACME client for phone mode's Let's Encrypt certificate (ADR-0022).
+FROM goacme/lego:v5.5.2@sha256:1944e8c36055beec47c7de6f15202b41128be75eea0ffa257f0c14d93c5155fd AS lego
 
 FROM alpine:3.24.2 AS migrations
 COPY services/ /src/services/
@@ -23,6 +25,7 @@ RUN apk add --no-cache bash curl jq openssl ca-certificates coreutils gettext po
  && addgroup -S -g 65532 raadi && adduser -S -D -H -u 65532 -G raadi raadi
 COPY --from=bao /usr/bin/bao /usr/local/bin/bao
 COPY --from=dbmate /usr/local/bin/dbmate /usr/local/bin/dbmate
+COPY --from=lego /lego /usr/local/bin/lego
 COPY --from=migrations /out/ /opt/raadi/migrations/
 COPY --from=templates /out/ /opt/raadi/templates/
 COPY deploy/init/manifest.json /opt/raadi/manifest.json

@@ -10,10 +10,12 @@
   binds the gateway to the laptop's LAN address. Everything else (Keycloak URLs, the BFF, CSP) already
   derives from `RAADI_DOMAIN`. `./raadi up` switches back.
 - **DNS**: a one-shot `phone-dns` job points `$PHONE_DOMAIN` and `*.$PHONE_DOMAIN` at the laptop's LAN
-  address through the GoDaddy DNS API. It accepts only private IPv4 addresses and writes only when they
-  changed.
-- **TLS**: a one-shot `phone-cert` job runs lego (MIT) with a **DNS-01** challenge to get or renew a
-  Let's Encrypt wildcard certificate. It installs the certificate as Traefik's default certificate, in the
+  address through GoDaddy's DNS records API (v3, with a scoped Personal Access Token). It accepts only
+  private IPv4 addresses and writes only when they changed.
+- **TLS**: a one-shot `phone-cert` job runs lego (MIT, copied into the init image) with a **DNS-01**
+  challenge to get or renew a Let's Encrypt wildcard certificate. lego's GoDaddy provider supports only the
+  older key and secret, so its `exec` provider calls our hook (`godaddy-acme.sh`), which adds and removes the
+  challenge TXT records with the token. It installs the certificate as Traefik's default certificate, in the
   same place as the development CA's. Phones trust it out of the box, nothing needs to be reachable from
   the internet, and renewal happens 30 days before expiry. The ACME account and certificate are kept in
   the `acme` volume.
@@ -21,7 +23,7 @@
   `REACT_NATIVE_PACKAGER_HOSTNAME` set so Expo Go connects to the laptop. `--offline` avoids Expo's online
   services. The app is built with the phone-mode URLs (`app.config.ts` reads `PUBLIC_BASE_URL` and
   `AUTH_BASE_URL`).
-- **Secrets the user supplies** (the GoDaddy key and secret) are stored with `./raadi secret-set` in the
+- **Secrets the user supplies** (the GoDaddy token, `godaddy_pat`) are stored with `./raadi secret-set` in the
   secrets volume, next to the generated secrets, from a hidden prompt. That command refuses to overwrite a
   generated secret.
 
@@ -37,8 +39,8 @@
 
 ## Consequences
 
-- Phone mode needs internet access, for DNS and Let's Encrypt, and a GoDaddy API key. The default mode
-  still runs offline.
+- Phone mode needs internet access, for DNS and Let's Encrypt, and a GoDaddy Personal Access Token. The
+  default mode still runs offline.
 - The domain's public DNS holds a private LAN address. That reveals nothing reachable, but some routers'
   DNS-rebinding protection blocks such answers (see docs/mobile.md).
 - While phone mode runs, the development stack, with its demo passwords, is reachable from the LAN.

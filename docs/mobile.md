@@ -19,12 +19,12 @@ The native app runs in Expo Go on a phone on the same Wi-Fi as the laptop
 ([ADR-0022](adr/0022-phone-mode.md)). The stack then answers as `https://dev.raadiso.com`
 (`PHONE_DOMAIN`), with a Let's Encrypt certificate the phone already trusts.
 
-1. **Once:** create a GoDaddy API key (a _Production_ key) at <https://developer.godaddy.com/keys>, then
-   store it in your own terminal. The input is hidden and never written to the repository:
+1. **Once:** at <https://developer.godaddy.com/keys>, create a Personal Access Token with the scopes
+   `domains.domain:read` and `domains.dns:update`. Then store it from your own terminal. The input is hidden,
+   and the token never goes into the repository or a chat:
 
    ```bash
-   ./raadi secret-set godaddy_api_key
-   ./raadi secret-set godaddy_api_secret
+   ./raadi secret-set godaddy_pat
    ```
 
 2. **Each time:** `./raadi phone`. This:
