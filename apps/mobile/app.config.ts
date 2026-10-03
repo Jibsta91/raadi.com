@@ -5,9 +5,14 @@ import type { ExpoConfig } from 'expo/config';
 const publicBaseUrl = process.env.PUBLIC_BASE_URL ?? 'http://raadi.localhost';
 const authBaseUrl = process.env.AUTH_BASE_URL ?? 'http://auth.raadi.localhost';
 
+// The Expo project this app is linked to (phone mode: Expo Go on an iPhone needs a signed-in, linked
+// project). Set in .env; without them the app is a standalone, offline project called "raadi".
+const easProjectId = process.env.EAS_PROJECT_ID;
+
 const config: ExpoConfig = {
   name: 'Raadiso',
-  slug: 'raadi',
+  slug: process.env.EXPO_SLUG ?? 'raadi',
+  ...(process.env.EXPO_OWNER ? { owner: process.env.EXPO_OWNER } : {}),
   version: '0.1.0',
   scheme: 'raadi',
   orientation: 'portrait',
@@ -30,6 +35,7 @@ const config: ExpoConfig = {
     authBaseUrl,
     realm: process.env.KEYCLOAK_REALM ?? 'raadi',
     clientId: 'raadi-mobile',
+    ...(easProjectId ? { eas: { projectId: easProjectId } } : {}),
   },
 };
 

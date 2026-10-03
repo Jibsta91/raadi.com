@@ -80,7 +80,8 @@ services:
         pnpm --filter @raadi/catalog build &&
         if [ -s /secrets/_master/expo_token ]; then
         export EXPO_TOKEN="$$(cat /secrets/_master/expo_token)"; online=;
-        else online=--offline; echo "no expo_token: Expo Go on a physical iPhone will refuse this server (docs/mobile.md)";
+        elif grep -q sessionSecret /root/.expo/state.json 2>/dev/null; then online=;
+        else online=--offline; echo "not signed in to Expo: Expo Go on a physical iPhone will refuse this server (docs/mobile.md)";
         fi &&
         exec pnpm --filter mobile exec expo start --port 8081 $$online
     restart: unless-stopped
@@ -92,15 +93,22 @@ services:
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
       AUTH_BASE_URL: ${AUTH_BASE_URL}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      EXPO_OWNER: ${EXPO_OWNER:-}
+      EXPO_SLUG: ${EXPO_SLUG:-}
+      EAS_PROJECT_ID: ${EAS_PROJECT_ID:-}
       # The address Expo Go connects to (Metro inside the container cannot see the LAN address).
       REACT_NATIVE_PACKAGER_HOSTNAME: ${LAN_IP:?run ./raadi phone}
       EXPO_NO_TELEMETRY: '1'
+      # node-dev sets CI=true, which puts Metro in CI mode (no reloads) and Expo in non-interactive mode.
+      CI: 'false'
       # Never let Metro rewrite tsconfig.json or expo-env.d.ts in the bind-mounted checkout.
       EXPO_NO_TYPESCRIPT_SETUP: '1'
     ports:
       - '${LAN_IP:?run ./raadi phone}:8081:8081'
     volumes:
       - secrets:/secrets:ro
+      # `expo login` keeps its session here, so it survives the container being recreated.
+      - expo-home:/root/.expo
       - .:/workspace
       - nm-root:/workspace/node_modules
       - nm-mobile:/workspace/apps/mobile/node_modules
@@ -126,6 +134,7 @@ services:
 
 volumes:
   acme: {}
+  expo-home: {}
   nm-root: {}
   nm-mobile: {}
   nm-api-client: {}

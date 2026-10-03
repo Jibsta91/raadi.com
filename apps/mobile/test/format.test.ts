@@ -27,6 +27,29 @@ describe('formatAge', () => {
   });
 });
 
+describe('formatAge without Intl.RelativeTimeFormat (Hermes on iOS and Android)', () => {
+  const now = new Date('2026-10-02T12:00:00Z');
+  const intl = Intl as { RelativeTimeFormat?: unknown };
+  const saved = intl.RelativeTimeFormat;
+  const withoutRtf = (run: () => void) => {
+    intl.RelativeTimeFormat = undefined;
+    try {
+      run();
+    } finally {
+      intl.RelativeTimeFormat = saved;
+    }
+  };
+  it('falls back to its own short wording in every language', () => {
+    withoutRtf(() => {
+      assert.equal(formatAge('2026-10-02T11:59:50Z', 'en', now), 'now');
+      assert.equal(formatAge('2026-10-02T11:55:00Z', 'en', now), '5 min ago');
+      assert.equal(formatAge('2026-10-02T09:00:00Z', 'nb', now), 'for 3 t siden');
+      assert.equal(formatAge('2026-09-30T12:00:00Z', 'so', now), '2 maalmood ka hor');
+      assert.match(formatAge('2026-08-01T12:00:00Z', 'en', now), /2026/);
+    });
+  });
+});
+
 describe('pickLocale', () => {
   it('maps Norwegian variants to nb', () => {
     assert.equal(pickLocale(['nn-NO']), 'nb');
