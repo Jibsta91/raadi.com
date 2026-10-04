@@ -65,6 +65,8 @@ test('a seller promotes a listing: pay, get a receipt, rank first in search', as
     const text = ((await msg.json()) as { Text: string }).Text;
     expect(text).toMatch(/Promoted listing for 7 days: NOK\s?49\.00 \(incl\. VAT NOK\s?9\.80\)/);
   }).toPass({ timeout: 60_000 });
+  // Clean up: test listings would otherwise pile up against the 50-listing quota.
+  await page.request.delete(`/api/v1/listings/${id}`, { headers: { origin } });
 });
 
 test('a declined payment leaves the listing unpromoted and offers a retry', async ({ page }) => {
@@ -91,4 +93,5 @@ test('a declined payment leaves the listing unpromoted and offers a retry', asyn
     timeout: 30_000,
   });
   await expect(page.getByTestId('order-retry')).toBeVisible();
+  await page.request.delete(`/api/v1/listings/${id}`, { headers: { origin } });
 });

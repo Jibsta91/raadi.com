@@ -2,16 +2,10 @@
 
 import type { Listing, Media } from '@raadi/api-client';
 import {
-  BODY_TYPES,
+  ATTRIBUTE_FIELDS,
+  attributePayload as toAttributes,
   CATEGORIES,
-  CONDITIONS,
-  DRIVETRAINS,
-  EMPLOYMENT_TYPES,
-  FUELS,
-  GEARBOXES,
-  OWNERSHIPS,
   PLACES,
-  PROPERTY_TYPES,
   type Category,
 } from '@raadi/catalog';
 import { Button } from '@raadi/ui';
@@ -21,36 +15,7 @@ import { type FormEvent, type ReactNode, useId, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { CATEGORY_ICONS, SUBCATEGORY_ICONS } from '@/lib/taxonomy-icons';
 
-type Field =
-  | { key: string; kind: 'select'; options: readonly string[]; required: boolean }
-  | { key: string; kind: 'text'; required: boolean }
-  | { key: string; kind: 'number'; required: boolean; min?: number; max?: number; unit?: string };
-
-/** The attribute inputs per category (mirrors attributeSchemas in @raadi/catalog). */
-const FIELDS: Record<Category, Field[]> = {
-  torget: [{ key: 'condition', kind: 'select', options: CONDITIONS, required: true }],
-  bil: [
-    { key: 'make', kind: 'text', required: true },
-    { key: 'model', kind: 'text', required: true },
-    { key: 'year', kind: 'number', required: true, min: 1900, max: new Date().getFullYear() + 1 },
-    { key: 'mileageKm', kind: 'number', required: true, min: 0, unit: 'km' },
-    { key: 'fuel', kind: 'select', options: FUELS, required: true },
-    { key: 'gearbox', kind: 'select', options: GEARBOXES, required: true },
-    { key: 'bodyType', kind: 'select', options: BODY_TYPES, required: false },
-    { key: 'drivetrain', kind: 'select', options: DRIVETRAINS, required: false },
-  ],
-  eiendom: [
-    { key: 'propertyType', kind: 'select', options: PROPERTY_TYPES, required: true },
-    { key: 'areaM2', kind: 'number', required: true, min: 1, unit: 'm²' },
-    { key: 'bedrooms', kind: 'number', required: false, min: 0 },
-    { key: 'ownership', kind: 'select', options: OWNERSHIPS, required: false },
-  ],
-  jobb: [
-    { key: 'employer', kind: 'text', required: true },
-    { key: 'employmentType', kind: 'select', options: EMPLOYMENT_TYPES, required: true },
-  ],
-  reise: [{ key: 'guests', kind: 'number', required: true, min: 1, max: 50 }],
-};
+const FIELDS = ATTRIBUTE_FIELDS;
 
 const PLACES_BY_NAME = [...PLACES].sort((a, b) => a.name.localeCompare(b.name, 'nb'));
 const POLICY_CODES = [
@@ -132,14 +97,7 @@ export function ListingForm({
   }
 
   function attributePayload(): Record<string, string | number> {
-    if (!category) return {};
-    const out: Record<string, string | number> = {};
-    for (const f of FIELDS[category]) {
-      const raw = attributes[f.key]?.trim() ?? '';
-      if (raw === '') continue;
-      out[f.key] = f.kind === 'number' ? Number(raw) : raw;
-    }
-    return out;
+    return category ? toAttributes(category, attributes) : {};
   }
 
   async function submit(e: FormEvent<HTMLFormElement>) {

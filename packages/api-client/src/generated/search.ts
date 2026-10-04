@@ -159,6 +159,10 @@ export interface operations {
                 bedroomsMax?: number;
                 guestsMin?: number;
                 guestsMax?: number;
+                /** @description Only listings published after this time (exclusive); saved searches use it */
+                publishedAfter?: string;
+                /** @description Only listings published at or before this time */
+                publishedBefore?: string;
                 priceMin?: number;
                 priceMax?: number;
                 /** @description Place id (centre of a radius search) */

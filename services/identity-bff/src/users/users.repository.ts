@@ -94,6 +94,8 @@ export class UsersRepository {
       await this.outbox(client, id, 'no.raadi.identity.user.preferences_changed.v1', {
         userId: id,
         changed: Object.keys(patch).filter((k) => patch[k as keyof typeof patch] !== undefined),
+        // Notifications writes e-mails and pushes in this language.
+        ...(patch.locale ? { locale: rows[0].locale as 'nb' | 'en' | 'so' } : {}),
       });
       return toProfile(rows[0]);
     });

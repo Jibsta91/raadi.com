@@ -30,3 +30,5 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0023](0023-domain-dns-and-tls.md)                | Domain raadiso.com at GoDaddy, Let's Encrypt by DNS-01; brand "Raadiso"         | Accepted |
 | [0024](0024-category-pages-and-filters.md)        | Categories like FINN: category pages, filters per category, guided new listing  | Accepted |
 | [0025](0025-push-notifications.md)                | Push notifications: Expo push behind the notifications queue, local mock        | Accepted |
+| [0026](0026-favourites-and-saved-searches.md)     | Favourites and saved searches: a `saved` service, alerts as events              | Accepted |
+| [0027](0027-reports-and-blocking.md)              | Reports and blocking: listings' moderators' queue, blocks in messaging          | Accepted |

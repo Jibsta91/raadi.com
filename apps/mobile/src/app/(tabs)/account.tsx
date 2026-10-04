@@ -7,6 +7,7 @@ import { fill, useI18n } from '../../i18n';
 import { languageNames } from '../../i18n/messages';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { useAuth } from '../../lib/auth/context';
+import { config } from '../../lib/config';
 import type { Locale } from '../../lib/format';
 import {
   fonts,
@@ -150,10 +151,28 @@ export default function Account() {
             {fill(m.auth.signedInAs, { email: auth.user.email ?? auth.user.name ?? '' })}
           </Body>
           <Button
+            testID="account-new-listing"
+            variant="ink"
+            label={m.sell.title}
+            onPress={() => router.push('/listings/new')}
+          />
+          <Button
             testID="my-listings"
             variant="secondary"
             label={m.account.myListings}
             onPress={() => router.push('/my-listings')}
+          />
+          <Button
+            testID="favourites"
+            variant="secondary"
+            label={m.favourites.title}
+            onPress={() => router.push('/favourites')}
+          />
+          <Button
+            testID="saved-searches"
+            variant="secondary"
+            label={m.savedSearches.title}
+            onPress={() => router.push('/saved-searches')}
           />
           <Button
             testID="logout"
@@ -188,7 +207,21 @@ export default function Account() {
           testID="locale"
           label={m.account.language}
           value={locale}
-          onChange={setLocale}
+          onChange={(next) => {
+            setLocale(next);
+            // Signed in: save it to the profile too, so e-mails and pushes use it.
+            if (auth.status === 'signedIn') {
+              void auth
+                .fetch(
+                  new Request(`${config.apiBaseUrl}/api/v1/identity/me`, {
+                    method: 'PATCH',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ locale: next }),
+                  }),
+                )
+                .catch(() => undefined);
+            }
+          }}
           options={LOCALES.map((l) => ({ value: l, label: languageNames[l] }))}
         />
       </View>

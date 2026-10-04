@@ -155,7 +155,15 @@ components:
         id: { type: string, format: uuid }
         kind:
           type: string
-          enum: [listing_removed, review_received, listing_promoted]
+          enum:
+            [
+              listing_removed,
+              review_received,
+              listing_promoted,
+              favourite_price_drop,
+              favourite_sold,
+              saved_search_match,
+            ]
           description: The client renders the localized text from the kind and params.
         params:
           type: object

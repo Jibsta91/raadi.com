@@ -70,6 +70,33 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ConversationPage' }
         '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/messaging/conversations/{id}/block:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [messaging]
+      operationId: blockCounterpart
+      summary: Block the other person in this conversation (no more messages from them, anywhere)
+      responses:
+        '200':
+          description: The conversation, now closed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conversation' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [messaging]
+      operationId: unblockCounterpart
+      summary: Unblock the other person in this conversation
+      responses:
+        '200':
+          description: The conversation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conversation' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /api/v1/messaging/conversations/{id}:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
@@ -198,8 +225,26 @@ components:
         sentAt: { type: string, format: date-time }
     ConversationFields:
       type: object
-      required: [id, role, listing, counterpart, lastMessage, unread, createdAt, lastMessageAt]
+      required:
+        [
+          id,
+          role,
+          listing,
+          counterpart,
+          lastMessage,
+          unread,
+          blockedByMe,
+          canMessage,
+          createdAt,
+          lastMessageAt,
+        ]
       properties:
+        blockedByMe: { type: boolean, description: The caller blocked the other person (ADR-0027) }
+        canMessage:
+          type: boolean
+          description: >-
+            False when either side blocked the other. The blocked side is not told which; sending then
+            answers 422 conversation_closed.
         id: { type: string, format: uuid }
         role: { type: string, enum: [buyer, seller], description: The caller's role }
         listing:

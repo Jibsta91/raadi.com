@@ -19,7 +19,10 @@
     "signup": "Opprett konto",
     "account": "Konto",
     "accountMenu": "Kontomeny",
-    "categories": "Kategorier"
+    "categories": "Kategorier",
+    "favourites": "Favoritter",
+    "savedSearches": "Lagrede søk",
+    "moderation": "Moderering"
   },
   "home": {
     "heroTitle": "Finn det. Selg det. <brand>Raadiso.</brand>",
@@ -453,7 +456,12 @@
       "listing_unavailable": "Denne annonsen er ikke lenger tilgjengelig.",
       "rate_limited": "Du sender for raskt. Vent litt og prøv igjen.",
       "generic": "Meldingen kunne ikke sendes. Prøv igjen."
-    }
+    },
+    "block": "Blokker {name}",
+    "blockConfirm": "Blokkere {name}? Dere kan ikke lenger sende meldinger til hverandre.",
+    "blockedByMe": "Du har blokkert {name}. Ingen av dere kan sende flere meldinger.",
+    "closed": "Du kan ikke lenger sende meldinger i denne samtalen.",
+    "unblock": "Opphev blokkering"
   },
   "notifications": {
     "title": "Varsler",
@@ -462,7 +470,10 @@
     "kinds": {
       "listing_removed": "Annonsen «{title}» ble fjernet av en moderator fordi den bryter reglene for markedsplassen.",
       "review_received": "Du har fått en ny omtale: {rating} av 5 stjerner.",
-      "listing_promoted": "Annonsen din er nå fremhevet i {days} dager. Kvitteringen ligger i e-posten din."
+      "listing_promoted": "Annonsen din er nå fremhevet i {days} dager. Kvitteringen ligger i e-posten din.",
+      "favourite_price_drop": "En favoritt har fått lavere pris: nå {priceNok} kr (før {previousPriceNok} kr).",
+      "favourite_sold": "En av favorittene dine er solgt.",
+      "saved_search_match": "{count} nye annonser passer et lagret søk."
     },
     "settings": {
       "title": "Varsler om nye meldinger",
@@ -645,5 +656,62 @@
       }
     },
     "newListing": "Legg ut annonse i {category}"
+  },
+  "favourites": {
+    "title": "Favoritter",
+    "intro": "Annonser du har lagret. Du får beskjed når prisen går ned eller noe blir solgt.",
+    "empty": "Trykk på hjertet på en annonse for å lagre den her.",
+    "browse": "Finn noe å like",
+    "add": "Lagre som favoritt",
+    "remove": "Fjern fra favoritter",
+    "unavailable": "Favorittene er midlertidig utilgjengelige. Prøv igjen om litt."
+  },
+  "savedSearches": {
+    "title": "Lagrede søk",
+    "intro": "Vi sjekker søkene dine jevnlig og sier fra når nye annonser passer.",
+    "empty": "Søk etter noe og trykk «Lagre søk», så får du varsel om nye treff.",
+    "browse": "Gå til søket",
+    "save": "Lagre søk",
+    "saved": "Søket er lagret",
+    "error": "Kunne ikke lagre, prøv igjen",
+    "alertsOn": "Varsler på",
+    "alertsOff": "Varsler av",
+    "delete": "Slett søket",
+    "new": "{count} nye",
+    "near": "Nær {place} ({km} km)",
+    "untitled": "Lagret søk",
+    "unavailable": "Lagrede søk er midlertidig utilgjengelige. Prøv igjen om litt."
+  },
+  "report": {
+    "open": "Rapporter annonsen",
+    "title": "Hva er galt med annonsen?",
+    "reasons": {
+      "fraud": "Svindel eller forsøk på svindel",
+      "prohibited": "Ulovlig eller forbudt vare",
+      "offensive": "Støtende innhold",
+      "wrong_category": "Feil kategori",
+      "other": "Noe annet"
+    },
+    "comment": "Kommentar (valgfritt)",
+    "send": "Send til moderatorene",
+    "cancel": "Avbryt",
+    "thanks": "Takk! Moderatorene ser på annonsen.",
+    "error": "Kunne ikke sende. Prøv igjen."
+  },
+  "moderation": {
+    "title": "Moderering",
+    "intro": "Annonser brukerne har rapportert, de mest rapporterte først.",
+    "empty": "Ingen åpne rapporter. Bra!",
+    "count": "{count, plural, one {# rapport} other {# rapporter}}",
+    "since": "siden {date}",
+    "remove": "Fjern annonsen",
+    "dismiss": "Avvis rapportene",
+    "confirmRemove": "Fjerne annonsen? Eieren får beskjed.",
+    "status": {
+      "sold": "solgt",
+      "deleted": "fjernet",
+      "active": "aktiv"
+    },
+    "unavailable": "Moderering er midlertidig utilgjengelig."
   }
 }

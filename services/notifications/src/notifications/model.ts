@@ -1,8 +1,22 @@
 import { z } from 'zod';
 
-export type NotificationKind = 'listing_removed' | 'review_received' | 'listing_promoted';
-export type EmailKind = 'new_message' | 'listing_removed' | 'payment_receipt';
-export type PushKind = 'new_message' | 'listing_removed' | 'review_received' | 'listing_promoted';
+export type NotificationKind =
+  | 'listing_removed'
+  | 'review_received'
+  | 'listing_promoted'
+  | 'favourite_price_drop'
+  | 'favourite_sold'
+  | 'saved_search_match';
+export type EmailKind =
+  'new_message' | 'listing_removed' | 'payment_receipt' | 'saved_search_match';
+export type PushKind =
+  | 'new_message'
+  | 'listing_removed'
+  | 'review_received'
+  | 'listing_promoted'
+  | 'favourite_price_drop'
+  | 'favourite_sold'
+  | 'saved_search_match';
 export type Locale = 'nb' | 'en' | 'so';
 
 export interface NotificationRow {
@@ -90,6 +104,11 @@ export function pushPath(kind: PushKind, refId: string): string {
       return `/listings/${refId}`;
     case 'review_received':
       return '/account';
+    case 'favourite_price_drop':
+    case 'favourite_sold':
+      return `/listings/${refId}`;
+    case 'saved_search_match':
+      return `/saved-searches/${refId}`;
   }
 }
 
@@ -102,6 +121,9 @@ const LINKS: Record<NotificationKind, (row: NotificationRow) => string> = {
   // The recipient's own trust profile, where the new review is listed.
   review_received: (row) => `/users/${row.user_id}`,
   listing_promoted: (row) => `/listings/${row.ref_id}`,
+  favourite_price_drop: (row) => `/listings/${row.ref_id}`,
+  favourite_sold: (row) => `/listings/${row.ref_id}`,
+  saved_search_match: (row) => `/my/saved-searches?open=${row.ref_id}`,
 };
 
 export function toNotification(row: NotificationRow): Notification {

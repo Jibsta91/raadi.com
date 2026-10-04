@@ -1,11 +1,13 @@
 import {
   Body,
+  Delete,
   Controller,
   Get,
   HttpCode,
   Param,
   ParseUUIDPipe,
   Post,
+  Put,
   Query,
   Req,
   Res,
@@ -55,6 +57,17 @@ export class MessagingController {
     @Query(new ZodValidationPipe(pageSchema)) page: z.infer<typeof pageSchema>,
   ) {
     return this.messaging.inbox(req.principal!, page.limit, page.offset);
+  }
+
+  /** Block the other person in this conversation; their messages stop, in every conversation. */
+  @Put('conversations/:id/block')
+  block(@Req() req: AuthenticatedRequest, @Param('id', uuid) id: string) {
+    return this.messaging.block(req.principal!, id);
+  }
+
+  @Delete('conversations/:id/block')
+  unblock(@Req() req: AuthenticatedRequest, @Param('id', uuid) id: string) {
+    return this.messaging.unblock(req.principal!, id);
   }
 
   @Get('conversations/:id')

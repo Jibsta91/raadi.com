@@ -14,6 +14,39 @@ lists the changes since 0.3.0-alpha.2; the alpha entries below cover the rest of
 
 ### Added
 
+- Favourites and saved searches (ADR-0026): a heart on every listing, a Favourites page and app screen, and
+  "Save search" on the results. You hear about it (in the app, as a push, and for saved searches at most one
+  e-mail a day) when a favourite gets cheaper or is sold, or a saved search has new matches. New service:
+  `saved`.
+- Search accepts `publishedAfter` and `publishedBefore`.
+- Sell from the app: category and subcategory tiles, then the same fields as the website, with photos from
+  the camera or the photo library (`expo-image-picker`). The form fields per category now live in
+  `@raadi/catalog/attributes`, shared by the website and the app.
+- Report a listing (reason and comment) on the website and in the app; moderators work a queue at
+  `/moderation`, where removing a listing resolves its reports (ADR-0027).
+- Block someone from a conversation: no more messages either way, in any conversation; the blocked person only
+  sees that the conversation is closed. Unblock at any time (ADR-0027).
+
+- The app's search has each category's own filters (makes, fuel, body type, ranges for year, mileage, area
+  and price) in a filter sheet.
+
+### Changed
+
+- E-mails and pushes come in the language chosen on the website or in the app: the choice is saved to the
+  profile, and `preferences_changed` events carry the new language (optional field). The app remembers its
+  language setting.
+- The app shows no push banner for the conversation that is already open.
+- The e2e suite signs each demo user in once per run and reuses the sessions, and tests delete the listings
+  they create.
+
+## [0.3.0] — 2026-10-04
+
+Phase 3 is done: messaging, notifications (e-mail, push, in-app), reviews and BankID verification, payments
+for promoted listings, and the Raadiso app (Expo) with push notifications, tested on an iPhone. This entry
+lists the changes since 0.3.0-alpha.2; the alpha entries below cover the rest of the phase.
+
+### Added
+
 - Push notifications in the app: new messages, removed listings, reviews and promotions, sent through Expo's
   push service from the notifications queue. Taps open the right screen, and message pushes can be switched off
   in the app and on the website. Development uses push-mock (`http://push.raadi.localhost/messages`) and stays

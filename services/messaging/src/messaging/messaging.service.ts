@@ -13,6 +13,7 @@ import {
   type Conversation,
   type ConversationDetail,
   type Message,
+  counterpartOf,
   type StartConversation,
   toConversation,
   toMessage,
@@ -26,7 +27,10 @@ const sent = meter.createCounter('raadi.messaging.messages_sent', {
   description: 'Messages sent, by whether they opened a new conversation',
 });
 const refused = meter.createCounter('raadi.messaging.refused', {
-  description: 'Conversation starts refused, by reason',
+  description: 'Messages refused, by reason',
+});
+const blocks = meter.createCounter('raadi.messaging.blocks', {
+  description: 'People blocked and unblocked (ADR-0027)',
 });
 
 @Injectable()
@@ -52,6 +56,7 @@ export class MessagingService {
     const existing = await this.repo.findByListingAndBuyer(input.listingId, principal.sub);
     let result: Sent & { created: boolean };
     if (existing) {
+      await this.refuseIfBlocked(principal.sub, existing.seller_id);
       const appended = await this.repo.send(existing.id, principal.sub, input.body);
       result = { ...appended!, created: false };
     } else {
@@ -60,6 +65,7 @@ export class MessagingService {
         this.refuse('own_listing', 'You cannot message yourself.');
       if (contact.status !== 'active')
         this.refuse('listing_unavailable', 'This listing is no longer available.');
+      await this.refuseIfBlocked(principal.sub, contact.ownerId);
       result = await this.repo.start(
         {
           listingId: contact.listingId,
@@ -84,6 +90,9 @@ export class MessagingService {
   }
 
   async send(principal: Principal, conversationId: string, body: string): Promise<Message> {
+    const entry = await this.repo.inboxEntry(conversationId, principal.sub);
+    if (!entry) throw new NotFoundException('Conversation not found');
+    await this.refuseIfBlocked(principal.sub, counterpartOf(entry, principal.sub));
     const result = await this.repo.send(conversationId, principal.sub, body);
     if (!result) throw new NotFoundException('Conversation not found');
     await this.announce(result);
@@ -133,6 +142,23 @@ export class MessagingService {
       .catch((err: unknown) => this.logger.warn({ err }, 'read receipt not published'));
   }
 
+  /** Blocks the other person in this conversation (everywhere, not only here). */
+  async block(principal: Principal, conversationId: string): Promise<Conversation> {
+    const entry = await this.repo.inboxEntry(conversationId, principal.sub);
+    if (!entry) throw new NotFoundException('Conversation not found');
+    await this.repo.block(principal.sub, counterpartOf(entry, principal.sub));
+    blocks.add(1, { action: 'block' });
+    return this.conversation(conversationId, principal.sub);
+  }
+
+  async unblock(principal: Principal, conversationId: string): Promise<Conversation> {
+    const entry = await this.repo.inboxEntry(conversationId, principal.sub);
+    if (!entry) throw new NotFoundException('Conversation not found');
+    await this.repo.unblock(principal.sub, counterpartOf(entry, principal.sub));
+    blocks.add(1, { action: 'unblock' });
+    return this.conversation(conversationId, principal.sub);
+  }
+
   async unread(principal: Principal): Promise<{ count: number }> {
     return { count: await this.repo.unreadTotal(principal.sub) };
   }
@@ -155,6 +181,15 @@ export class MessagingService {
         message,
       })
       .catch((err: unknown) => this.logger.warn({ err }, 'live delivery not published'));
+  }
+
+  /**
+   * Either side blocked the other: the conversation is closed. The same answer for both, so the
+   * blocked person does not learn that they were blocked.
+   */
+  private async refuseIfBlocked(userId: string, otherId: string): Promise<void> {
+    if (await this.repo.blockedBetween(userId, otherId))
+      this.refuse('conversation_closed', 'You can no longer send messages in this conversation.');
   }
 
   private refuse(code: string, message: string): never {

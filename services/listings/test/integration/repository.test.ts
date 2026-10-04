@@ -4,12 +4,14 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { after, before, describe, it } from 'node:test';
+import { imgproxySigner } from '@raadi/service-kit';
 import pg from 'pg';
 import { GenericContainer, type StartedTestContainer, Wait } from 'testcontainers';
 import {
   ListingsRepository,
   VersionConflictError,
 } from '../../src/listings/listings.repository.js';
+import { ReportsService } from '../../src/listings/reports.js';
 
 let container: StartedTestContainer;
 let pool: pg.Pool;
@@ -122,5 +124,77 @@ describe('ListingsRepository', () => {
     const batch = [input(), input()];
     assert.equal((await repo.createMany(batch)).length, 2);
     assert.equal((await repo.createMany(batch)).length, 0);
+  });
+});
+
+describe('reports (ADR-0027)', () => {
+  const signer = imgproxySigner('aa'.repeat(32), 'bb'.repeat(32));
+
+  it('queues reports per listing, updates a repeated report, and refuses own listings', async () => {
+    const repo = new ListingsRepository(pool);
+    const reports = new ReportsService(pool, signer);
+    const listing = input();
+    await repo.create(listing);
+    const [a, b] = [randomUUID(), randomUUID()];
+    assert.deepEqual(
+      await reports.report(a, listing.id, { reason: 'fraud', comment: 'Ber om forskudd' }),
+      {
+        created: true,
+      },
+    );
+    assert.deepEqual(await reports.report(a, listing.id, { reason: 'prohibited', comment: '' }), {
+      created: false,
+    });
+    await reports.report(b, listing.id, { reason: 'prohibited', comment: 'Ulovlig vare' });
+    await assert.rejects(
+      reports.report(listing.ownerId, listing.id, { reason: 'other', comment: '' }),
+      /own listing/,
+    );
+    await assert.rejects(
+      reports.report(a, randomUUID(), { reason: 'other', comment: '' }),
+      /not found/,
+    );
+
+    const item = (await reports.queue(50)).items.find((i) => i.listing.id === listing.id)!;
+    assert.equal(item.count, 2);
+    assert.deepEqual(item.reasons, { prohibited: 2 });
+    assert.deepEqual(
+      item.comments.map((c) => c.comment),
+      ['Ulovlig vare'],
+    );
+    assert.equal(item.listing.sellerName, 'Kari N.');
+  });
+
+  it('closes reports when dismissed or when a moderator removes the listing', async () => {
+    const repo = new ListingsRepository(pool);
+    const reports = new ReportsService(pool, signer);
+    const moderator = randomUUID();
+    const [fine, bad] = [input(), input()];
+    await repo.create(fine);
+    await repo.create(bad);
+    await reports.report(randomUUID(), fine.id, { reason: 'other', comment: '' });
+    await reports.report(randomUUID(), bad.id, { reason: 'fraud', comment: '' });
+
+    assert.equal(await reports.close(fine.id, moderator, 'dismissed'), 1);
+    await repo.softDelete(bad.id, 'moderation');
+    await repo.resolveReports(bad.id, moderator);
+
+    const open = (await reports.queue(100)).items.map((i) => i.listing.id);
+    assert.ok(!open.includes(fine.id) && !open.includes(bad.id));
+    const { rows } = await pool.query<{ status: string }>(
+      'SELECT status FROM reports WHERE listing_id = $1',
+      [bad.id],
+    );
+    assert.deepEqual(
+      rows.map((r) => r.status),
+      ['resolved'],
+    );
+    // A new report after a dismissal opens a fresh one.
+    assert.deepEqual(
+      await reports.report(randomUUID(), fine.id, { reason: 'other', comment: '' }),
+      {
+        created: true,
+      },
+    );
   });
 });

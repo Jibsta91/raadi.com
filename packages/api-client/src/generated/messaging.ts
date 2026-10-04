@@ -26,6 +26,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/messaging/conversations/{id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Block the other person in this conversation (no more messages from them, anywhere) */
+        put: operations["blockCounterpart"];
+        post?: never;
+        /** Unblock the other person in this conversation */
+        delete: operations["unblockCounterpart"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/messaging/conversations/{id}": {
         parameters: {
             query?: never;
@@ -157,6 +177,10 @@ export interface components {
             sentAt: string;
         };
         ConversationFields: {
+            /** @description The caller blocked the other person (ADR-0027) */
+            blockedByMe: boolean;
+            /** @description False when either side blocked the other. The blocked side is not told which; sending then answers 422 conversation_closed. */
+            canMessage: boolean;
             /** Format: uuid */
             id: string;
             /**
@@ -304,6 +328,54 @@ export interface operations {
             422: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
+        };
+    };
+    blockCounterpart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The conversation, now closed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    unblockCounterpart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The conversation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
         };
     };
     conversation: {

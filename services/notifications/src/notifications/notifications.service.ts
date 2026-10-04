@@ -158,6 +158,58 @@ export class NotificationsService {
         emails.add(1, { kind: 'payment_receipt', outcome: 'queued' });
         return;
       }
+      case 'no.raadi.identity.user.registered.v1':
+        await this.repo.once(parsed.id, (tx) =>
+          tx.saveLocale(parsed.data.userId, parsed.data.locale),
+        );
+        return;
+      case 'no.raadi.identity.user.preferences_changed.v1': {
+        const { userId, locale } = parsed.data;
+        if (locale) await this.repo.once(parsed.id, (tx) => tx.saveLocale(userId, locale));
+        return;
+      }
+      case 'no.raadi.saved.alert.v1': {
+        // Favourites and saved searches (ADR-0026): in the app, as a push, and (saved
+        // searches only) at most one e-mail a day per search.
+        const { userId, kind, listingId, savedSearchId, count, priceNok, previousPriceNok } =
+          parsed.data;
+        await this.repo.once(parsed.id, async (tx) => {
+          if (kind === 'search_match' && savedSearchId && count) {
+            await tx.notifyMatches(userId, savedSearchId, count);
+            const push = await tx.queuePush({
+              userId,
+              kind: 'saved_search_match',
+              refId: savedSearchId,
+              params: { count: String(count) },
+              throttleSeconds: 3600,
+            });
+            pushes.add(1, { kind: 'saved_search_match', outcome: push });
+            const queued = await tx.queueEmail({
+              userId,
+              kind: 'saved_search_match',
+              refId: savedSearchId,
+              params: { count: String(count) },
+              throttleMinutes: 24 * 60,
+            });
+            emails.add(1, { kind: 'saved_search_match', outcome: queued ? 'queued' : 'throttled' });
+            created.add(1, { kind: 'saved_search_match' });
+          } else if ((kind === 'price_drop' || kind === 'sold') && listingId) {
+            const notice = kind === 'price_drop' ? 'favourite_price_drop' : 'favourite_sold';
+            const params: Record<string, string> =
+              kind === 'price_drop'
+                ? {
+                    priceNok: String(priceNok ?? ''),
+                    previousPriceNok: String(previousPriceNok ?? ''),
+                  }
+                : {};
+            await tx.notify(userId, notice, listingId, params);
+            const push = await tx.queuePush({ userId, kind: notice, refId: listingId, params });
+            pushes.add(1, { kind: notice, outcome: push });
+            created.add(1, { kind: notice });
+          }
+        });
+        return;
+      }
       default:
         return;
     }
@@ -179,14 +231,18 @@ export class NotificationsService {
         await this.repo.finish('emails', email.id, 'skipped', 'no deliverable address');
         return void emails.add(1, { kind: email.kind, outcome: 'skipped' });
       }
-      const base = `${this.cfg.env.PUBLIC_BASE_URL}/${recipient.locale}`;
+      // The language chosen on the website or in the app wins over Keycloak's.
+      const locale = (await this.repo.locale(email.user_id)) ?? recipient.locale;
+      const base = `${this.cfg.env.PUBLIC_BASE_URL}/${locale}`;
       const action =
         email.kind === 'new_message'
           ? `${base}/messages/${email.ref_id}`
           : email.kind === 'payment_receipt'
             ? `${base}/listings/${email.ref_id}`
-            : `${base}/my/listings`;
-      const rendered = renderEmail(email.kind, recipient.locale, email.params, {
+            : email.kind === 'saved_search_match'
+              ? `${base}/my/saved-searches?open=${email.ref_id}`
+              : `${base}/my/listings`;
+      const rendered = renderEmail(email.kind, locale, email.params, {
         action,
         settings: `${base}/notifications`,
       });
@@ -229,7 +285,8 @@ export class NotificationsService {
   private async push(push: PushRow): Promise<void> {
     try {
       const tokens = await this.repo.deviceTokens(push.user_id);
-      const locale = tokens.length ? await this.directory.locale(push.user_id) : null;
+      const known = tokens.length ? await this.directory.locale(push.user_id) : null;
+      const locale = known && ((await this.repo.locale(push.user_id)) ?? known);
       if (!tokens.length || !locale) {
         await this.repo.finish(
           'pushes',

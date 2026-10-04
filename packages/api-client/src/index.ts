@@ -21,6 +21,7 @@ import type {
   components as PaymentsComponents,
   paths as PaymentsPaths,
 } from './generated/payments';
+import type { components as SavedComponents, paths as SavedPaths } from './generated/saved';
 import type { components as TrustComponents, paths as TrustPaths } from './generated/trust';
 
 export type {
@@ -30,6 +31,7 @@ export type {
   MessagingPaths,
   NotificationsPaths,
   PaymentsPaths,
+  SavedPaths,
   SearchPaths,
   TrustPaths,
 };
@@ -79,6 +81,12 @@ export type ReviewInput = TrustComponents['schemas']['ReviewInput'];
 export type RatingSummary = TrustComponents['schemas']['RatingSummary'];
 export type Eligibility = TrustComponents['schemas']['Eligibility'];
 
+// Saved (favourites and saved searches)
+export type Favourite = SavedComponents['schemas']['Favourite'];
+export type FavouritePage = SavedComponents['schemas']['FavouritePage'];
+export type SavedSearch = SavedComponents['schemas']['SavedSearch'];
+export type SavedSearchInput = SavedComponents['schemas']['SavedSearchInput'];
+
 // Payments (promoted listings)
 export type PaymentProduct = PaymentsComponents['schemas']['Product'];
 export type PaymentOrder = PaymentsComponents['schemas']['Order'];
@@ -102,3 +110,4 @@ export const createNotificationsClient = (options: ClientOptions) =>
 export const createTrustClient = (options: ClientOptions) => createClient<TrustPaths>(options);
 export const createPaymentsClient = (options: ClientOptions) =>
   createClient<PaymentsPaths>(options);
+export const createSavedClient = (options: ClientOptions) => createClient<SavedPaths>(options);

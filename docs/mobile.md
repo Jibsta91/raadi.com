@@ -57,6 +57,21 @@ Notes:
 - Metro runs in a container, where file changes on the host don't always arrive. After editing app code,
   reload in Expo Go (shake → Reload) or run `./raadi restart expo`.
 
+## Selling from the app
+
+"Selg" on the home screen (or "Ny annonse" on the account screen) opens the same flow as the website:
+category tiles, subcategory tiles, then photos, title and description, the category's details (from
+`@raadi/catalog/attributes`, shared with the website's form), price and place. Photos come from the camera
+or the photo library (`expo-image-picker`) and go to the media service like the website's uploads, where
+they are virus-scanned and re-encoded without location data. In the web build (`/m`) there is no camera
+button; the picker opens a file chooser.
+
+## Search filters
+
+With a category chosen, search shows a "Filtre" chip that opens the category's own filters: chips for the
+facets (car make, fuel, gearbox, body type, property type, …) and "from – to" fields for year, mileage,
+area, bedrooms, guests and price. The lists come from `@raadi/catalog/attributes`, like the website's.
+
 ## Push notifications
 
 After sign-in the app asks for permission and registers its Expo push token with the notifications

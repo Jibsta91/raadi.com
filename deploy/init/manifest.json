@@ -38,6 +38,7 @@
     "notifications_db_password",
     "kafka_notifications_password",
     "notifications_kc_client_secret",
+    "saved_db_password",
     "trust_db_password",
     "kafka_trust_password",
     "trust_bankid_client_secret",
@@ -46,7 +47,8 @@
     "payments_vipps_client_secret",
     "payments_vipps_subscription_key",
     "payments_vipps_webhook_secret",
-    "kafka_listings_password"
+    "kafka_listings_password",
+    "kafka_saved_password"
   ],
   "fileConsumers": {
     "postgres": {
@@ -88,7 +90,8 @@
         "kafka_monitor_password",
         "kafka_notifications_password",
         "kafka_trust_password",
-        "kafka_listings_password"
+        "kafka_listings_password",
+        "kafka_saved_password"
       ]
     },
     "kafka-connect": {
@@ -251,6 +254,17 @@
         "bankid_client_secret": "trust_bankid_client_secret",
         "identity_pepper": "trust_identity_pepper"
       }
+    },
+    "saved": {
+      "uid": 65532,
+      "database": "saved",
+      "migrations": "saved",
+      "outbox": true,
+      "openbao": {
+        "db_password": "saved_db_password",
+        "kafka_password": "kafka_saved_password"
+      },
+      "shared": ["imgproxy"]
     },
     "payments": {
       "uid": 65532,

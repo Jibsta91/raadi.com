@@ -48,3 +48,9 @@
 Expo push (mobile) arrives with the mobile app as another channel of the same queue. The language comes from
 Keycloak's locale attribute; the in-app language preference (identity-bff) is not synced there yet. E-mail
 logs (`emails` table, no addresses) are kept for auditing; retention is part of the Phase 4 GDPR work.
+
+## Update (2026-10-04)
+
+The language the user picks on the website or in the app is now saved to their profile. identity-bff's
+`preferences_changed` event carries it (an optional `locale` field), and notifications keeps it per user and
+prefers it over Keycloak's locale attribute, which remains the fallback.

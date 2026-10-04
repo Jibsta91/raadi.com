@@ -1,32 +1,83 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { SearchHit } from '@raadi/api-client';
+import type { FacetValue, SearchHit } from '@raadi/api-client';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListingTile } from '../../components/listing-card';
+import { filterKeys, SearchFilters } from '../../components/search-filters';
 import { Body, Chip, Field, LargeTitle, Status } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
 import { unwrap, useApi } from '../../lib/api';
 import { CATEGORIES, isCategory, isSubcategoryOf, subcategoriesOf } from '../../lib/categories';
-import { space, tabBarSpace, useTheme } from '../../theme';
+import { useAuth } from '../../lib/auth/context';
+import { fonts, radius, space, tabBarSpace, useTheme } from '../../theme';
 
 const PAGE_SIZE = 24;
+
+/** "Save search" (ADR-0026): saved at once; signed-out users are asked to sign in first. */
+function SaveSearch({ params, name }: { params: Record<string, string>; name: string }) {
+  const { m } = useI18n();
+  const api = useApi();
+  const auth = useAuth();
+  const theme = useTheme();
+  const key = JSON.stringify(params);
+  const [state, setState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  useEffect(() => setState('idle'), [key]);
+
+  const save = async () => {
+    if (auth.status !== 'signedIn') return void auth.signIn();
+    setState('saving');
+    const { response } = await api.saved
+      .POST('/api/v1/saved/searches', { body: { name, params, notify: true } })
+      .catch(() => ({ response: { ok: false } }));
+    setState(response.ok ? 'saved' : 'idle');
+  };
+
+  return (
+    <Pressable
+      role="button"
+      testID="save-search"
+      disabled={state !== 'idle'}
+      onPress={() => void save()}
+      style={[styles.save, { borderColor: theme.border, backgroundColor: theme.surface }]}
+    >
+      <Ionicons
+        name={state === 'saved' ? 'bookmark' : 'bookmark-outline'}
+        size={16}
+        color={theme.text}
+      />
+      <Text style={[styles.saveText, { color: theme.text }]}>
+        {state === 'saved' ? m.savedSearches.saved : m.savedSearches.save}
+      </Text>
+    </Pressable>
+  );
+}
 
 export default function Search() {
   const { m } = useI18n();
   const api = useApi();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ q?: string; category?: string; subcategory?: string }>();
-  const query = params.q ?? '';
-  const category = isCategory(params.category) ? params.category : undefined;
-  const subcategory = isSubcategoryOf(category, params.subcategory)
-    ? params.subcategory
-    : undefined;
+  const params = useLocalSearchParams<Record<string, string | string[]>>();
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const query = one(params.q) ?? '';
+  const rawCategory = one(params.category);
+  const category = isCategory(rawCategory) ? rawCategory : undefined;
+  const rawSubcategory = one(params.subcategory);
+  const subcategory = isSubcategoryOf(category, rawSubcategory) ? rawSubcategory : undefined;
+  // Other filters (from a saved search made on the website: fuel, yearMin, …) pass straight through.
+  const extra = Object.fromEntries(
+    Object.entries(params)
+      .filter(([k]) => !['q', 'category', 'subcategory', 'page', 'pageSize'].includes(k))
+      .map(([k, v]) => [k, one(v) ?? ''])
+      .filter(([, v]) => v !== ''),
+  );
+  const extraKey = JSON.stringify(extra);
   const [text, setText] = useState(query);
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [total, setTotal] = useState<number>();
+  const [makes, setMakes] = useState<FacetValue[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -39,7 +90,7 @@ export default function Search() {
     setHits([]);
     setTotal(undefined);
     setPage(1);
-  }, [query, category, subcategory, nonce]);
+  }, [query, category, subcategory, extraKey, nonce]);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,13 +99,21 @@ export default function Search() {
     api.search
       .GET('/api/v1/search/listings', {
         params: {
-          query: { q: query || undefined, category, subcategory, page, pageSize: PAGE_SIZE },
+          query: {
+            ...JSON.parse(extraKey),
+            q: query || undefined,
+            category,
+            subcategory,
+            page,
+            pageSize: PAGE_SIZE,
+          },
         },
       })
       .then((res) => {
         const result = unwrap(res);
         if (cancelled || !result) return;
         setTotal(result.total);
+        setMakes(result.facets.make ?? []);
         setHits((prev) => (page === 1 ? result.items : [...prev, ...result.items]));
       })
       .catch(() => !cancelled && setError(true))
@@ -62,7 +121,7 @@ export default function Search() {
     return () => {
       cancelled = true;
     };
-  }, [api, query, category, subcategory, page, nonce]);
+  }, [api, query, category, subcategory, extraKey, page, nonce]);
 
   const more = () => {
     if (!loading && total !== undefined && hits.length < total) setPage((p) => p + 1);
@@ -112,7 +171,14 @@ export default function Search() {
                 testID={`filter-${id}`}
                 label={m.categories[id]}
                 selected={category === id}
-                onPress={() => router.setParams({ category: id, subcategory: '' })}
+                onPress={() =>
+                  router.setParams({
+                    category: id,
+                    subcategory: '',
+                    // Another category's filters do not apply here.
+                    ...Object.fromEntries(category ? filterKeys(category).map((k) => [k, '']) : []),
+                  })
+                }
               />
             ))}
           </ScrollView>
@@ -124,6 +190,13 @@ export default function Search() {
               style={styles.bleed}
               testID="subcategory-filters"
             >
+              <SearchFilters
+                category={category}
+                value={extra}
+                makes={makes}
+                total={total}
+                onApply={(filters) => router.setParams(filters)}
+              />
               {subcategoriesOf(category).map((id) => (
                 <Chip
                   key={id}
@@ -135,11 +208,33 @@ export default function Search() {
               ))}
             </ScrollView>
           ) : null}
-          {total !== undefined ? (
-            <Body muted testID="search-total">
-              {fill(m.search.results, { count: total })}
-            </Body>
-          ) : null}
+          <View style={styles.totalRow}>
+            {total !== undefined ? (
+              <Body muted testID="search-total">
+                {fill(m.search.results, { count: total })}
+              </Body>
+            ) : (
+              <View />
+            )}
+            {query || category ? (
+              <SaveSearch
+                params={{
+                  ...extra,
+                  ...(query ? { q: query } : {}),
+                  ...(category ? { category } : {}),
+                  ...(subcategory ? { subcategory } : {}),
+                }}
+                name={[
+                  query ? `«${query}»` : '',
+                  category ? m.categories[category] : '',
+                  subcategory ? m.taxonomy.subcategories[subcategory] : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+                  .slice(0, 80)}
+              />
+            ) : null}
+          </View>
         </View>
       }
       ListEmptyComponent={
@@ -161,4 +256,15 @@ const styles = StyleSheet.create({
   header: { gap: space.lg, marginBottom: space.md },
   bleed: { marginHorizontal: -(space.xl - 4) },
   chips: { gap: space.sm, paddingHorizontal: space.xl - 4 },
+  totalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  save: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: space.md,
+    height: 36,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  saveText: { fontFamily: fonts.semibold, fontSize: 14 },
 });

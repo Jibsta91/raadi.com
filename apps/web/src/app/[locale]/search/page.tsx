@@ -15,9 +15,11 @@ import { ListingCard } from '@/components/listings/listing-card';
 import { ActiveFilters, facetChips, paramChip } from '@/components/search/active-filters';
 import { FacetGroup } from '@/components/search/facet-group';
 import { FilterPanel } from '@/components/search/filter-panel';
+import { SaveSearchButton } from '@/components/saved/saved-search-controls';
 import { SearchControls } from '@/components/search/search-controls';
 import { Link } from '@/i18n/navigation';
-import { searchListings, ServiceUnavailableError } from '@/lib/api';
+import { savedSearches, searchListings, ServiceUnavailableError } from '@/lib/api';
+import { sameSearch, savedParams, searchLabels } from '@/lib/search-labels';
 import { flatParams, makeLabel } from '@/lib/format';
 import { CATEGORY_FILTERS, href, type Params, selected, withParams } from '@/lib/search-params';
 
@@ -102,6 +104,17 @@ export default async function SearchPage({
     }
   };
   const filtered = Object.keys(current).some((k) => k !== 'q' && k !== 'sort' && k !== 'page');
+  // Saving a search keeps its filters; "Lagre søk" shows once there is something to keep.
+  const toSave = savedParams(current);
+  const canSave = Object.keys(toSave).length > 0;
+  const [saveName, alreadySaved] = canSave
+    ? await Promise.all([
+        searchLabels(toSave).then((l) => l.join(' · ').slice(0, 80) || t('savedSearches.untitled')),
+        savedSearches()
+          .then((list) => (list ?? []).some((x) => sameSearch(x.params, toSave)))
+          .catch(() => false),
+      ])
+    : ['', false];
   const facets = [
     'category',
     ...(only || subcategories.length ? ['subcategory'] : []),
@@ -260,9 +273,14 @@ export default async function SearchPage({
             clearLabel={t('search.clearFilters')}
             removeLabel={(filter) => t('search.removeFilter', { filter })}
           />
-          <h1 id="results-heading" className="text-xl font-semibold" data-testid="result-count">
-            {t('search.results', { total: result.total })}
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 id="results-heading" className="text-xl font-semibold" data-testid="result-count">
+              {t('search.results', { total: result.total })}
+            </h1>
+            {canSave ? (
+              <SaveSearchButton name={saveName} params={toSave} initialSaved={alreadySaved} />
+            ) : null}
+          </div>
           {result.items.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
               <SearchX aria-hidden className="size-10" />

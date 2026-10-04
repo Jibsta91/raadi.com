@@ -44,6 +44,8 @@ export class NotificationWorkers implements OnApplicationBootstrap, OnApplicatio
         topicFor('listing'),
         topicFor('review'),
         topicFor('payment'),
+        topicFor('alert'),
+        topicFor('user'),
       ],
       deadLetterTopic: 'raadi.dlq',
       handle: (event) => notifications.onEvent(event),

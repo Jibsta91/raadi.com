@@ -6,6 +6,7 @@ import { PG_POOL } from '../tokens.js';
 import type {
   Device,
   EmailKind,
+  Locale,
   EmailRow,
   NotificationKind,
   NotificationRow,
@@ -120,6 +121,17 @@ export class NotificationsRepository {
     return { emailMessages: rows[0]!.email_messages, pushMessages: rows[0]!.push_messages };
   }
 
+  // ------------------------------------------------------------- language
+
+  /** The language the user chose (website or app), if any. */
+  async locale(userId: string): Promise<Locale | null> {
+    const { rows } = await this.pool.query<{ locale: Locale }>(
+      'SELECT locale FROM user_locales WHERE user_id = $1',
+      [userId],
+    );
+    return rows[0]?.locale ?? null;
+  }
+
   // ------------------------------------------------------------- devices
 
   /** Registers (or moves) an app installation's push token to this user. */
@@ -222,6 +234,30 @@ export class Tx {
       `INSERT INTO notifications (id, user_id, kind, ref_id, params) VALUES ($1, $2, $3, $4, $5)`,
       [randomUUID(), userId, kind, refId, params],
     );
+  }
+
+  async saveLocale(userId: string, locale: Locale): Promise<void> {
+    await this.client.query(
+      `INSERT INTO user_locales (user_id, locale) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO UPDATE SET locale = EXCLUDED.locale, updated_at = now()`,
+      [userId, locale],
+    );
+  }
+
+  /**
+   * Adds new saved-search matches to the user's unread notice for that search
+   * (one growing notice instead of one per check), or creates the notice.
+   */
+  async notifyMatches(userId: string, savedSearchId: string, count: number): Promise<void> {
+    const { rowCount } = await this.client.query(
+      `UPDATE notifications
+          SET params = jsonb_set(params, '{count}', to_jsonb(((params->>'count')::int + $3)::text)),
+              created_at = now()
+        WHERE user_id = $1 AND kind = 'saved_search_match' AND ref_id = $2 AND read_at IS NULL`,
+      [userId, savedSearchId, count],
+    );
+    if (!rowCount)
+      await this.notify(userId, 'saved_search_match', savedSearchId, { count: String(count) });
   }
 
   /**

@@ -1,0 +1,280 @@
+openapi: 3.1.0
+info:
+  title: Raadi saved
+  version: 1.0.0
+  description: |
+    Favourites and saved searches for the signed-in user (ADR-0026). A favourite keeps a
+    listing on the user's list, also after it is sold, and raises an alert when its price
+    drops or it is sold. A saved search is repeated regularly; new matches raise an alert.
+    Alerts become in-app notices, pushes and e-mails in the notifications service.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: http://raadi.localhost
+    description: Local development through the gateway
+tags:
+  - name: favourites
+  - name: saved-searches
+security: [{ bearer: [] }, { session: [] }]
+paths:
+  /api/v1/saved/favourites:
+    get:
+      tags: [favourites]
+      operationId: listFavourites
+      summary: The caller's favourites, newest first (sold listings included, deleted ones left out)
+      parameters:
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 48 },
+          }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: A page of favourites
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FavouritePage' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/saved/favourites/ids:
+    get:
+      tags: [favourites]
+      operationId: favouriteIds
+      summary: Ids of the caller's favourite listings (for hearts on listing cards)
+      responses:
+        '200':
+          description: Listing ids
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [ids]
+                properties:
+                  ids: { type: array, items: { type: string, format: uuid } }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/saved/favourites/{listingId}:
+    parameters:
+      - { name: listingId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [favourites]
+      operationId: addFavourite
+      summary: Add a listing to the caller's favourites (idempotent)
+      responses:
+        '204': { description: Added }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422':
+          description: own_listing or too_many_favourites
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [favourites]
+      operationId: removeFavourite
+      summary: Remove a listing from the caller's favourites (idempotent)
+      responses:
+        '204': { description: Removed }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/saved/searches:
+    get:
+      tags: [saved-searches]
+      operationId: listSavedSearches
+      summary: The caller's saved searches, newest first
+      responses:
+        '200':
+          description: Saved searches
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/SavedSearch' } }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [saved-searches]
+      operationId: saveSearch
+      summary: Save a search (the same search saved again returns the existing one)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SavedSearchInput' }
+      responses:
+        '200':
+          description: Already saved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SavedSearch' }
+        '201':
+          description: Saved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SavedSearch' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422':
+          description: too_many_saved_searches
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+  /api/v1/saved/searches/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      tags: [saved-searches]
+      operationId: updateSavedSearch
+      summary: Rename a saved search or switch its alerts on or off
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                name: { type: string, minLength: 1, maxLength: 80 }
+                notify: { type: boolean }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SavedSearch' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [saved-searches]
+      operationId: deleteSavedSearch
+      summary: Delete a saved search
+      responses:
+        '204': { description: Deleted }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /api/v1/saved/searches/{id}/seen:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [saved-searches]
+      operationId: markSavedSearchSeen
+      summary: The caller opened the search; reset its new-matches count
+      responses:
+        '204': { description: Reset }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      operationId: liveness
+      security: []
+      responses: { '200': { description: Process is alive } }
+  /readyz:
+    get:
+      operationId: readiness
+      security: []
+      responses:
+        '200': { description: Ready }
+        '503': { description: Not ready }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    session: { type: apiKey, in: cookie, name: raadi_sid }
+  responses:
+    Problem:
+      description: RFC 9457 problem details
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Favourite:
+      type: object
+      additionalProperties: false
+      required: [listingId, savedAt, listing]
+      properties:
+        listingId: { type: string, format: uuid }
+        savedAt: { type: string, format: date-time }
+        listing:
+          type: object
+          additionalProperties: false
+          required: [id, title, priceNok, status, category, subcategory, location, publishedAt]
+          properties:
+            id: { type: string, format: uuid }
+            title: { type: string }
+            priceNok: { type: [integer, 'null'] }
+            status: { type: string, enum: [active, sold, deleted] }
+            category: { type: string }
+            subcategory: { type: string }
+            location:
+              type: object
+              additionalProperties: false
+              required: [name, county, countyName]
+              properties:
+                name: { type: string }
+                county: { type: string }
+                countyName: { type: string }
+            image:
+              type: object
+              additionalProperties: false
+              required: [thumb, card]
+              properties:
+                thumb: { type: string }
+                card: { type: string }
+            publishedAt: { type: string, format: date-time }
+    FavouritePage:
+      type: object
+      additionalProperties: false
+      required: [total, limit, offset, items]
+      properties:
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+        items: { type: array, items: { $ref: '#/components/schemas/Favourite' } }
+    SavedSearchInput:
+      type: object
+      additionalProperties: false
+      required: [name, params]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        params:
+          type: object
+          description: >-
+            The search API's query parameters as strings (q, category, fuel, priceMax, near, …). Paging,
+            sorting and time windows are ignored.
+          additionalProperties: { type: string, maxLength: 400 }
+        notify: { type: boolean, default: true, description: Alert me about new matches }
+    SavedSearch:
+      type: object
+      additionalProperties: false
+      required: [id, name, params, notify, newCount, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        params:
+          type: object
+          additionalProperties: { type: string }
+        notify: { type: boolean }
+        newCount: { type: integer, minimum: 0, description: New matches since last opened }
+        createdAt: { type: string, format: date-time }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        traceId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path: { type: string }
+              message: { type: string }
+              code: { type: string }

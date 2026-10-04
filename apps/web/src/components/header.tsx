@@ -1,5 +1,16 @@
 import { Button } from '@raadi/ui';
-import { Bell, LayoutList, LogOut, MessageCircle, Plus, Search, UserRound } from 'lucide-react';
+import {
+  Bell,
+  Bookmark,
+  Heart,
+  LayoutList,
+  LogOut,
+  MessageCircle,
+  Plus,
+  Search,
+  ShieldCheck,
+  UserRound,
+} from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { unreadCount, unreadNotifications } from '@/lib/api';
@@ -129,6 +140,35 @@ export async function Header({ locale }: { locale: string }) {
                 <LayoutList aria-hidden />
                 {t('myListings')}
               </Link>
+              <Link
+                href="/my/favourites"
+                prefetch={false}
+                data-testid="nav-favourites"
+                className={menuItem}
+              >
+                <Heart aria-hidden />
+                {t('favourites')}
+              </Link>
+              <Link
+                href="/my/saved-searches"
+                prefetch={false}
+                data-testid="nav-saved-searches"
+                className={menuItem}
+              >
+                <Bookmark aria-hidden />
+                {t('savedSearches')}
+              </Link>
+              {session.user.roles.includes('moderator') ? (
+                <Link
+                  href="/moderation"
+                  prefetch={false}
+                  data-testid="nav-moderation"
+                  className={menuItem}
+                >
+                  <ShieldCheck aria-hidden />
+                  {t('moderation')}
+                </Link>
+              ) : null}
               <form action="/auth/logout" method="post" className="mt-1 border-t pt-1">
                 <button type="submit" data-testid="nav-logout" className={menuItem}>
                   <LogOut aria-hidden />
