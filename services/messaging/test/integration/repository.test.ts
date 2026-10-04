@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { after, before, describe, it } from 'node:test';
+import { imgproxySigner, type Principal } from '@raadi/service-kit';
 import pg from 'pg';
 import { GenericContainer, type StartedTestContainer, Wait } from 'testcontainers';
 import {
@@ -120,5 +121,55 @@ describe('MessagingRepository', () => {
   it('refuses a conversation with yourself', async () => {
     const id = randomUUID();
     await assert.rejects(repo.start(conversationFor({ sellerId: id, buyerId: id }), 'hi'));
+  });
+
+  it('closes conversations both ways when someone blocks, without telling the blocked person why', async () => {
+    const { MessagingService } = await import('../../src/messaging/messaging.service.js');
+    const input = conversationFor();
+    const listings = {
+      contact: async () => ({
+        listingId: input.listingId,
+        title: input.listingTitle,
+        imageId: null,
+        ownerId: input.sellerId,
+        sellerName: input.sellerName,
+        status: 'active',
+      }),
+    };
+    const realtime = { publish: async () => undefined };
+    const service = new MessagingService(
+      repo,
+      listings as never,
+      realtime as never,
+      imgproxySigner('aa'.repeat(32), 'bb'.repeat(32)),
+    );
+    const who = (sub: string, name = 'Ola Nordmann') =>
+      ({ sub, roles: ['user'], claims: { name } }) as unknown as Principal;
+    const buyer = who(input.buyerId);
+    const seller = who(input.sellerId, 'Kari Nordmann');
+    const { conversation } = await service.start(buyer, 't', {
+      listingId: input.listingId,
+      body: 'Hei!',
+    });
+    assert.equal(conversation.canMessage, true);
+
+    const blocked = await service.block(seller, conversation.id);
+    assert.equal(blocked.blockedByMe, true);
+    assert.equal(blocked.canMessage, false);
+    const theirView = await service.detail(buyer, conversation.id, 20);
+    assert.equal(theirView.canMessage, false);
+    assert.equal(theirView.blockedByMe, false, 'the blocked person is not told who closed it');
+
+    for (const attempt of [
+      () => service.send(buyer, conversation.id, 'Hallo?'),
+      () => service.start(buyer, 't', { listingId: input.listingId, body: 'Hallo?' }),
+      () => service.send(seller, conversation.id, 'Nei'),
+    ]) {
+      await assert.rejects(attempt(), /no longer send messages/);
+    }
+
+    await service.unblock(seller, conversation.id);
+    const message = await service.send(buyer, conversation.id, 'Er den ledig?');
+    assert.equal(message.body, 'Er den ledig?');
   });
 });

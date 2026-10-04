@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NoPhoto } from '../../components/no-photo';
+import { ReportListing } from '../../components/report-listing';
 import { Badge, Body, Button, Field, Glass, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import type { Messages } from '../../i18n/messages';
@@ -311,7 +312,9 @@ export default function ListingScreen() {
           <Body>{item.description}</Body>
           {item.viewer?.isOwner ? (
             <Badge label={m.listing.yours} tone="neutral" testID="own-listing" />
-          ) : null}
+          ) : (
+            <ReportListing listingId={item.id} />
+          )}
         </View>
       </ScrollView>
 

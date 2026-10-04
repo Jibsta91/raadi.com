@@ -25,6 +25,7 @@ import { InternalListingsController } from './listings/internal.controller.js';
 import { ListingsController } from './listings/listings.controller.js';
 import { ListingsRepository } from './listings/listings.repository.js';
 import { ListingsService, SIGNER } from './listings/listings.service.js';
+import { ReportsController, ReportsService } from './listings/reports.js';
 import { APP_CONFIG, PG_POOL } from './tokens.js';
 
 @Module({})
@@ -55,7 +56,12 @@ export class AppModule {
           skipIf: (ctx) => ctx.getClass() === HealthController,
         }),
       ],
-      controllers: [ListingsController, InternalListingsController, HealthController],
+      controllers: [
+        ListingsController,
+        ReportsController,
+        InternalListingsController,
+        HealthController,
+      ],
       providers: [
         { provide: APP_CONFIG, useValue: cfg },
         { provide: PG_POOL, useFactory: () => createPgPool(env, secrets.db_password, 'listings') },
@@ -75,6 +81,7 @@ export class AppModule {
         },
         ListingsRepository,
         ListingsService,
+        ReportsService,
         PromotionsConsumer,
         Lifecycle,
         { provide: APP_GUARD, useClass: ThrottlerGuard },

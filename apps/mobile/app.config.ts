@@ -32,6 +32,14 @@ const config: ExpoConfig = {
     'expo-web-browser',
     // Push notifications (ADR-0025); development builds get the entitlements from this plugin.
     ['expo-notifications', { color: '#3b5bff' }],
+    // Photos for new listings: library and camera (development builds get the permission texts).
+    [
+      'expo-image-picker',
+      {
+        photosPermission: 'Raadiso uses your photos for the listings you create.',
+        cameraPermission: 'Raadiso uses the camera to take photos for your listings.',
+      },
+    ],
   ],
   experiments: {
     // Only the web export lives under a sub-path; Expo Go serves the app from the dev server's root.

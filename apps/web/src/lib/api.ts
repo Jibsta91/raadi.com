@@ -348,3 +348,21 @@ export async function markSavedSearchSeen(id: string): Promise<SavedSearch | nul
     .catch(() => undefined);
   return (await savedSearches().catch(() => null))?.find((s) => s.id === id) ?? null;
 }
+
+/** Open reports grouped by listing (moderators); null when not allowed. */
+export async function reportQueue() {
+  const token = await accessToken();
+  if (!token) return null;
+  const { data, response } = await createListingsClient({ baseUrl: env.listingsUrl }).GET(
+    '/api/v1/listings/moderation/reports',
+    {
+      params: { query: { limit: 50 } },
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-store',
+    },
+  );
+  if (data) return data.items;
+  if (response.status === 401 || response.status === 403) return null;
+  throw new ServiceUnavailableError(`listings returned ${response.status}`);
+}

@@ -8,6 +8,7 @@ import {
   MessageCircle,
   Plus,
   Search,
+  ShieldCheck,
   UserRound,
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
@@ -157,6 +158,17 @@ export async function Header({ locale }: { locale: string }) {
                 <Bookmark aria-hidden />
                 {t('savedSearches')}
               </Link>
+              {session.user.roles.includes('moderator') ? (
+                <Link
+                  href="/moderation"
+                  prefetch={false}
+                  data-testid="nav-moderation"
+                  className={menuItem}
+                >
+                  <ShieldCheck aria-hidden />
+                  {t('moderation')}
+                </Link>
+              ) : null}
               <form action="/auth/logout" method="post" className="mt-1 border-t pt-1">
                 <button type="submit" data-testid="nav-logout" className={menuItem}>
                   <LogOut aria-hidden />

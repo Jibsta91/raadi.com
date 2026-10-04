@@ -1,14 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListingFeature, ListingTile } from '../../components/listing-card';
 import { Chip, Field, Status, Title } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import { CATEGORIES } from '../../lib/categories';
 import { unwrap, useApi, useLoad } from '../../lib/api';
-import { fonts, space, tabBarSpace, useTheme } from '../../theme';
+import { fonts, radius, space, tabBarSpace, useTheme } from '../../theme';
 
 export default function Home() {
   const { m } = useI18n();
@@ -48,9 +48,20 @@ export default function Home() {
       refreshing={false}
       ListHeaderComponent={
         <View style={styles.header}>
-          <Text role="heading" aria-level={1} style={[styles.wordmark, { color: theme.text }]}>
-            raadiso<Text style={{ color: theme.accent }}>.</Text>
-          </Text>
+          <View style={styles.top}>
+            <Text role="heading" aria-level={1} style={[styles.wordmark, { color: theme.text }]}>
+              raadiso<Text style={{ color: theme.accent }}>.</Text>
+            </Text>
+            <Pressable
+              role="button"
+              testID="new-listing"
+              onPress={() => router.push('/listings/new')}
+              style={[styles.sell, { backgroundColor: theme.ink }]}
+            >
+              <Ionicons name="add" size={18} color={theme.inkText} />
+              <Text style={[styles.sellText, { color: theme.inkText }]}>{m.sell.cta}</Text>
+            </Pressable>
+          </View>
           <Field
             testID="home-search"
             value={q}
@@ -106,6 +117,16 @@ const styles = StyleSheet.create({
   row: { gap: space.md + 2, marginBottom: space.lg },
   header: { gap: space.lg + 2, marginBottom: space.md },
   wordmark: { fontFamily: fonts.displayHeavy, fontSize: 40, lineHeight: 44, letterSpacing: -1.8 },
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    height: 38,
+    paddingHorizontal: space.md + 2,
+    borderRadius: radius.pill,
+  },
+  sellText: { fontFamily: fonts.semibold, fontSize: 15 },
   bleed: { marginHorizontal: -(space.xl - 4) },
   chips: { gap: space.sm, paddingHorizontal: space.xl - 4 },
   section: { gap: space.md },

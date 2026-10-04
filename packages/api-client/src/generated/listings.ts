@@ -113,6 +113,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/listings/{id}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Report a listing to the moderators (ADR-0027); reporting again updates the open report */
+        post: operations["reportListing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/listings/moderation/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open reports grouped by listing, most reported first (moderators) */
+        get: operations["reportQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/listings/moderation/reports/{id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The listing is fine; close its open reports (moderators). Removing it resolves them instead. */
+        post: operations["dismissReports"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -217,6 +268,40 @@ export interface components {
             status: "active" | "sold";
             /** Format: uuid */
             imageId: string | null;
+        };
+        /** @enum {string} */
+        ReportReason: "fraud" | "prohibited" | "offensive" | "wrong_category" | "other";
+        ReportInput: {
+            reason: components["schemas"]["ReportReason"];
+            comment?: string;
+        };
+        ReportQueueItem: {
+            listing: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+                /** @enum {string} */
+                status: "active" | "sold" | "deleted";
+                sellerName: string;
+                image?: {
+                    thumb: string;
+                    card: string;
+                };
+            };
+            count: number;
+            /** @description Open reports per reason */
+            reasons: {
+                [key: string]: number;
+            };
+            /** @description The five most recent comments, without who wrote them */
+            comments: {
+                reason: components["schemas"]["ReportReason"];
+                comment: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            /** Format: date-time */
+            firstReportedAt: string;
         };
         Problem: {
             type: string;
@@ -450,6 +535,97 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    reportListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportInput"];
+            };
+        };
+        responses: {
+            /** @description Received */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        received: true;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            /** @description own_listing or too_many_reports */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reportQueue: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["ReportQueueItem"][];
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    dismissReports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Listing id */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Dismissed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
         };
     };
 }

@@ -27,7 +27,13 @@ const INBOX_SELECT = `
          (SELECT count(*) FROM messages m
            WHERE m.conversation_id = c.id AND m.sender_id <> $1
              AND m.created_at > CASE WHEN c.buyer_id = $1 THEN c.buyer_read_at ELSE c.seller_read_at END
-         ) AS unread
+         ) AS unread,
+         EXISTS (SELECT 1 FROM blocks b WHERE b.blocker_id = $1
+                    AND b.blocked_id = CASE WHEN c.buyer_id = $1 THEN c.seller_id ELSE c.buyer_id END
+         ) AS blocked_by_me,
+         EXISTS (SELECT 1 FROM blocks b WHERE b.blocked_id = $1
+                    AND b.blocker_id = CASE WHEN c.buyer_id = $1 THEN c.seller_id ELSE c.buyer_id END
+         ) AS blocked_by_them
     FROM conversations c
     LEFT JOIN LATERAL (
       SELECT body, sender_id, created_at FROM messages
@@ -169,6 +175,32 @@ export class MessagingRepository {
       [userId, conversationId],
     );
     return rows[0] ?? null;
+  }
+
+  // ------------------------------------------------------------ blocks
+
+  /** True if either person blocked the other. */
+  async blockedBetween(a: string, b: string): Promise<boolean> {
+    const { rowCount } = await this.pool.query(
+      `SELECT 1 FROM blocks WHERE (blocker_id = $1 AND blocked_id = $2)
+                               OR (blocker_id = $2 AND blocked_id = $1) LIMIT 1`,
+      [a, b],
+    );
+    return !!rowCount;
+  }
+
+  async block(blockerId: string, blockedId: string): Promise<void> {
+    await this.pool.query(
+      'INSERT INTO blocks (blocker_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [blockerId, blockedId],
+    );
+  }
+
+  async unblock(blockerId: string, blockedId: string): Promise<void> {
+    await this.pool.query('DELETE FROM blocks WHERE blocker_id = $1 AND blocked_id = $2', [
+      blockerId,
+      blockedId,
+    ]);
   }
 
   /** Newest first, at most `limit`, optionally only those sent before a time. */

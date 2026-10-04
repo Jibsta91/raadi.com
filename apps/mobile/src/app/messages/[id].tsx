@@ -16,7 +16,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NoPhoto } from '../../components/no-photo';
 import { Body, Button, Glass, noFocusRing, Status } from '../../components/ui';
-import { useI18n } from '../../i18n';
+import { fill, useI18n } from '../../i18n';
+import { confirm } from '../../lib/confirm';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { config } from '../../lib/config';
 import { formatAge } from '../../lib/format';
@@ -67,6 +68,9 @@ export default function ConversationScreen() {
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(false);
+  // Either side blocked the other (ADR-0027): no composer; the blocked side is not told why.
+  const [closed, setClosed] = useState(false);
+  const [blockedByMe, setBlockedByMe] = useState(false);
 
   const detail = useLoad(
     async () =>
@@ -88,6 +92,8 @@ export default function ConversationScreen() {
     if (!detail.data) return;
     setMessages(detail.data.messages);
     setHasMore(detail.data.hasMore);
+    setClosed(!detail.data.canMessage);
+    setBlockedByMe(detail.data.blockedByMe);
     markRead();
   }, [detail.data, markRead]);
 
@@ -129,6 +135,11 @@ export default function ConversationScreen() {
         atBottom.current = true;
         append(res.data);
         setDraft('');
+      } else if (
+        (res.error as { errors?: Array<{ code?: string }> } | undefined)?.errors?.[0]?.code ===
+        'conversation_closed'
+      ) {
+        setClosed(true);
       } else {
         setSendError(true);
       }
@@ -136,6 +147,29 @@ export default function ConversationScreen() {
       setSendError(true);
     } finally {
       setSending(false);
+    }
+  };
+
+  const setBlocked = async (block: boolean, name: string) => {
+    if (
+      block &&
+      !(await confirm(
+        fill(m.messages.block, { name }),
+        m.messages.blockConfirm,
+        m.messages.blockOk,
+        m.messages.cancel,
+      ))
+    )
+      return;
+    const path = { params: { path: { id } } };
+    const res = await (
+      block
+        ? api.messaging.PUT('/api/v1/messaging/conversations/{id}/block', path)
+        : api.messaging.DELETE('/api/v1/messaging/conversations/{id}/block', path)
+    ).catch(() => null);
+    if (res?.data) {
+      setClosed(!res.data.canMessage);
+      setBlockedByMe(res.data.blockedByMe);
     }
   };
 
@@ -157,7 +191,23 @@ export default function ConversationScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={90}
     >
-      <Stack.Screen options={{ title: conversation.counterpart.name }} />
+      <Stack.Screen
+        options={{
+          title: conversation.counterpart.name,
+          headerRight: () =>
+            blockedByMe ? null : (
+              <Pressable
+                role="button"
+                testID="block"
+                aria-label={fill(m.messages.block, { name: conversation.counterpart.name })}
+                hitSlop={8}
+                onPress={() => void setBlocked(true, conversation.counterpart.name)}
+              >
+                <Ionicons name="ban-outline" size={22} color={theme.muted} />
+              </Pressable>
+            ),
+        }}
+      />
       <Link href={`/listings/${conversation.listing.id}`} asChild>
         {/* Link asChild spreads props: one style object, not an array (see listing-card.tsx). */}
         <Pressable
@@ -216,40 +266,68 @@ export default function ConversationScreen() {
           {m.messages.errors.generic}
         </Body>
       ) : null}
-      <Glass
-        style={[
-          styles.composer,
-          { marginBottom: Math.max(insets.bottom, space.md) },
-          composerFocused ? { borderColor: theme.accent } : null,
-        ]}
-      >
-        <TextInput
-          testID="compose"
-          value={draft}
-          onChangeText={setDraft}
-          placeholder={m.messages.compose}
-          placeholderTextColor={theme.muted}
-          accessibilityLabel={m.messages.compose}
-          multiline
-          maxLength={2000}
-          onFocus={() => setComposerFocused(true)}
-          onBlur={() => setComposerFocused(false)}
-          style={[styles.composerInput, noFocusRing, { color: theme.text }]}
-        />
-        <Pressable
-          role="button"
-          testID="send"
-          aria-label={sending ? m.messages.sending : m.messages.send}
-          disabled={sending || draft.trim().length === 0}
-          onPress={() => void send()}
+      {closed ? (
+        <View
+          testID="thread-closed"
           style={[
-            styles.sendButton,
-            { backgroundColor: theme.accent, opacity: sending || !draft.trim() ? 0.5 : 1 },
+            styles.closed,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+              marginBottom: Math.max(insets.bottom, space.md),
+            },
           ]}
         >
-          <Ionicons name="arrow-up" size={22} color={theme.accentText} />
-        </Pressable>
-      </Glass>
+          <Body muted style={styles.small}>
+            {blockedByMe
+              ? fill(m.messages.blockedByMe, { name: conversation.counterpart.name })
+              : m.messages.closed}
+          </Body>
+          {blockedByMe ? (
+            <Button
+              testID="unblock"
+              variant="secondary"
+              label={m.messages.unblock}
+              onPress={() => void setBlocked(false, conversation.counterpart.name)}
+            />
+          ) : null}
+        </View>
+      ) : (
+        <Glass
+          style={[
+            styles.composer,
+            { marginBottom: Math.max(insets.bottom, space.md) },
+            composerFocused ? { borderColor: theme.accent } : null,
+          ]}
+        >
+          <TextInput
+            testID="compose"
+            value={draft}
+            onChangeText={setDraft}
+            placeholder={m.messages.compose}
+            placeholderTextColor={theme.muted}
+            accessibilityLabel={m.messages.compose}
+            multiline
+            maxLength={2000}
+            onFocus={() => setComposerFocused(true)}
+            onBlur={() => setComposerFocused(false)}
+            style={[styles.composerInput, noFocusRing, { color: theme.text }]}
+          />
+          <Pressable
+            role="button"
+            testID="send"
+            aria-label={sending ? m.messages.sending : m.messages.send}
+            disabled={sending || draft.trim().length === 0}
+            onPress={() => void send()}
+            style={[
+              styles.sendButton,
+              { backgroundColor: theme.accent, opacity: sending || !draft.trim() ? 0.5 : 1 },
+            ]}
+          >
+            <Ionicons name="arrow-up" size={22} color={theme.accentText} />
+          </Pressable>
+        </Glass>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -280,6 +358,13 @@ const styles = StyleSheet.create({
   },
   bubbleText: { fontFamily: fonts.body, fontSize: 16, lineHeight: 22 },
   time: { fontFamily: fonts.body, fontSize: 11, opacity: 0.75 },
+  closed: {
+    gap: space.sm,
+    marginHorizontal: space.lg,
+    padding: space.lg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',

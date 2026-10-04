@@ -475,6 +475,46 @@ expect_status 204 "a saved search can be deleted"
 login_as "$USER_EMAIL" && req DELETE "$PUBLIC/api/v1/listings/$fav_listing" -H "origin: $ORIGIN"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
+section "Reports and blocking (ADR-0027)"
+: > "$JAR"
+req POST "$PUBLIC/api/v1/listings/$kari_listing/reports" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"reason":"fraud"}'
+expect_status 401 "anonymous users cannot report"
+login_as "$OLA" || fail "login as ola"
+req POST "$PUBLIC/api/v1/listings/$kari_listing/reports" -H 'content-type: application/json' -H "origin: $ORIGIN" \
+  --data '{"reason":"fraud","comment":"Ber om betaling på forhånd (smoke)"}'
+expect_status 202 "a buyer reports a listing"
+req GET "$PUBLIC/api/v1/listings/mine?limit=1"
+req POST "$PUBLIC/api/v1/listings/$(json '.items[0].id')/reports" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"reason":"other"}'
+[[ "$status" == "422" && "$(json '.errors[0].code')" == "own_listing" ]] && ok "nobody reports their own listing" || fail "own report" "HTTP $status"
+req GET "$PUBLIC/api/v1/listings/moderation/reports"
+expect_status 403 "only moderators see the report queue"
+login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as moderator"
+req GET "$PUBLIC/api/v1/listings/moderation/reports"
+jq -e --arg id "$kari_listing" '.items[] | select(.listing.id == $id and .reasons.fraud >= 1)' "$BODY" >/dev/null \
+  && ok "the moderator sees the report, grouped by listing" || fail "report queue" "$(head -c 300 "$BODY")"
+req POST "$PUBLIC/api/v1/listings/moderation/reports/$kari_listing/dismiss" -H "origin: $ORIGIN"
+expect_status 204 "the moderator dismisses the reports"
+req GET "$PUBLIC/api/v1/listings/moderation/reports"
+! jq -e --arg id "$kari_listing" '.items[] | select(.listing.id == $id)' "$BODY" >/dev/null \
+  && ok "dismissed reports leave the queue" || fail "queue after dismiss"
+
+login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
+req PUT "$PUBLIC/api/v1/messaging/conversations/$conversation/block" -H "origin: $ORIGIN"
+[[ "$status" == "200" && "$(json '.blockedByMe')" == "true" && "$(json '.canMessage')" == "false" ]] \
+  && ok "the seller blocks the buyer" || fail "block" "HTTP $status $(head -c 200 "$BODY")"
+login_as "$OLA" || fail "login as ola"
+req POST "$PUBLIC/api/v1/messaging/conversations/$conversation/messages" -H 'content-type: application/json' \
+  -H "origin: $ORIGIN" --data '{"body":"Hallo?"}'
+[[ "$status" == "422" && "$(json '.errors[0].code')" == "conversation_closed" ]] \
+  && ok "the blocked buyer cannot write" || fail "blocked send" "HTTP $status"
+req GET "$PUBLIC/api/v1/messaging/conversations/$conversation"
+[[ "$(json '.canMessage')" == "false" && "$(json '.blockedByMe')" == "false" ]] \
+  && ok "the blocked buyer sees a closed conversation, not who closed it" || fail "blocked view"
+login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
+req DELETE "$PUBLIC/api/v1/messaging/conversations/$conversation/block" -H "origin: $ORIGIN"
+[[ "$status" == "200" && "$(json '.canMessage')" == "true" ]] && ok "the seller unblocks" || fail "unblock" "HTTP $status"
+req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
+
 section "Reviews and trust (eligibility, BankID mock)"
 : > "$JAR"
 req GET "$PUBLIC/api/v1/trust/me"

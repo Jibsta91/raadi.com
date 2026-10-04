@@ -3,16 +3,48 @@ import { domain, login, openAccountMenu } from './support.js';
 
 test.describe.configure({ mode: 'serial' });
 
-test('favourites: heart a listing, find it under Favourites, remove it', async ({ page }) => {
+test('favourites: heart a listing, find it under Favourites, remove it', async ({ browser }) => {
+  // Kari sells something (through the API with her session); Amina favourites it.
+  const seller = await browser.newPage();
+  await login(seller, `kari.nordmann@${domain}`);
+  const title = `Favoritt e2e ${Date.now().toString(36)}`;
+  const created = await seller.request.post('/api/v1/listings', {
+    headers: { origin: new URL(seller.url()).origin },
+    data: {
+      category: 'torget',
+      subcategory: 'hobby',
+      title,
+      description: 'Laget av e2e-testen for favoritter.',
+      priceNok: 250,
+      attributes: { condition: 'good' },
+      placeId: 'oslo',
+      imageIds: [],
+    },
+  });
+  expect(created.status()).toBe(201);
+  await seller.close();
+
+  const page = await browser.newPage();
   await login(page, `amina.hassan@${domain}`);
-  // Seeded cars: Amina owns none of the first results' sellers' listings in this category.
-  await page.goto('/en/search?category=bil&sort=newest');
-  const card = page.getByTestId('listing-card').first();
-  const title = await card.getByTestId('listing-card-title').innerText();
+  // New listings are searchable a moment after publishing (Kafka -> OpenSearch).
+  await expect(async () => {
+    await page.goto(`/en/search?q=${encodeURIComponent(title)}`);
+    await expect(page.getByTestId('listing-card')).toHaveCount(1, { timeout: 1_000 });
+  }).toPass({ timeout: 30_000 });
   const heart = page.getByTestId('favourite-toggle').first();
   await expect(heart).toHaveAttribute('aria-pressed', 'false');
+  // The heart turns red at once; wait for the server before reloading.
+  const saved = page.waitForResponse(
+    (r) => r.url().includes('/api/v1/saved/favourites/') && r.request().method() === 'PUT',
+  );
   await heart.click();
   await expect(heart).toHaveAttribute('aria-pressed', 'true');
+  expect((await saved).status()).toBe(204);
+  await page.reload();
+  await expect(page.getByTestId('favourite-toggle').first()).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
 
   await openAccountMenu(page);
   await page.getByTestId('nav-favourites').click();
@@ -25,12 +57,14 @@ test('favourites: heart a listing, find it under Favourites, remove it', async (
 
   // The heart on the listing page shows the same state; removing it empties the list again.
   await favourite.click();
-  const inline = page.getByTestId('favourite-toggle');
+  await expect(page).toHaveURL(/\/en\/listings\/[0-9a-f-]{36}$/);
+  const inline = page.getByTestId('listing-detail').getByTestId('favourite-toggle');
   await expect(inline).toHaveAttribute('aria-pressed', 'true');
   await inline.click();
   await expect(inline).toHaveAttribute('aria-pressed', 'false');
   await page.goto('/en/my/favourites');
   await expect(page.getByTestId('favourites').getByText(title, { exact: true })).toHaveCount(0);
+  await page.close();
 });
 
 test('saved searches: save a search, see it listed with its filters, open and delete it', async ({

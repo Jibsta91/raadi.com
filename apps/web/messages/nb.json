@@ -21,7 +21,8 @@
     "accountMenu": "Kontomeny",
     "categories": "Kategorier",
     "favourites": "Favoritter",
-    "savedSearches": "Lagrede søk"
+    "savedSearches": "Lagrede søk",
+    "moderation": "Moderering"
   },
   "home": {
     "heroTitle": "Finn det. Selg det. <brand>Raadiso.</brand>",
@@ -455,7 +456,12 @@
       "listing_unavailable": "Denne annonsen er ikke lenger tilgjengelig.",
       "rate_limited": "Du sender for raskt. Vent litt og prøv igjen.",
       "generic": "Meldingen kunne ikke sendes. Prøv igjen."
-    }
+    },
+    "block": "Blokker {name}",
+    "blockConfirm": "Blokkere {name}? Dere kan ikke lenger sende meldinger til hverandre.",
+    "blockedByMe": "Du har blokkert {name}. Ingen av dere kan sende flere meldinger.",
+    "closed": "Du kan ikke lenger sende meldinger i denne samtalen.",
+    "unblock": "Opphev blokkering"
   },
   "notifications": {
     "title": "Varsler",
@@ -675,5 +681,37 @@
     "near": "Nær {place} ({km} km)",
     "untitled": "Lagret søk",
     "unavailable": "Lagrede søk er midlertidig utilgjengelige. Prøv igjen om litt."
+  },
+  "report": {
+    "open": "Rapporter annonsen",
+    "title": "Hva er galt med annonsen?",
+    "reasons": {
+      "fraud": "Svindel eller forsøk på svindel",
+      "prohibited": "Ulovlig eller forbudt vare",
+      "offensive": "Støtende innhold",
+      "wrong_category": "Feil kategori",
+      "other": "Noe annet"
+    },
+    "comment": "Kommentar (valgfritt)",
+    "send": "Send til moderatorene",
+    "cancel": "Avbryt",
+    "thanks": "Takk! Moderatorene ser på annonsen.",
+    "error": "Kunne ikke sende. Prøv igjen."
+  },
+  "moderation": {
+    "title": "Moderering",
+    "intro": "Annonser brukerne har rapportert, de mest rapporterte først.",
+    "empty": "Ingen åpne rapporter. Bra!",
+    "count": "{count, plural, one {# rapport} other {# rapporter}}",
+    "since": "siden {date}",
+    "remove": "Fjern annonsen",
+    "dismiss": "Avvis rapportene",
+    "confirmRemove": "Fjerne annonsen? Eieren får beskjed.",
+    "status": {
+      "sold": "solgt",
+      "deleted": "fjernet",
+      "active": "aktiv"
+    },
+    "unavailable": "Moderering er midlertidig utilgjengelig."
   }
 }
