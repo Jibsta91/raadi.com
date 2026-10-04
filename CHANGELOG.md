@@ -6,6 +6,12 @@ Each release also has generated notes on GitHub.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-10-04
+
+Phase 3 is done: messaging, notifications (e-mail, push, in-app), reviews and BankID verification, payments
+for promoted listings, and the Raadiso app (Expo) with push notifications, tested on an iPhone. This entry
+lists the changes since 0.3.0-alpha.2; the alpha entries below cover the rest of the phase.
+
 ### Added
 
 - Favourites and saved searches (ADR-0026): a heart on every listing, a Favourites page and app screen, and
