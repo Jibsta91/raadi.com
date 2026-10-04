@@ -173,6 +173,15 @@ export class ListingsRepository {
    * Soft delete; emits `listing.deleted` so search and media can clean up and
    * the owner can be told when a moderator removed it.
    */
+  /** Marks a removed listing's open reports as resolved by the moderator (ADR-0027). */
+  async resolveReports(listingId: string, moderatorId: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE reports SET status = 'resolved', handled_by = $2, handled_at = now()
+        WHERE listing_id = $1 AND status = 'open'`,
+      [listingId, moderatorId],
+    );
+  }
+
   async softDelete(id: string, reason: 'owner' | 'moderation'): Promise<ListingRow | null> {
     return withTransaction(this.pool, async (client) => {
       const { rows } = await client.query<ListingRow>(

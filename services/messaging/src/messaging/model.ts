@@ -50,6 +50,8 @@ export interface InboxRow extends ConversationRow {
   last_sender_id: string | null;
   last_sent_at: Date | null;
   unread: string | number;
+  blocked_by_me: boolean;
+  blocked_by_them: boolean;
 }
 
 export interface MessageRow {
@@ -75,6 +77,10 @@ export interface Conversation {
   counterpart: { id: string; name: string };
   lastMessage: { body: string; fromMe: boolean; sentAt: string } | null;
   unread: number;
+  /** The viewer blocked the other person (and can unblock them). */
+  blockedByMe: boolean;
+  /** False when either side blocked the other; the blocked side is not told why (ADR-0027). */
+  canMessage: boolean;
   createdAt: string;
   lastMessageAt: string;
 }
@@ -128,6 +134,8 @@ export function toConversation(
           }
         : null,
     unread: Number(row.unread),
+    blockedByMe: row.blocked_by_me,
+    canMessage: !row.blocked_by_me && !row.blocked_by_them,
     createdAt: row.created_at.toISOString(),
     lastMessageAt: row.last_message_at.toISOString(),
   };

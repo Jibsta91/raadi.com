@@ -21,5 +21,14 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     locale: 'nb-NO',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    // One sign-in per demo user for the whole run (see specs/sessions.setup.ts).
+    { name: 'sessions', testMatch: /.*\.setup\.ts/, use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      dependencies: ['sessions'],
+      testIgnore: /.*\.setup\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
 });
