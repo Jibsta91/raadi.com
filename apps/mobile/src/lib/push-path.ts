@@ -8,3 +8,9 @@ export function safeAppPath(value: unknown): string | null {
   if (!/^\/[A-Za-z0-9\-._~/]*$/.test(value) || value.startsWith('//')) return null;
   return value;
 }
+
+/** True when a push points at the screen on show (the open conversation), so no banner is needed. */
+export function isCurrentScreen(url: unknown, currentPath: string): boolean {
+  const path = safeAppPath(url);
+  return !!path && !!currentPath && path.replace(/\/$/, '') === currentPath.replace(/\/$/, '');
+}

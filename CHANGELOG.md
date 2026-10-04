@@ -21,9 +21,17 @@ Each release also has generated notes on GitHub.
 - Block someone from a conversation: no more messages either way, in any conversation; the blocked person only
   sees that the conversation is closed. Unblock at any time (ADR-0027).
 
+- The app's search has each category's own filters (makes, fuel, body type, ranges for year, mileage, area
+  and price) in a filter sheet.
+
 ### Changed
 
-- The e2e suite signs each demo user in once per run and reuses the sessions.
+- E-mails and pushes come in the language chosen on the website or in the app: the choice is saved to the
+  profile, and `preferences_changed` events carry the new language (optional field). The app remembers its
+  language setting.
+- The app shows no push banner for the conversation that is already open.
+- The e2e suite signs each demo user in once per run and reuses the sessions, and tests delete the listings
+  they create.
 
 ## [0.3.0] — 2026-10-04
 

@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { COUNTIES, findPlace } from './places.js';
 import {
   BODY_TYPES,
-  CATEGORY_KEYS,
   CONDITIONS,
   DRIVETRAINS,
   EMPLOYMENT_TYPES,
@@ -12,7 +11,8 @@ import {
   PROPERTY_TYPES,
   RANGE_PARAMS,
   type RangeParam,
-} from './taxonomy.js';
+} from './attributes.js';
+import { CATEGORY_KEYS } from './categories.js';
 
 /**
  * The search API's query parameters (GET /api/v1/search/listings), shared by the

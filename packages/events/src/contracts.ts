@@ -47,6 +47,8 @@ export const contracts = {
   'no.raadi.identity.user.preferences_changed.v1': z.object({
     userId: uuid,
     changed: z.array(z.string()),
+    /** Added later (optional, BACKWARD compatible): the new language, when it changed. */
+    locale: z.enum(['nb', 'en', 'so']).optional(),
   }),
   'no.raadi.listings.listing.published.v1': z.object({ listing: listingSnapshot }),
   'no.raadi.listings.listing.updated.v1': z.object({ listing: listingSnapshot }),

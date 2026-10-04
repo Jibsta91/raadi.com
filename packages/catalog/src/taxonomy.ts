@@ -55,37 +55,3 @@ export const attributeSchemas = {
 } satisfies Record<Category, z.ZodType>;
 
 export type Attributes = { [C in Category]: z.infer<(typeof attributeSchemas)[C]> };
-
-/** Attribute keys exposed as search facets, per category. */
-export const FACET_ATTRIBUTES = {
-  torget: ['condition'],
-  bil: ['make', 'fuel', 'gearbox', 'bodyType', 'drivetrain'],
-  eiendom: ['propertyType', 'ownership'],
-  jobb: ['employmentType'],
-  reise: [],
-} as const satisfies Record<Category, readonly string[]>;
-
-export type FacetAttribute = (typeof FACET_ATTRIBUTES)[Category][number];
-
-/**
- * Numeric attributes searchable as a range, per category. Each becomes the
- * query parameters `<param>Min` and `<param>Max` (FINN-style "fra – til").
- */
-export const RANGE_ATTRIBUTES = {
-  torget: [],
-  bil: [
-    { param: 'year', field: 'year' },
-    { param: 'mileage', field: 'mileageKm' },
-  ],
-  eiendom: [
-    { param: 'area', field: 'areaM2' },
-    { param: 'bedrooms', field: 'bedrooms' },
-  ],
-  jobb: [],
-  reise: [{ param: 'guests', field: 'guests' }],
-} as const satisfies Record<Category, ReadonlyArray<{ param: string; field: string }>>;
-
-export type RangeParam = (typeof RANGE_ATTRIBUTES)[Category][number]['param'];
-export const RANGE_PARAMS = [
-  ...new Set(Object.values(RANGE_ATTRIBUTES).flatMap((r) => r.map((a) => a.param))),
-] as RangeParam[];

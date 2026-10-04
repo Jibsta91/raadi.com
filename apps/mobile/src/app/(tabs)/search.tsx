@@ -1,10 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { SearchHit } from '@raadi/api-client';
+import type { FacetValue, SearchHit } from '@raadi/api-client';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListingTile } from '../../components/listing-card';
+import { filterKeys, SearchFilters } from '../../components/search-filters';
 import { Body, Chip, Field, LargeTitle, Status } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
 import { unwrap, useApi } from '../../lib/api';
@@ -76,6 +77,7 @@ export default function Search() {
   const [text, setText] = useState(query);
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [total, setTotal] = useState<number>();
+  const [makes, setMakes] = useState<FacetValue[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -111,6 +113,7 @@ export default function Search() {
         const result = unwrap(res);
         if (cancelled || !result) return;
         setTotal(result.total);
+        setMakes(result.facets.make ?? []);
         setHits((prev) => (page === 1 ? result.items : [...prev, ...result.items]));
       })
       .catch(() => !cancelled && setError(true))
@@ -168,7 +171,14 @@ export default function Search() {
                 testID={`filter-${id}`}
                 label={m.categories[id]}
                 selected={category === id}
-                onPress={() => router.setParams({ category: id, subcategory: '' })}
+                onPress={() =>
+                  router.setParams({
+                    category: id,
+                    subcategory: '',
+                    // Another category's filters do not apply here.
+                    ...Object.fromEntries(category ? filterKeys(category).map((k) => [k, '']) : []),
+                  })
+                }
               />
             ))}
           </ScrollView>
@@ -180,6 +190,13 @@ export default function Search() {
               style={styles.bleed}
               testID="subcategory-filters"
             >
+              <SearchFilters
+                category={category}
+                value={extra}
+                makes={makes}
+                total={total}
+                onApply={(filters) => router.setParams(filters)}
+              />
               {subcategoriesOf(category).map((id) => (
                 <Chip
                   key={id}

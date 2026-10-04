@@ -22,7 +22,7 @@ test('favourites: heart a listing, find it under Favourites, remove it', async (
     },
   });
   expect(created.status()).toBe(201);
-  await seller.close();
+  const { id } = (await created.json()) as { id: string };
 
   const page = await browser.newPage();
   await login(page, `amina.hassan@${domain}`);
@@ -65,6 +65,11 @@ test('favourites: heart a listing, find it under Favourites, remove it', async (
   await page.goto('/en/my/favourites');
   await expect(page.getByTestId('favourites').getByText(title, { exact: true })).toHaveCount(0);
   await page.close();
+  // Clean up: test listings would otherwise pile up against the 50-listing quota.
+  await seller.request.delete(`/api/v1/listings/${id}`, {
+    headers: { origin: new URL(seller.url()).origin },
+  });
+  await seller.close();
 });
 
 test('saved searches: save a search, see it listed with its filters, open and delete it', async ({

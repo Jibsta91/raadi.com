@@ -92,4 +92,29 @@ test('app: sell something, with a photo, and land on the new listing', async ({ 
   await expect(page).toHaveURL(/\/m\/listings\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('listing-title')).toHaveText(title);
   await expect(page.getByTestId('own-listing')).toBeVisible();
+  // Clean up: test listings would otherwise pile up against the 50-listing quota.
+  const id = page.url().split('/').pop()!;
+  await page.request.delete(`/api/v1/listings/${id}`, {
+    headers: { origin: new URL(page.url()).origin },
+  });
+});
+
+test("app: a category's own filters narrow the results", async ({ page }) => {
+  await page.goto('/m/search?category=bil');
+  const results = page.getByTestId('search-results');
+  const total = results.getByTestId('search-total');
+  await expect(total).toBeVisible();
+  const before = Number((await total.innerText()).replace(/\D/g, ''));
+
+  await results.getByTestId('open-filters').click();
+  await page.getByTestId('filter-fuel-electric').click();
+  await page.getByTestId('filter-yearMin').fill('2015');
+  await page.getByTestId('filters-apply').click();
+
+  await expect(page).toHaveURL(/fuel=electric/);
+  await expect(page).toHaveURL(/yearMin=2015/);
+  await expect(results.getByTestId('open-filters')).toContainText('(2)');
+  await expect
+    .poll(async () => Number((await total.innerText()).replace(/\D/g, '')))
+    .toBeLessThan(before);
 });

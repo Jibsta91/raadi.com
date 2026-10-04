@@ -86,7 +86,7 @@ acl --allow-principal User:media --operation Read --operation Describe \
   --topic raadi.listing.events --group media-listing-sync
 acl --allow-principal User:notifications --operation Read --operation Describe \
   --topic raadi.conversation.events --topic raadi.listing.events --topic raadi.review.events \
-  --topic raadi.payment.events --topic raadi.alert.events --group notifications
+  --topic raadi.payment.events --topic raadi.alert.events --topic raadi.user.events --group notifications
 acl --allow-principal User:trust --operation Read --operation Describe \
   --topic raadi.conversation.events --topic raadi.listing.events --group trust
 acl --allow-principal User:listings --operation Read --operation Describe \

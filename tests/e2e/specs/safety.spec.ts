@@ -108,5 +108,8 @@ test('blocking closes a conversation for both, and unblocking opens it again', a
   await buyer.reload();
   await expect(buyer.getByTestId('compose-input')).toBeVisible();
   await buyer.close();
+  await seller.request.delete(`/api/v1/listings/${id}`, {
+    headers: { origin: new URL(seller.url()).origin },
+  });
   await seller.close();
 });
