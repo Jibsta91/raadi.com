@@ -9,6 +9,8 @@ import {
 } from '../src/demo.js';
 import { distanceKm, findPlace, PLACES } from '../src/places.js';
 import {
+  ATTRIBUTE_FIELDS,
+  attributePayload,
   attributeSchemas,
   CATEGORIES,
   CATEGORY_KEYS,
@@ -90,5 +92,39 @@ describe('search filters', () => {
       for (const f of FACET_ATTRIBUTES[c]) assert.ok(keys.includes(f), `${c}.${f}`);
       for (const r of RANGE_ATTRIBUTES[c]) assert.ok(keys.includes(r.field), `${c}.${r.field}`);
     }
+  });
+});
+
+describe('form fields', () => {
+  it('cover exactly the attributes each category accepts', () => {
+    for (const c of CATEGORY_KEYS) {
+      const keys = Object.keys(attributeSchemas[c].shape).sort();
+      assert.deepEqual(ATTRIBUTE_FIELDS[c].map((f) => f.key).sort(), keys, c);
+      for (const f of ATTRIBUTE_FIELDS[c]) {
+        const optional = attributeSchemas[c].shape[f.key as never] as { isOptional(): boolean };
+        assert.equal(f.required, !optional.isOptional(), `${c}.${f.key} required`);
+      }
+    }
+  });
+
+  it('shape form values into a payload the schema accepts', () => {
+    const payload = attributePayload('bil', {
+      make: ' Volvo ',
+      model: 'V60',
+      year: '2019',
+      mileageKm: '85000',
+      fuel: 'diesel',
+      gearbox: 'automatic',
+      bodyType: '',
+    });
+    assert.deepEqual(payload, {
+      make: 'Volvo',
+      model: 'V60',
+      year: 2019,
+      mileageKm: 85000,
+      fuel: 'diesel',
+      gearbox: 'automatic',
+    });
+    assert.ok(attributeSchemas.bil.safeParse(payload).success);
   });
 });

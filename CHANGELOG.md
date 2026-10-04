@@ -13,6 +13,9 @@ Each release also has generated notes on GitHub.
   e-mail a day) when a favourite gets cheaper or is sold, or a saved search has new matches. New service:
   `saved`.
 - Search accepts `publishedAfter` and `publishedBefore`.
+- Sell from the app: category and subcategory tiles, then the same fields as the website, with photos from
+  the camera or the photo library (`expo-image-picker`). The form fields per category now live in
+  `@raadi/catalog/attributes`, shared by the website and the app.
 
 ## [0.3.0] — 2026-10-04
 

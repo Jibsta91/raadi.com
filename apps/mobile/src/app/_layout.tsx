@@ -79,6 +79,7 @@ function Screens() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="listings/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="listings/new" options={{ title: m.sell.title }} />
         <Stack.Screen name="messages/[id]" options={{ title: m.messages.title }} />
         <Stack.Screen name="my-listings" options={{ title: m.account.myListings }} />
         <Stack.Screen name="favourites" options={{ title: m.favourites.title }} />

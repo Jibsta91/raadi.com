@@ -150,6 +150,12 @@ export default function Account() {
             {fill(m.auth.signedInAs, { email: auth.user.email ?? auth.user.name ?? '' })}
           </Body>
           <Button
+            testID="account-new-listing"
+            variant="ink"
+            label={m.sell.title}
+            onPress={() => router.push('/listings/new')}
+          />
+          <Button
             testID="my-listings"
             variant="secondary"
             label={m.account.myListings}

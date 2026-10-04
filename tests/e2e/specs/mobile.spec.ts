@@ -1,5 +1,8 @@
+import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 import { domain, password } from './support.js';
+
+const fixture = fileURLToPath(new URL('../../fixtures/images/listing.jpg', import.meta.url));
 
 // The Expo app's web build under /m (ADR-0021), at a phone's size.
 test.use({ viewport: { width: 393, height: 852 } });
@@ -48,4 +51,45 @@ test('app: search, open a listing, sign in, my listings, log out back to the app
 test("app: unknown routes show the app's own not-found screen", async ({ page }) => {
   await page.goto('/m/does-not-exist');
   await expect(page.getByTestId('not-found')).toBeVisible();
+});
+
+test('app: sell something, with a photo, and land on the new listing', async ({ page }) => {
+  const title = `App-sykkel e2e ${Date.now().toString(36)}`;
+  await page.goto('/m/account');
+  await page.getByTestId('login').click();
+  await page.locator('#username').fill(`ola.nordmann@${domain}`);
+  await page.locator('#password').fill(password);
+  await page.locator('#kc-login').click();
+  await expect(page).toHaveURL(/\/m\/account$|\/welcome/);
+  if (/\/welcome/.test(page.url())) await page.getByTestId('welcome-continue').click();
+
+  await page.getByTestId('account-new-listing').click();
+  await expect(page).toHaveURL(/\/m\/listings\/new$/);
+  await page.getByTestId('pick-category-torget').click();
+  await page.getByTestId('pick-subcategory-sport').click();
+  await expect(page.getByTestId('picked-category')).toContainText('Sport');
+
+  // The web build's picker opens a file chooser; the photo is scanned and re-encoded server-side.
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByTestId('add-photos').click();
+  await (await chooser).setFiles(fixture);
+  await expect(page.getByTestId('listing-form').getByRole('img').first()).toBeVisible({
+    timeout: 30_000,
+  });
+
+  await expect(page.getByTestId('publish')).toBeDisabled();
+  await page.getByTestId('field-title').fill(title);
+  await page
+    .getByTestId('field-description')
+    .fill('Lett racersykkel. Lagt ut fra appen av e2e-testen.');
+  await page.getByTestId('field-attr-condition-good').click();
+  await page.getByTestId('field-price').fill('3500');
+  await page.getByTestId('field-place').fill('tromso');
+  await page.getByTestId('place-tromso').click();
+  await expect(page.getByTestId('field-place-selected')).toContainText('Tromsø');
+
+  await page.getByTestId('publish').click();
+  await expect(page).toHaveURL(/\/m\/listings\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('listing-title')).toHaveText(title);
+  await expect(page.getByTestId('own-listing')).toBeVisible();
 });
