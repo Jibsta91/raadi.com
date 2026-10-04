@@ -60,6 +60,7 @@ C4Container
     Container(notifications, "notifications", "NestJS", "E-mail (queued, throttled) and in-app; Expo push later")
     Container(payments, "payments", "NestJS", "Promoted listings; Vipps/Stripe adapters, signed webhooks")
     Container(paymock, "payments-mock", "NestJS", "Vipps-compatible test PSP (development only)")
+    Container(pushmock, "push-mock", "Node", "Expo push-compatible stand-in (development only)")
     Container(trust, "trust", "NestJS", "Reviews after a sale, BankID verification (OIDC)")
   }
 
@@ -102,6 +103,7 @@ C4Container
   Rel(messaging, listings, "Seller lookup (internal API)")
   Rel(kafka, notifications, "message and listing events")
   Rel(notifications, keycloak, "E-mail address + language (view-users)")
+  Rel(notifications, pushmock, "Pushes (Expo push API; Expo's service in production)")
   Rel(payments, psp, "Create, capture, refund; signed webhooks back", "HTTPS")
   Rel(payments, listings, "Owner and status of the listing (internal API)")
   Rel(kafka, listings, "promotion events")
@@ -222,6 +224,7 @@ reachable only on the internal Docker network.
 | messaging                              | 3                    | 4000                                  | `/api/v1/messaging/*`, WebSocket `/api/v1/messaging/ws`            |
 | notifications                          | 3                    | 4000                                  | `/api/v1/notifications/*`; SMTP out                                |
 | payments / payments-mock               | 3                    | 4000 / 4000                           | `/api/v1/payments/*`; `pay.raadi.localhost/pay/` (mock, dev)       |
+| push-mock                              | 3                    | 4000                                  | `push.raadi.localhost/messages` (read-only, dev)                   |
 | trust                                  | 3                    | 4000                                  | `/api/v1/trust/*`; BankID OIDC (mock realm in dev)                 |
 | mobile (Expo dev server)               | 3                    | 8081                                  | LAN / tunnel                                                       |
 | ai-governance                          | 4                    | 8100                                  | `/api/v1/ai/governance`                                            |

@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const discovery = useRef<AuthSession.DiscoveryDocument | null>(null);
   const tokens = useRef<Tokens | null>(null);
   const refreshing = useRef<Promise<string | null> | null>(null);
+  const signOutTasks = useRef(new Set<() => Promise<void>>());
 
   const getDiscovery = useCallback(async () => {
     discovery.current ??= await AuthSession.fetchDiscoveryAsync(config.issuer);
@@ -136,7 +137,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [getDiscovery, store]);
 
+  const beforeSignOut = useCallback((task: () => Promise<void>) => {
+    signOutTasks.current.add(task);
+    return () => void signOutTasks.current.delete(task);
+  }, []);
+
   const signOut = useCallback(async () => {
+    // While the tokens still work (push token removal); never let one block signing out.
+    await Promise.allSettled(
+      [...signOutTasks.current].map((task) =>
+        Promise.race([task(), new Promise((resolve) => setTimeout(resolve, 3000))]),
+      ),
+    );
     const doc = await getDiscovery().catch(() => null);
     const refreshToken = await SecureStore.getItemAsync(REFRESH_KEY);
     const idToken = await SecureStore.getItemAsync(ID_TOKEN_KEY);
@@ -193,8 +205,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const token = await accessToken();
         return token ? { Authorization: `Bearer ${token}` } : undefined;
       },
+      beforeSignOut,
     }),
-    [status, user, error, signIn, signOut, authFetch, accessToken],
+    [status, user, error, signIn, signOut, authFetch, accessToken, beforeSignOut],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;

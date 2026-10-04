@@ -465,11 +465,13 @@
       "listing_promoted": "Annonsen din er nå fremhevet i {days} dager. Kvitteringen ligger i e-posten din."
     },
     "settings": {
-      "title": "E-post",
+      "title": "Varsler om nye meldinger",
       "emailMessages": "Send meg e-post når jeg får en ny melding",
       "emailMessagesHint": "Maks én e-post per samtale hver halvtime. Varsler om annonsene dine sendes alltid.",
       "saved": "Lagret",
-      "error": "Kunne ikke lagre. Prøv igjen."
+      "error": "Kunne ikke lagre. Prøv igjen.",
+      "pushMessages": "Send push-varsel til appen når jeg får en ny melding",
+      "pushMessagesHint": "Gjelder Raadiso-appen på telefonen din. Varselet viser aldri meldingsteksten."
     }
   },
   "trust": {

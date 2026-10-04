@@ -8,6 +8,11 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Push notifications in the app: new messages, removed listings, reviews and promotions, sent through Expo's
+  push service from the notifications queue. Taps open the right screen, and message pushes can be switched off
+  in the app and on the website. Development uses push-mock (`http://push.raadi.localhost/messages`) and stays
+  offline (ADR-0025).
+- Lint: the Rules of Hooks for the website and the app.
 - Category front pages (`/nb/bil`, `/nb/torget`, …) with subcategory tiles and counts, popular searches,
   popular car makes and the newest listings. In the app, category chips open an equivalent screen (ADR-0024).
 - Search filters that follow the category: car make, body type, drivetrain and gearbox; property ownership;

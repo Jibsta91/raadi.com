@@ -327,6 +327,14 @@ ws() { # <origin> — WebSocket handshake through the gateway with the session c
 login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
 req GET "$PUBLIC/api/v1/listings/mine?limit=1"
 kari_listing="$(json '.items[0].id')"
+# The seller's phone: an app installation registers its Expo push token (ADR-0025).
+push_token="ExponentPushToken[smoke-$(date +%s%N | tail -c 9)]"
+req PUT "$PUBLIC/api/v1/notifications/devices" -H 'content-type: application/json' -H "origin: $ORIGIN" \
+  --data '{"token":"not-a-push-token","platform":"ios"}'
+expect_status 400 "malformed push tokens are rejected"
+req PUT "$PUBLIC/api/v1/notifications/devices" -H 'content-type: application/json' -H "origin: $ORIGIN" \
+  --data "$(jq -nc --arg t "$push_token" '{token: $t, platform: "ios"}')"
+expect_status 204 "the app registers its push token"
 req GET "$PUBLIC/internal/v1/listings/$kari_listing/contact"
 # The gateway sends the path to the web app (a locale redirect or 404), never to listings.
 [[ "$status" =~ ^(307|404)$ ]] && ! grep -q ownerId "$BODY" \
@@ -387,6 +395,12 @@ id=$(curl -sf --get --data-urlencode "query=to:$USER_EMAIL subject:\"ny melding\
 text=$(curl -sf "http://mailpit:8025/api/v1/message/$id" | jq -r .Text)
 grep -q "/nb/messages/" <<<"$text" && ! grep -qF "$hello" <<<"$text" \
   && ok "e-mail links to the conversation and contains no message text" || fail "e-mail content"
+pushes() { curl -sf --max-time 10 --get --data-urlencode "to=$push_token" 'http://push-mock:4000/messages'; }
+pushed() { pushes | jq -e '.messages | length > 0'; }
+eventually "new-message push reaches the seller's phone (Expo-compatible mock)" 90 pushed
+push=$(pushes | jq -c '.messages[0]')
+[[ "$(jq -r '.data.url' <<<"$push")" == "/messages/$conversation" ]] && ! grep -qF "$hello" <<<"$push" \
+  && ok "push opens the conversation and contains no message text" || fail "push content" "$push"
 
 login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
 removed() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" "$PUBLIC/api/v1/notifications" \
@@ -402,6 +416,9 @@ expect_status 400 "invalid preferences are rejected"
 req PUT "$PUBLIC/api/v1/notifications/preferences" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"emailMessages":false}'
 [[ "$status" == "200" && "$(json '.emailMessages')" == "false" ]] && ok "message e-mails can be switched off" || fail "preferences"
 req PUT "$PUBLIC/api/v1/notifications/preferences" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"emailMessages":true}'
+[[ "$(json '.pushMessages')" == "true" ]] && ok "push preference is kept when an older client saves" || fail "push preference" "$(cat "$BODY")"
+req DELETE "$PUBLIC/api/v1/notifications/devices/$(jq -rn --arg t "$push_token" '$t|@uri')" -H "origin: $ORIGIN"
+expect_status 204 "signing out in the app removes its push token"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
 section "Reviews and trust (eligibility, BankID mock)"

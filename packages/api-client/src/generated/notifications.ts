@@ -81,12 +81,46 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The caller's e-mail preferences */
+        /** The caller's e-mail and push preferences */
         get: operations["notificationPreferences"];
-        /** Change the caller's e-mail preferences */
+        /** Change the caller's e-mail and push preferences */
         put: operations["saveNotificationPreferences"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Register this app installation for push notifications (moves the token to the caller) */
+        put: operations["registerDevice"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/devices/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Stop pushing to one of the caller's devices (sign-out) */
+        delete: operations["removeDevice"];
         options?: never;
         head?: never;
         patch?: never;
@@ -153,6 +187,14 @@ export interface components {
         Preferences: {
             /** @description E-mail me about new messages. Service e-mails (moderation) are always sent. */
             emailMessages: boolean;
+            /** @description Push new messages to my phone. Always present in responses; leaving it out of a PUT keeps the stored value. */
+            pushMessages?: boolean;
+        };
+        Device: {
+            /** @description The app's Expo push token */
+            token: string;
+            /** @enum {string} */
+            platform: "ios" | "android";
         };
         Problem: {
             type: string;
@@ -318,6 +360,52 @@ export interface operations {
             };
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
+        };
+    };
+    registerDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Device"];
+            };
+        };
+        responses: {
+            /** @description Registered */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+        };
+    };
+    removeDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
         };
     };
     liveness: {

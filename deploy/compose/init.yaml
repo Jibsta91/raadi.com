@@ -190,6 +190,7 @@ services:
       trust: { condition: service_healthy }
       payments: { condition: service_healthy }
       payments-mock: { condition: service_healthy }
+      push-mock: { condition: service_healthy }
       apicurio: { condition: service_healthy }
       opensearch: { condition: service_healthy }
       imgproxy: { condition: service_healthy }

@@ -42,7 +42,7 @@ test('owner is notified in the app when a moderator removes their listing', asyn
   await owner.getByTestId('notification-item').filter({ hasText: title }).click();
   await expect(owner).toHaveURL(/\/en\/my\/listings$/);
 
-  // E-mail preferences save immediately.
+  // Message alert preferences save immediately.
   await owner.goto('/en/notifications');
   const toggle = owner.getByTestId('pref-email-messages');
   const before = await toggle.isChecked();
@@ -51,6 +51,17 @@ test('owner is notified in the app when a moderator removes their listing', asyn
   await owner.reload();
   await expect(owner.getByTestId('pref-email-messages')).toBeChecked({ checked: !before });
   await owner.getByTestId('pref-email-messages').click(); // restore
+  await expect(owner.getByTestId('pref-status')).toHaveText('Saved');
+
+  // The app's push preference is saved the same way, independently of e-mail.
+  const push = owner.getByTestId('pref-push-messages');
+  const pushBefore = await push.isChecked();
+  await push.click();
+  await expect(owner.getByTestId('pref-status')).toHaveText('Saved');
+  await owner.reload();
+  await expect(owner.getByTestId('pref-push-messages')).toBeChecked({ checked: !pushBefore });
+  await expect(owner.getByTestId('pref-email-messages')).toBeChecked({ checked: before });
+  await owner.getByTestId('pref-push-messages').click(); // restore
   await expect(owner.getByTestId('pref-status')).toHaveText('Saved');
 
   await owner.close();

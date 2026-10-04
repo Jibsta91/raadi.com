@@ -30,5 +30,7 @@ describe('OpenAPI contract', () => {
     valid('Notification', n);
     valid('NotificationList', { unread: 1, items: [n] });
     valid('Preferences', { emailMessages: false });
+    valid('Preferences', { emailMessages: true, pushMessages: false });
+    valid('Device', { token: 'ExponentPushToken[abc]', platform: 'ios' });
   });
 });

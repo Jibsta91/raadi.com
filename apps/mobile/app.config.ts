@@ -25,7 +25,14 @@ const config: ExpoConfig = {
     adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', backgroundColor: '#0e1116' },
   },
   web: { bundler: 'metro', output: 'single', favicon: './assets/favicon.png' },
-  plugins: ['expo-router', 'expo-secure-store', 'expo-localization', 'expo-web-browser'],
+  plugins: [
+    'expo-router',
+    'expo-secure-store',
+    'expo-localization',
+    'expo-web-browser',
+    // Push notifications (ADR-0025); development builds get the entitlements from this plugin.
+    ['expo-notifications', { color: '#3b5bff' }],
+  ],
   experiments: {
     // Only the web export lives under a sub-path; Expo Go serves the app from the dev server's root.
     ...(process.env.MOBILE_WEB_BASE_URL ? { baseUrl: process.env.MOBILE_WEB_BASE_URL } : {}),

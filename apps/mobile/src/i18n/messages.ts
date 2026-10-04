@@ -92,6 +92,10 @@ const en = {
     themeSystem: 'System',
     themeLight: 'Light',
     themeDark: 'Dark',
+    notifications: 'Notifications',
+    pushMessages: 'Push notifications for new messages',
+    pushHint:
+      'Notices about your listings and reviews are always pushed, without any message text.',
   },
 };
 
@@ -180,6 +184,9 @@ const nb: Messages = {
     themeSystem: 'System',
     themeLight: 'Lys',
     themeDark: 'Mørk',
+    notifications: 'Varsler',
+    pushMessages: 'Push-varsler om nye meldinger',
+    pushHint: 'Beskjeder om annonsene og omtalene dine sendes alltid, uten meldingstekst.',
   },
 };
 
@@ -272,6 +279,10 @@ const so: Messages = {
     themeSystem: 'Nidaamka',
     themeLight: 'Iftiin',
     themeDark: 'Mugdi',
+    notifications: 'Ogeysiisyo',
+    pushMessages: 'Ogeysiisyo push ah oo fariimaha cusub',
+    pushHint:
+      'Ogeysiisyada xayeysiisyadaada iyo faallooyinka had iyo jeer waa la soo diraa, iyadoo aan qoraal fariin lahayn.',
   },
 };
 

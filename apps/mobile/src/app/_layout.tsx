@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { I18nProvider, useI18n } from '../i18n';
 import { AuthProvider } from '../lib/auth/provider';
+import { PushRegistration } from '../lib/push';
 import { RealtimeProvider } from '../lib/realtime';
 import { fonts, ThemeProvider, useTheme } from '../theme';
 
@@ -104,6 +105,7 @@ export default function RootLayout() {
           <AuthProvider>
             <RealtimeProvider>
               <Screens />
+              <PushRegistration />
             </RealtimeProvider>
           </AuthProvider>
         </I18nProvider>

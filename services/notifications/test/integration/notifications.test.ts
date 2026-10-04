@@ -13,6 +13,7 @@ import type { AppConfig } from '../../src/config.js';
 import type { UserDirectory } from '../../src/notifications/directory.js';
 import { NotificationsRepository } from '../../src/notifications/notifications.repository.js';
 import { NotificationsService } from '../../src/notifications/notifications.service.js';
+import type { PushClient, PushMessage } from '../../src/notifications/push.js';
 
 let container: StartedTestContainer;
 let pool: pg.Pool;
@@ -24,7 +25,26 @@ let failSends = 0;
 const directory = {
   recipient: async (userId: string) =>
     userId === GONE ? null : { email: `${userId}@example.test`, locale: 'nb' as const },
+  locale: async (userId: string) => (userId === GONE ? null : ('nb' as const)),
 } as unknown as UserDirectory;
+const pushed: PushMessage[] = [];
+let failPushes = 0;
+/** Like Expo: tokens with "Unregistered" belong to uninstalled apps. */
+const pusher = {
+  send: async (messages: PushMessage[]) => {
+    if (failPushes > 0) {
+      failPushes--;
+      throw new Error('push service returned 503');
+    }
+    const ok = messages.filter((m) => !m.to.includes('Unregistered'));
+    pushed.push(...ok);
+    return {
+      sent: ok.length,
+      unregistered: messages.filter((m) => m.to.includes('Unregistered')).map((m) => m.to),
+      errors: [],
+    };
+  },
+} as unknown as PushClient;
 const mailer = {
   sendMail: async (m: { to: string; subject: string; text: string }) => {
     if (failSends > 0) {
@@ -65,9 +85,11 @@ before(async () => {
       SMTP_FROM: 'Raadi <no-reply@raadi.localhost>',
       EMAIL_THROTTLE_MINUTES: 30,
       EMAIL_MAX_ATTEMPTS: 2,
+      PUSH_THROTTLE_SECONDS: 60,
+      PUSH_MAX_ATTEMPTS: 2,
     },
   } as unknown as AppConfig;
-  service = new NotificationsService(repo, directory, mailer, cfg);
+  service = new NotificationsService(repo, directory, mailer, pusher, cfg);
 });
 
 after(async () => {
@@ -99,10 +121,11 @@ const messageSent = (recipientId: string, conversationId: string, body = 'secret
   body,
 });
 const drain = async () => {
-  while ((await service.sendDue()) > 0) {
+  while ((await service.sendDuePushes()) + (await service.sendDue()) > 0) {
     /* drain */
   }
 };
+const token = (name: string) => `ExponentPushToken[${name}-${randomUUID().slice(0, 8)}]`;
 
 describe('notifications pipeline', () => {
   it('e-mails the recipient once per conversation per window, and once per event', async () => {
@@ -210,5 +233,96 @@ describe('notifications pipeline', () => {
     assert.deepEqual(list[0]!.params, { rating: '4' });
     const queued = await pool.query('SELECT 1 FROM emails WHERE user_id = $1', [subject]);
     assert.equal(queued.rowCount, 0);
+  });
+
+  it('pushes new messages to every device of the recipient, without the message text', async () => {
+    const user = randomUUID();
+    const conversation = randomUUID();
+    const phone = token('phone');
+    const tablet = token('tablet');
+    await repo.registerDevice(user, { token: phone, platform: 'ios' });
+    await repo.registerDevice(user, { token: tablet, platform: 'android' });
+    const first = messageSent(user, conversation);
+    await service.onEvent(received(first.event));
+    await service.onEvent(received(first.event)); // redelivery
+    await service.onEvent(received(messageSent(user, conversation).event)); // throttled
+    await drain();
+    const mine = pushed.filter((m) => m.to === phone || m.to === tablet);
+    assert.equal(mine.length, 2);
+    for (const m of mine) {
+      assert.equal(m.title, 'Ny melding');
+      assert.deepEqual(m.data, { url: `/messages/${conversation}` });
+      assert.ok(!JSON.stringify(m).includes('secret text'));
+    }
+  });
+
+  it('queues no push without a device, and none after opting out', async () => {
+    const lonely = randomUUID();
+    await service.onEvent(received(messageSent(lonely, randomUUID()).event));
+    const queued = await pool.query('SELECT 1 FROM pushes WHERE user_id = $1', [lonely]);
+    assert.equal(queued.rowCount, 0);
+
+    const quiet = randomUUID();
+    const device = token('quiet');
+    await repo.registerDevice(quiet, { token: device, platform: 'ios' });
+    await repo.savePreferences(quiet, { emailMessages: true, pushMessages: false });
+    // An older client saving only emailMessages keeps the push opt-out.
+    await repo.savePreferences(quiet, { emailMessages: true });
+    assert.deepEqual(await repo.preferences(quiet), { emailMessages: true, pushMessages: false });
+    await service.onEvent(received(messageSent(quiet, randomUUID()).event));
+    await drain();
+    assert.equal(pushed.filter((m) => m.to === device).length, 0);
+  });
+
+  it('forgets uninstalled apps, moves a token to the next user, and retries outages', async () => {
+    const user = randomUUID();
+    const gone = token('Unregistered');
+    const live = token('live');
+    await repo.registerDevice(user, { token: gone, platform: 'android' });
+    await repo.registerDevice(user, { token: live, platform: 'ios' });
+    failPushes = 1;
+    await service.onEvent(received(messageSent(user, randomUUID()).event));
+    await drain();
+    let row = (await pool.query('SELECT * FROM pushes WHERE user_id = $1', [user])).rows[0];
+    assert.equal(row.status, 'pending');
+    await pool.query('UPDATE pushes SET next_attempt_at = now() WHERE id = $1', [row.id]);
+    await drain();
+    row = (await pool.query('SELECT * FROM pushes WHERE id = $1', [row.id])).rows[0];
+    assert.equal(row.status, 'sent');
+    assert.deepEqual(await repo.deviceTokens(user), [live]);
+
+    // Someone else signs in on the same phone: the token follows them.
+    const next = randomUUID();
+    await repo.registerDevice(next, { token: live, platform: 'ios' });
+    assert.deepEqual(await repo.deviceTokens(user), []);
+    assert.equal(await repo.removeDevice(user, live), false);
+    assert.equal(await repo.removeDevice(next, live), true);
+  });
+
+  it('pushes service notices that also appear in the app', async () => {
+    const owner = randomUUID();
+    const device = token('owner');
+    await repo.registerDevice(owner, { token: device, platform: 'ios' });
+    await service.onEvent(
+      received(
+        buildEvent('no.raadi.listings.listing.deleted.v1', {
+          source: 'urn:raadi:listings',
+          subject: randomUUID(),
+          data: {
+            listingId: randomUUID(),
+            version: 2,
+            imageIds: [],
+            ownerId: owner,
+            title: 'Hemmelig sykkel',
+            reason: 'moderation',
+          },
+        }),
+      ),
+    );
+    await drain();
+    const [push] = pushed.filter((m) => m.to === device);
+    assert.equal(push?.title, 'Annonse fjernet');
+    assert.deepEqual(push?.data, { url: '/my-listings' });
+    assert.ok(!JSON.stringify(push).includes('Hemmelig'), 'no listing title on the lock screen');
   });
 });
