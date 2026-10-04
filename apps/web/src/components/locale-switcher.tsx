@@ -7,7 +7,11 @@ import { routing } from '@/i18n/routing';
 
 const NAMES: Record<string, string> = { nb: 'Norsk', en: 'English', so: 'Soomaali' };
 
-export function LocaleSwitcher({ label }: { label: string }) {
+/**
+ * Language picker. For signed-in users the choice is also saved to their profile, so e-mails and
+ * pushes come in the same language.
+ */
+export function LocaleSwitcher({ label, signedIn }: { label: string; signedIn: boolean }) {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -21,9 +25,17 @@ export function LocaleSwitcher({ label }: { label: string }) {
         className="h-11 rounded-full border border-input bg-card px-4 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         value={locale}
         disabled={pending}
-        onChange={(e) =>
-          startTransition(() => router.replace(pathname, { locale: e.target.value }))
-        }
+        onChange={(e) => {
+          const next = e.target.value;
+          if (signedIn) {
+            void fetch('/api/v1/identity/me', {
+              method: 'PATCH',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ locale: next }),
+            }).catch(() => undefined);
+          }
+          startTransition(() => router.replace(pathname, { locale: next }));
+        }}
       >
         {routing.locales.map((l) => (
           <option key={l} value={l} lang={l}>

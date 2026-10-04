@@ -47,6 +47,15 @@ const en = {
     listings: '{count} listings',
     seeAll: 'See all {count} listings',
   },
+  filters: {
+    title: 'Filters',
+    close: 'Close filters',
+    from: 'From',
+    to: 'To',
+    clear: 'Clear',
+    apply: 'Show results',
+    show: 'Show {count} results',
+  },
   report: {
     open: 'Report this listing',
     title: 'What is wrong with this listing?',
@@ -225,6 +234,15 @@ const nb: Messages = {
     subcategories: 'Kategorier',
     listings: '{count} annonser',
     seeAll: 'Se alle {count} annonser',
+  },
+  filters: {
+    title: 'Filtre',
+    close: 'Lukk filtre',
+    from: 'Fra',
+    to: 'Til',
+    clear: 'Nullstill',
+    apply: 'Vis treff',
+    show: 'Vis {count} treff',
   },
   report: {
     open: 'Rapporter annonsen',
@@ -408,6 +426,15 @@ const so: Messages = {
     subcategories: 'Qaybaha',
     listings: '{count} xayeysiis',
     seeAll: 'Arag dhammaan {count} xayeysiis',
+  },
+  filters: {
+    title: 'Shaandhooyin',
+    close: 'Xir shaandhooyinka',
+    from: 'Laga bilaabo',
+    to: 'Ilaa',
+    clear: 'Nadiifi',
+    apply: 'Muuji natiijooyinka',
+    show: 'Muuji {count} natiijo',
   },
   report: {
     open: 'Soo sheeg xayeysiiskan',

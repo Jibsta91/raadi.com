@@ -1,22 +1,29 @@
 // Push notifications on devices (ADR-0025): register this installation's Expo push token while
 // signed in, remove it on sign-out, and open the screen a push points to when it is tapped.
 import * as Notifications from 'expo-notifications';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { useApi } from './api';
 import { useAuth } from './auth/context';
 import { config } from './config';
-import { safeAppPath } from './push-path';
+import { isCurrentScreen, safeAppPath } from './push-path';
 
-// Show pushes as banners while the app is open too (a new message in another conversation).
+/** The screen on show (an Expo Router path), kept by PushRegistration. */
+let currentPath = '';
+
+// Show pushes as banners while the app is open too (a new message in another conversation),
+// but not for the screen already on show: a message in the open conversation appears there.
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
+  handleNotification: async (notification) => {
+    const here = isCurrentScreen(notification.request.content.data?.url, currentPath);
+    return {
+      shouldShowBanner: !here,
+      shouldShowList: !here,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    };
+  },
 });
 
 /** Responses already acted on: the "last response" survives reloads and must open only once. */
@@ -56,6 +63,11 @@ export function PushRegistration(): null {
   const api = useApi();
   const registered = useRef<string | null>(null);
   const { status, beforeSignOut } = auth;
+  const pathname = usePathname();
+
+  useEffect(() => {
+    currentPath = pathname;
+  }, [pathname]);
 
   // Taps: the push that started the app, and those tapped while it runs.
   useEffect(() => {

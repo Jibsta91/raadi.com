@@ -1,6 +1,15 @@
 import { getLocales } from 'expo-localization';
-import { createContext, use, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { pickLocale, type Locale } from '../lib/format';
+import { getPreference, setPreference } from '../lib/storage';
 import { catalogues, type Messages } from './messages';
 
 interface I18n {
@@ -10,12 +19,23 @@ interface I18n {
 }
 
 const I18nContext = createContext<I18n | null>(null);
+const LOCALE_KEY = 'raadi.locale';
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>(() =>
+  const [locale, setLocaleState] = useState<Locale>(() =>
     pickLocale(getLocales().map((l) => l.languageTag)),
   );
-  const value = useMemo(() => ({ locale, setLocale, m: catalogues[locale] }), [locale]);
+  // A language picked on the account screen is remembered across starts.
+  useEffect(() => {
+    void getPreference(LOCALE_KEY).then((saved) => {
+      if (saved === 'nb' || saved === 'en' || saved === 'so') setLocaleState(saved);
+    });
+  }, []);
+  const setLocale = useCallback((next: Locale) => {
+    setLocaleState(next);
+    void setPreference(LOCALE_KEY, next);
+  }, []);
+  const value = useMemo(() => ({ locale, setLocale, m: catalogues[locale] }), [locale, setLocale]);
   return <I18nContext value={value}>{children}</I18nContext>;
 }
 

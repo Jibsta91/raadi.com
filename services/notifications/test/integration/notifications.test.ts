@@ -365,4 +365,22 @@ describe('notifications pipeline', () => {
     assert.equal(mail.length, 1);
     assert.match(mail[0]!.text, new RegExp(`/nb/my/saved-searches\\?open=${search}`));
   });
+
+  it('writes in the language the user chose on the website or in the app', async () => {
+    const user = randomUUID();
+    const device = token('locale');
+    await repo.registerDevice(user, { token: device, platform: 'ios' });
+    const changed = buildEvent('no.raadi.identity.user.preferences_changed.v1', {
+      source: 'urn:raadi:identity',
+      subject: user,
+      data: { userId: user, changed: ['locale'], locale: 'en' },
+    });
+    await service.onEvent(received(changed));
+    await service.onEvent(received(messageSent(user, randomUUID()).event));
+    await drain();
+    assert.equal(pushed.find((m) => m.to === device)?.title, 'New message');
+    const mail = sent.find((m) => m.to === `${user}@example.test`);
+    assert.equal(mail?.subject, 'You have a new message on Raadiso');
+    assert.match(mail!.text, /\/en\/messages\//);
+  });
 });

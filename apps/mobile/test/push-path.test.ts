@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { safeAppPath } from '../src/lib/push-path.ts';
+import { isCurrentScreen, safeAppPath } from '../src/lib/push-path.ts';
 
 describe('safeAppPath', () => {
   it('follows plain app paths', () => {
@@ -27,5 +27,16 @@ describe('safeAppPath', () => {
       `/${'a'.repeat(250)}`,
     ])
       assert.equal(safeAppPath(p), null, String(p));
+  });
+});
+
+describe('isCurrentScreen', () => {
+  it('matches the open screen only', () => {
+    assert.equal(isCurrentScreen('/messages/abc', '/messages/abc'), true);
+    assert.equal(isCurrentScreen('/messages/abc', '/messages/abc/'), true);
+    assert.equal(isCurrentScreen('/messages/abc', '/messages/def'), false);
+    assert.equal(isCurrentScreen('/messages/abc', '/'), false);
+    assert.equal(isCurrentScreen('https://evil.example', 'https://evil.example'), false);
+    assert.equal(isCurrentScreen(undefined, '/messages/abc'), false);
   });
 });

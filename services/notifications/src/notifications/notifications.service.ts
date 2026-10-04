@@ -158,6 +158,16 @@ export class NotificationsService {
         emails.add(1, { kind: 'payment_receipt', outcome: 'queued' });
         return;
       }
+      case 'no.raadi.identity.user.registered.v1':
+        await this.repo.once(parsed.id, (tx) =>
+          tx.saveLocale(parsed.data.userId, parsed.data.locale),
+        );
+        return;
+      case 'no.raadi.identity.user.preferences_changed.v1': {
+        const { userId, locale } = parsed.data;
+        if (locale) await this.repo.once(parsed.id, (tx) => tx.saveLocale(userId, locale));
+        return;
+      }
       case 'no.raadi.saved.alert.v1': {
         // Favourites and saved searches (ADR-0026): in the app, as a push, and (saved
         // searches only) at most one e-mail a day per search.
@@ -221,7 +231,9 @@ export class NotificationsService {
         await this.repo.finish('emails', email.id, 'skipped', 'no deliverable address');
         return void emails.add(1, { kind: email.kind, outcome: 'skipped' });
       }
-      const base = `${this.cfg.env.PUBLIC_BASE_URL}/${recipient.locale}`;
+      // The language chosen on the website or in the app wins over Keycloak's.
+      const locale = (await this.repo.locale(email.user_id)) ?? recipient.locale;
+      const base = `${this.cfg.env.PUBLIC_BASE_URL}/${locale}`;
       const action =
         email.kind === 'new_message'
           ? `${base}/messages/${email.ref_id}`
@@ -230,7 +242,7 @@ export class NotificationsService {
             : email.kind === 'saved_search_match'
               ? `${base}/my/saved-searches?open=${email.ref_id}`
               : `${base}/my/listings`;
-      const rendered = renderEmail(email.kind, recipient.locale, email.params, {
+      const rendered = renderEmail(email.kind, locale, email.params, {
         action,
         settings: `${base}/notifications`,
       });
@@ -273,7 +285,8 @@ export class NotificationsService {
   private async push(push: PushRow): Promise<void> {
     try {
       const tokens = await this.repo.deviceTokens(push.user_id);
-      const locale = tokens.length ? await this.directory.locale(push.user_id) : null;
+      const known = tokens.length ? await this.directory.locale(push.user_id) : null;
+      const locale = known && ((await this.repo.locale(push.user_id)) ?? known);
       if (!tokens.length || !locale) {
         await this.repo.finish(
           'pushes',
