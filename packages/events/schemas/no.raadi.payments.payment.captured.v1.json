@@ -35,10 +35,7 @@
     },
     "provider": {
       "type": "string",
-      "enum": [
-        "vipps",
-        "stripe"
-      ]
+      "enum": ["vipps", "stripe"]
     },
     "capturedAt": {
       "type": "string",

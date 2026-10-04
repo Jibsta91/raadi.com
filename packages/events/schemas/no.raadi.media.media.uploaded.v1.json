@@ -33,13 +33,6 @@
       "maximum": 9007199254740991
     }
   },
-  "required": [
-    "mediaId",
-    "ownerId",
-    "contentType",
-    "bytes",
-    "width",
-    "height"
-  ],
+  "required": ["mediaId", "ownerId", "contentType", "bytes", "width", "height"],
   "additionalProperties": false
 }

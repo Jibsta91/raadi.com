@@ -26,10 +26,7 @@
     },
     "subjectRole": {
       "type": "string",
-      "enum": [
-        "buyer",
-        "seller"
-      ]
+      "enum": ["buyer", "seller"]
     },
     "rating": {
       "type": "integer",

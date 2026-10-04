@@ -16,9 +16,6 @@
       }
     }
   },
-  "required": [
-    "userId",
-    "changed"
-  ],
+  "required": ["userId", "changed"],
   "additionalProperties": false
 }

@@ -16,21 +16,12 @@
     },
     "reason": {
       "type": "string",
-      "enum": [
-        "malware",
-        "unsupported_type",
-        "invalid_image",
-        "too_large"
-      ]
+      "enum": ["malware", "unsupported_type", "invalid_image", "too_large"]
     },
     "signature": {
       "type": "string"
     }
   },
-  "required": [
-    "mediaId",
-    "ownerId",
-    "reason"
-  ],
+  "required": ["mediaId", "ownerId", "reason"],
   "additionalProperties": false
 }

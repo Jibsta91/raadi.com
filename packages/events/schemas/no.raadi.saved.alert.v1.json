@@ -16,11 +16,7 @@
     },
     "kind": {
       "type": "string",
-      "enum": [
-        "price_drop",
-        "sold",
-        "search_match"
-      ]
+      "enum": ["price_drop", "sold", "search_match"]
     },
     "listingId": {
       "type": "string",
@@ -48,10 +44,6 @@
       "maximum": 9007199254740991
     }
   },
-  "required": [
-    "alertId",
-    "userId",
-    "kind"
-  ],
+  "required": ["alertId", "userId", "kind"],
   "additionalProperties": false
 }
