@@ -11,9 +11,16 @@
     },
     "locale": {
       "type": "string",
-      "enum": ["nb", "en", "so"]
+      "enum": [
+        "nb",
+        "en",
+        "so"
+      ]
     }
   },
-  "required": ["userId", "locale"],
+  "required": [
+    "userId",
+    "locale"
+  ],
   "additionalProperties": false
 }

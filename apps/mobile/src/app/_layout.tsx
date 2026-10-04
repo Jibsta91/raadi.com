@@ -81,6 +81,9 @@ function Screens() {
         <Stack.Screen name="listings/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="messages/[id]" options={{ title: m.messages.title }} />
         <Stack.Screen name="my-listings" options={{ title: m.account.myListings }} />
+        <Stack.Screen name="favourites" options={{ title: m.favourites.title }} />
+        <Stack.Screen name="saved-searches/index" options={{ title: m.savedSearches.title }} />
+        <Stack.Screen name="saved-searches/[id]" options={{ title: m.savedSearches.title }} />
       </Stack>
     </>
   );

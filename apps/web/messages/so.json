@@ -19,7 +19,9 @@
     "signup": "Is diiwaan geli",
     "account": "Akoon",
     "accountMenu": "Liiska akoonka",
-    "categories": "Qaybaha"
+    "categories": "Qaybaha",
+    "favourites": "Kuwa aan jeclahay",
+    "savedSearches": "Raadinta la keydiyay"
   },
   "home": {
     "heroTitle": "<brand>Raadiso.</brand> Hel. Iibi.",
@@ -462,7 +464,10 @@
     "kinds": {
       "listing_removed": "Xayeysiiskaaga \"{title}\" waxaa saaray maamule sababtoo ah wuxuu jebinayaa xeerarka suuqa.",
       "review_received": "Qof ayaa ku qiimeeyay: {rating} ka mid ah 5 xiddigood.",
-      "listing_promoted": "Xayeysiiskaaga hadda waa la horumariyay {days} maalmood. Rasiidka waxaa lagu diray iimaylkaaga."
+      "listing_promoted": "Xayeysiiskaaga hadda waa la horumariyay {days} maalmood. Rasiidka waxaa lagu diray iimaylkaaga.",
+      "favourite_price_drop": "Mid aad jeceshahay qiimihiisa waa la dhimay: hadda {priceNok} kr (hore {previousPriceNok} kr).",
+      "favourite_sold": "Mid ka mid ah kuwa aad jeceshahay waa la iibiyay.",
+      "saved_search_match": "{count} xayeysiis oo cusub ayaa ku habboon raadin la keydiyay."
     },
     "settings": {
       "title": "Ogeysiisyada fariimaha cusub",
@@ -645,5 +650,30 @@
       }
     },
     "newListing": "Xayeysiis ku dhig {category}"
+  },
+  "favourites": {
+    "title": "Kuwa aan jeclahay",
+    "intro": "Xayeysiisyada aad keydisay. Waan ku ogeysiinaynaa marka qiimuhu hoos u dhaco ama wax la iibiyo.",
+    "empty": "Riix wadnaha xayeysiis si aad halkan ugu keydiso.",
+    "browse": "Raadi wax aad jeceshahay",
+    "add": "U keydi kuwa aad jeceshahay",
+    "remove": "Ka saar kuwa aad jeceshahay",
+    "unavailable": "Kuwa aad jeceshahay hadda lama heli karo. Fadlan dib isku day dhowaan."
+  },
+  "savedSearches": {
+    "title": "Raadinta la keydiyay",
+    "intro": "Si joogto ah ayaan u hubinnaa raadintaada oo kuu sheegnaa marka xayeysiisyo cusub ay ku habboon yihiin.",
+    "empty": "Wax raadi oo riix «Keydi raadinta» si aad u hesho ogeysiisyo natiijooyin cusub.",
+    "browse": "Tag raadinta",
+    "save": "Keydi raadinta",
+    "saved": "Raadinta waa la keydiyay",
+    "error": "Lama keydin karo, isku day mar kale",
+    "alertsOn": "Ogeysiisyo shidan",
+    "alertsOff": "Ogeysiisyo dansan",
+    "delete": "Tirtir raadinta",
+    "new": "{count} cusub",
+    "near": "U dhow {place} ({km} km)",
+    "untitled": "Raadin la keydiyay",
+    "unavailable": "Raadinta la keydiyay hadda lama heli karo. Fadlan dib isku day dhowaan."
   }
 }

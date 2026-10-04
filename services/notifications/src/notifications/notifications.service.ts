@@ -158,6 +158,48 @@ export class NotificationsService {
         emails.add(1, { kind: 'payment_receipt', outcome: 'queued' });
         return;
       }
+      case 'no.raadi.saved.alert.v1': {
+        // Favourites and saved searches (ADR-0026): in the app, as a push, and (saved
+        // searches only) at most one e-mail a day per search.
+        const { userId, kind, listingId, savedSearchId, count, priceNok, previousPriceNok } =
+          parsed.data;
+        await this.repo.once(parsed.id, async (tx) => {
+          if (kind === 'search_match' && savedSearchId && count) {
+            await tx.notifyMatches(userId, savedSearchId, count);
+            const push = await tx.queuePush({
+              userId,
+              kind: 'saved_search_match',
+              refId: savedSearchId,
+              params: { count: String(count) },
+              throttleSeconds: 3600,
+            });
+            pushes.add(1, { kind: 'saved_search_match', outcome: push });
+            const queued = await tx.queueEmail({
+              userId,
+              kind: 'saved_search_match',
+              refId: savedSearchId,
+              params: { count: String(count) },
+              throttleMinutes: 24 * 60,
+            });
+            emails.add(1, { kind: 'saved_search_match', outcome: queued ? 'queued' : 'throttled' });
+            created.add(1, { kind: 'saved_search_match' });
+          } else if ((kind === 'price_drop' || kind === 'sold') && listingId) {
+            const notice = kind === 'price_drop' ? 'favourite_price_drop' : 'favourite_sold';
+            const params: Record<string, string> =
+              kind === 'price_drop'
+                ? {
+                    priceNok: String(priceNok ?? ''),
+                    previousPriceNok: String(previousPriceNok ?? ''),
+                  }
+                : {};
+            await tx.notify(userId, notice, listingId, params);
+            const push = await tx.queuePush({ userId, kind: notice, refId: listingId, params });
+            pushes.add(1, { kind: notice, outcome: push });
+            created.add(1, { kind: notice });
+          }
+        });
+        return;
+      }
       default:
         return;
     }
@@ -185,7 +227,9 @@ export class NotificationsService {
           ? `${base}/messages/${email.ref_id}`
           : email.kind === 'payment_receipt'
             ? `${base}/listings/${email.ref_id}`
-            : `${base}/my/listings`;
+            : email.kind === 'saved_search_match'
+              ? `${base}/my/saved-searches?open=${email.ref_id}`
+              : `${base}/my/listings`;
       const rendered = renderEmail(email.kind, recipient.locale, email.params, {
         action,
         settings: `${base}/notifications`,

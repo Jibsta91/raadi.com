@@ -19,7 +19,9 @@
     "signup": "Sign up",
     "account": "Account",
     "accountMenu": "Account menu",
-    "categories": "Categories"
+    "categories": "Categories",
+    "favourites": "Favourites",
+    "savedSearches": "Saved searches"
   },
   "home": {
     "heroTitle": "Find it. Sell it. <brand>Raadiso.</brand>",
@@ -462,7 +464,10 @@
     "kinds": {
       "listing_removed": "Your listing \"{title}\" was removed by a moderator because it breaks the marketplace rules.",
       "review_received": "Someone reviewed you: {rating} out of 5 stars.",
-      "listing_promoted": "Your listing is now promoted for {days} days. The receipt is in your e-mail."
+      "listing_promoted": "Your listing is now promoted for {days} days. The receipt is in your e-mail.",
+      "favourite_price_drop": "A favourite got cheaper: now {priceNok} kr (was {previousPriceNok} kr).",
+      "favourite_sold": "One of your favourites has been sold.",
+      "saved_search_match": "{count} new listings match a saved search."
     },
     "settings": {
       "title": "New message alerts",
@@ -645,5 +650,30 @@
       }
     },
     "newListing": "Post a listing in {category}"
+  },
+  "favourites": {
+    "title": "Favourites",
+    "intro": "Listings you saved. We tell you when the price drops or something is sold.",
+    "empty": "Tap the heart on a listing to keep it here.",
+    "browse": "Find something you like",
+    "add": "Save as favourite",
+    "remove": "Remove from favourites",
+    "unavailable": "Favourites are temporarily unavailable. Please try again shortly."
+  },
+  "savedSearches": {
+    "title": "Saved searches",
+    "intro": "We check your searches regularly and tell you when new listings match.",
+    "empty": "Search for something and tap \"Save search\" to get alerts about new matches.",
+    "browse": "Go to search",
+    "save": "Save search",
+    "saved": "Search saved",
+    "error": "Could not save, try again",
+    "alertsOn": "Alerts on",
+    "alertsOff": "Alerts off",
+    "delete": "Delete search",
+    "new": "{count} new",
+    "near": "Near {place} ({km} km)",
+    "untitled": "Saved search",
+    "unavailable": "Saved searches are temporarily unavailable. Please try again shortly."
   }
 }

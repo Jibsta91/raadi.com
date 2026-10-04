@@ -325,4 +325,44 @@ describe('notifications pipeline', () => {
     assert.deepEqual(push?.data, { url: '/my-listings' });
     assert.ok(!JSON.stringify(push).includes('Hemmelig'), 'no listing title on the lock screen');
   });
+
+  it('turns saved alerts into notices, pushes and a daily e-mail per saved search', async () => {
+    const user = randomUUID();
+    const device = token('saved');
+    await repo.registerDevice(user, { token: device, platform: 'ios' });
+    const search = randomUUID();
+    const listing = randomUUID();
+    const alert = (data: Record<string, unknown>) =>
+      buildEvent('no.raadi.saved.alert.v1', {
+        source: 'urn:raadi:saved',
+        subject: user,
+        data: { alertId: randomUUID(), userId: user, ...data } as never,
+      });
+    await service.onEvent(
+      received(alert({ kind: 'search_match', savedSearchId: search, count: 2 })),
+    );
+    await service.onEvent(
+      received(alert({ kind: 'search_match', savedSearchId: search, count: 3 })),
+    );
+    await service.onEvent(
+      received(
+        alert({ kind: 'price_drop', listingId: listing, priceNok: 800, previousPriceNok: 1000 }),
+      ),
+    );
+    await drain();
+
+    const list = await repo.list(user, 10);
+    const match = list.find((n) => n.kind === 'saved_search_match');
+    assert.equal(match?.params.count, '5', 'one growing notice per saved search');
+    assert.equal(list.find((n) => n.kind === 'favourite_price_drop')?.params.priceNok, '800');
+    const mine = pushed.filter((m) => m.to === device);
+    assert.deepEqual(
+      mine.map((m) => m.data.url).sort(),
+      [`/listings/${listing}`, `/saved-searches/${search}`],
+      'the second match within the hour is not pushed again',
+    );
+    const mail = sent.filter((m) => m.to === `${user}@example.test`);
+    assert.equal(mail.length, 1);
+    assert.match(mail[0]!.text, new RegExp(`/nb/my/saved-searches\\?open=${search}`));
+  });
 });

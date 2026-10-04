@@ -61,6 +61,26 @@ describe('category filters', () => {
   });
 });
 
+describe('saved-search window', () => {
+  it('filters on the publication time window', () => {
+    const body = buildSearch(
+      parse({ publishedAfter: '2026-10-04T10:00:00Z', publishedBefore: '2026-10-04T10:05:00Z' }),
+    );
+    assert.ok(
+      body.query.bool.filter.some(
+        (f) =>
+          JSON.stringify(f) ===
+          JSON.stringify({
+            range: {
+              publishedAt: { gt: '2026-10-04T10:00:00Z', lte: '2026-10-04T10:05:00Z' },
+            },
+          }),
+      ),
+    );
+    assert.ok(!searchParamsSchema.safeParse({ publishedAfter: 'yesterday' }).success);
+  });
+});
+
 describe('query builder', () => {
   it('only ever returns active listings', () => {
     const body = buildSearch(parse({}));

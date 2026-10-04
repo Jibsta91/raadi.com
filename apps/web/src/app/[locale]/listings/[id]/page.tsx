@@ -7,9 +7,10 @@ import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/serve
 import { ImageGallery } from '@/components/listings/image-gallery';
 import { ListingActions } from '@/components/listings/listing-actions';
 import { ContactSeller } from '@/components/messaging/contact-seller';
+import { FavouriteButton } from '@/components/saved/favourite-button';
 import { SellerTrust } from '@/components/trust/seller-trust';
 import { Link } from '@/i18n/navigation';
-import { getListing } from '@/lib/api';
+import { favouriteIds, getListing } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
 import { getSession } from '@/lib/session';
 
@@ -49,7 +50,12 @@ export default async function ListingPage({
   if (!UUID.test(id)) notFound();
   const listing = await getListing(id);
   if (!listing) notFound();
-  const [t, format, session] = await Promise.all([getTranslations(), getFormatter(), getSession()]);
+  const [t, format, session, favourites] = await Promise.all([
+    getTranslations(),
+    getFormatter(),
+    getSession(),
+    favouriteIds(),
+  ]);
   const canContact = listing.status === 'active' && !listing.viewer?.isOwner;
 
   const attributeValue = (key: string, value: string | number | boolean) => {
@@ -118,9 +124,18 @@ export default async function ListingPage({
                 })}
               </Badge>
             ) : null}
-            <h1 className="text-2xl font-bold" data-testid="listing-title">
-              {listing.title}
-            </h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-2xl font-bold" data-testid="listing-title">
+                {listing.title}
+              </h1>
+              {listing.viewer?.isOwner || listing.status === 'deleted' ? null : (
+                <FavouriteButton
+                  listingId={listing.id}
+                  initial={favourites.has(listing.id)}
+                  variant="inline"
+                />
+              )}
+            </div>
             <p className="text-3xl font-bold" data-testid="listing-price">
               {listing.priceNok === null
                 ? t('listing.noPrice')

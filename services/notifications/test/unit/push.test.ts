@@ -11,8 +11,11 @@ describe('push', () => {
         'listing_removed',
         'review_received',
         'listing_promoted',
+        'favourite_price_drop',
+        'favourite_sold',
+        'saved_search_match',
       ] as const) {
-        const copy = renderPush(kind, locale, { days: '7' });
+        const copy = renderPush(kind, locale, { days: '7', count: '3', priceNok: '800' });
         assert.ok(copy.title.length > 0 && copy.title.length <= 40, `${kind}/${locale} title`);
         assert.ok(copy.body.length > 0 && copy.body.length <= 120, `${kind}/${locale} body`);
         assert.ok(!copy.body.includes('{'), `${kind}/${locale}: placeholder left`);
@@ -26,6 +29,8 @@ describe('push', () => {
     assert.equal(pushPath('listing_removed', 'l1'), '/my-listings');
     assert.equal(pushPath('listing_promoted', 'l1'), '/listings/l1');
     assert.equal(pushPath('review_received', 'r1'), '/account');
+    assert.equal(pushPath('favourite_price_drop', 'l1'), '/listings/l1');
+    assert.equal(pushPath('saved_search_match', 's1'), '/saved-searches/s1');
   });
 
   it('accepts Expo push tokens only', () => {

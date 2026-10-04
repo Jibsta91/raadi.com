@@ -24,7 +24,11 @@
         },
         "status": {
           "type": "string",
-          "enum": ["active", "sold", "deleted"]
+          "enum": [
+            "active",
+            "sold",
+            "deleted"
+          ]
         },
         "category": {
           "type": "string",
@@ -61,7 +65,11 @@
             "type": "string"
           },
           "additionalProperties": {
-            "type": ["string", "number", "boolean"]
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
           }
         },
         "location": {
@@ -90,7 +98,13 @@
               "maximum": 180
             }
           },
-          "required": ["placeId", "name", "county", "lat", "lon"],
+          "required": [
+            "placeId",
+            "name",
+            "county",
+            "lat",
+            "lon"
+          ],
           "additionalProperties": false
         },
         "imageIds": {
@@ -145,6 +159,8 @@
       "description": "Public state of a listing after the change"
     }
   },
-  "required": ["listing"],
+  "required": [
+    "listing"
+  ],
   "additionalProperties": false
 }

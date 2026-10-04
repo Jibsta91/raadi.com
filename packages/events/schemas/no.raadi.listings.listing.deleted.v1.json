@@ -34,9 +34,16 @@
     },
     "reason": {
       "type": "string",
-      "enum": ["owner", "moderation"]
+      "enum": [
+        "owner",
+        "moderation"
+      ]
     }
   },
-  "required": ["listingId", "version", "imageIds"],
+  "required": [
+    "listingId",
+    "version",
+    "imageIds"
+  ],
   "additionalProperties": false
 }

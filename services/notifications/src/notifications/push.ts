@@ -29,6 +29,30 @@ const COPY: Record<PushKind, Record<Locale, PushCopy>> = {
     en: { title: 'New review', body: 'Someone reviewed you after a deal.' },
     so: { title: 'Faallo cusub', body: 'Qof ayaa kaa faallooday ka dib iib.' },
   },
+  favourite_price_drop: {
+    nb: { title: 'Lavere pris', body: 'En av favorittene dine koster nå {priceNok} kr.' },
+    en: { title: 'Price drop', body: 'One of your favourites now costs {priceNok} kr.' },
+    so: {
+      title: 'Qiimo dhimis',
+      body: 'Mid ka mid ah waxyaabaha aad jeceshahay hadda waa {priceNok} kr.',
+    },
+  },
+  favourite_sold: {
+    nb: { title: 'Favoritt solgt', body: 'En av favorittene dine er solgt.' },
+    en: { title: 'Favourite sold', body: 'One of your favourites has been sold.' },
+    so: {
+      title: 'Waa la iibiyay',
+      body: 'Mid ka mid ah waxyaabaha aad jeceshahay waa la iibiyay.',
+    },
+  },
+  saved_search_match: {
+    nb: { title: 'Nye treff', body: '{count} nye annonser passer et lagret søk.' },
+    en: { title: 'New matches', body: '{count} new listings match a saved search.' },
+    so: {
+      title: 'Natiijooyin cusub',
+      body: '{count} xayeysiis oo cusub ayaa ku habboon raadin la keydiyay.',
+    },
+  },
   listing_promoted: {
     nb: { title: 'Annonsen er fremhevet', body: 'Annonsen din er fremhevet i {days} dager.' },
     en: { title: 'Listing promoted', body: 'Your listing is promoted for {days} days.' },

@@ -119,6 +119,22 @@ export const contracts = {
     promotedUntil: timestamp.nullable(),
     reason: z.enum(['purchased', 'refunded']),
   }),
+  /**
+   * Something a user asked to hear about (saved, ADR-0026): a favourite got cheaper or was sold,
+   * or a saved search has new matches. Keyed by user. Ids and numbers only: no titles, no names.
+   */
+  'no.raadi.saved.alert.v1': z.object({
+    alertId: uuid,
+    userId: uuid,
+    kind: z.enum(['price_drop', 'sold', 'search_match']),
+    listingId: uuid.optional(),
+    savedSearchId: uuid.optional(),
+    /** New matches since the last alert (search_match). */
+    count: z.number().int().min(1).optional(),
+    /** Old and new asking price (price_drop). */
+    previousPriceNok: z.number().int().min(0).optional(),
+    priceNok: z.number().int().min(0).optional(),
+  }),
 } as const;
 
 export type EventType = keyof typeof contracts;

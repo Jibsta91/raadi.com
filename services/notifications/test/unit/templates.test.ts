@@ -10,7 +10,7 @@ const links = {
 
 describe('e-mail templates', () => {
   it('renders every kind in every locale with a link back and a settings link', () => {
-    for (const kind of ['new_message', 'listing_removed'] as const) {
+    for (const kind of ['new_message', 'listing_removed', 'saved_search_match'] as const) {
       for (const locale of ['nb', 'en', 'so'] as const) {
         const e = renderEmail(kind, locale, { title: 'Sykkel' }, links);
         assert.ok(e.subject.length > 5, `${kind}/${locale} subject`);

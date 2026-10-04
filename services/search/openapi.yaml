@@ -54,6 +54,18 @@ paths:
         - { name: bedroomsMax, in: query, schema: { type: integer, minimum: 0 } }
         - { name: guestsMin, in: query, schema: { type: integer, minimum: 0 } }
         - { name: guestsMax, in: query, schema: { type: integer, minimum: 0 } }
+        - {
+            name: publishedAfter,
+            in: query,
+            description: Only listings published after this time (exclusive); saved searches use it,
+            schema: { type: string, format: date-time },
+          }
+        - {
+            name: publishedBefore,
+            in: query,
+            description: Only listings published at or before this time,
+            schema: { type: string, format: date-time },
+          }
         - { name: priceMin, in: query, schema: { type: integer, minimum: 0 } }
         - { name: priceMax, in: query, schema: { type: integer, minimum: 0 } }
         - {

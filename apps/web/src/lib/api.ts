@@ -6,6 +6,9 @@ import {
   createMessagingClient,
   createNotificationsClient,
   createPaymentsClient,
+  createSavedClient,
+  type FavouritePage,
+  type SavedSearch,
   type NotificationList,
   type NotificationPreferences,
   type PaymentOrder,
@@ -272,4 +275,76 @@ function emptyFacets(): SearchResult['facets'] {
     make: [],
     price: [],
   };
+}
+
+/**
+ * Ids of the signed-in user's favourites, for hearts on listing cards. Once per
+ * request (cards share it); empty when signed out or when saved is down.
+ */
+export const favouriteIds = cache(async (): Promise<Set<string>> => {
+  const token = await accessToken().catch(() => null);
+  if (!token) return new Set();
+  try {
+    const { data } = await createSavedClient({ baseUrl: env.savedUrl }).GET(
+      '/api/v1/saved/favourites/ids',
+      {
+        headers: { authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(2000),
+        cache: 'no-store',
+      },
+    );
+    return new Set(data?.ids ?? []);
+  } catch (error) {
+    logger.warn({ err: error }, 'favourite ids unavailable');
+    return new Set();
+  }
+});
+
+/** The signed-in user's favourites; null when signed out. */
+export async function favourites(offset = 0): Promise<FavouritePage | null> {
+  const token = await accessToken();
+  if (!token) return null;
+  const { data, response } = await createSavedClient({ baseUrl: env.savedUrl }).GET(
+    '/api/v1/saved/favourites',
+    {
+      params: { query: { limit: 48, offset } },
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-store',
+    },
+  );
+  if (data) return data;
+  throw new ServiceUnavailableError(`saved returned ${response.status}`);
+}
+
+/** The signed-in user's saved searches; null when signed out. */
+export const savedSearches = cache(async (): Promise<SavedSearch[] | null> => {
+  const token = await accessToken();
+  if (!token) return null;
+  const { data, response } = await createSavedClient({ baseUrl: env.savedUrl }).GET(
+    '/api/v1/saved/searches',
+    {
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-store',
+    },
+  );
+  if (data) return data.items;
+  throw new ServiceUnavailableError(`saved returned ${response.status}`);
+});
+
+/** Marks a saved search as opened (its "new" count starts again from zero). Best effort. */
+export async function markSavedSearchSeen(id: string): Promise<SavedSearch | null> {
+  const token = await accessToken();
+  if (!token) return null;
+  const client = createSavedClient({ baseUrl: env.savedUrl });
+  const init = {
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(3000),
+    cache: 'no-store' as const,
+  };
+  await client
+    .POST('/api/v1/saved/searches/{id}/seen', { ...init, params: { path: { id } } })
+    .catch(() => undefined);
+  return (await savedSearches().catch(() => null))?.find((s) => s.id === id) ?? null;
 }

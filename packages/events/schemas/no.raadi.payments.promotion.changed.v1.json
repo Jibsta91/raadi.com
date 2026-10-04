@@ -28,9 +28,17 @@
     },
     "reason": {
       "type": "string",
-      "enum": ["purchased", "refunded"]
+      "enum": [
+        "purchased",
+        "refunded"
+      ]
     }
   },
-  "required": ["listingId", "orderId", "promotedUntil", "reason"],
+  "required": [
+    "listingId",
+    "orderId",
+    "promotedUntil",
+    "reason"
+  ],
   "additionalProperties": false
 }

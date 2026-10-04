@@ -225,6 +225,22 @@ export class Tx {
   }
 
   /**
+   * Adds new saved-search matches to the user's unread notice for that search
+   * (one growing notice instead of one per check), or creates the notice.
+   */
+  async notifyMatches(userId: string, savedSearchId: string, count: number): Promise<void> {
+    const { rowCount } = await this.client.query(
+      `UPDATE notifications
+          SET params = jsonb_set(params, '{count}', to_jsonb(((params->>'count')::int + $3)::text)),
+              created_at = now()
+        WHERE user_id = $1 AND kind = 'saved_search_match' AND ref_id = $2 AND read_at IS NULL`,
+      [userId, savedSearchId, count],
+    );
+    if (!rowCount)
+      await this.notify(userId, 'saved_search_match', savedSearchId, { count: String(count) });
+  }
+
+  /**
    * Queues a push unless the user has no devices (nothing to send to) or one
    * was queued for the same thing within the throttle window.
    */

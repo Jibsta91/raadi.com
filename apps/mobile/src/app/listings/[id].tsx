@@ -22,6 +22,7 @@ import { useI18n } from '../../i18n';
 import type { Messages } from '../../i18n/messages';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { attributeRows } from '../../lib/attributes';
+import { useFavourite } from '../../lib/saved';
 import { useAuth } from '../../lib/auth/context';
 import { isCategory, isSubcategoryOf } from '../../lib/categories';
 import { useKeyboardLift } from '../../lib/keyboard';
@@ -44,16 +45,29 @@ function GlassIcon({
   icon,
   label,
   onPress,
+  color,
+  pressed,
+  testID,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
+  color?: string;
+  pressed?: boolean;
+  testID?: string;
 }) {
   const theme = useTheme();
   return (
-    <Pressable role="button" aria-label={label} onPress={onPress} hitSlop={6}>
+    <Pressable
+      role="button"
+      aria-label={label}
+      aria-pressed={pressed}
+      testID={testID}
+      onPress={onPress}
+      hitSlop={6}
+    >
       <Glass style={styles.iconButton}>
-        <Ionicons name={icon} size={20} color={theme.text} />
+        <Ionicons name={icon} size={20} color={color ?? theme.text} />
       </Glass>
     </Pressable>
   );
@@ -139,6 +153,8 @@ export default function ListingScreen() {
       ),
     [api, id],
   );
+
+  const favourite = useFavourite(id);
 
   const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -301,17 +317,29 @@ export default function ListingScreen() {
 
       <View style={[styles.topBar, { top: insets.top + space.sm }]} pointerEvents="box-none">
         <GlassIcon icon="chevron-back" label={m.common.back} onPress={back} />
-        <GlassIcon
-          icon="share-outline"
-          label={m.common.share}
-          onPress={() => {
-            // Share the website's page: it opens for anyone, app or not.
-            const origin = config.apiBaseUrl || window.location.origin;
-            void Share.share({
-              message: `${item.title} — ${origin}/${locale}/listings/${item.id}`,
-            });
-          }}
-        />
+        <View style={styles.topActions}>
+          {item.viewer?.isOwner ? null : (
+            <GlassIcon
+              icon={favourite.saved ? 'heart' : 'heart-outline'}
+              color={favourite.saved ? '#f43f5e' : undefined}
+              label={favourite.saved ? m.favourites.remove : m.favourites.add}
+              pressed={favourite.saved}
+              testID="favourite-toggle"
+              onPress={() => void favourite.toggle()}
+            />
+          )}
+          <GlassIcon
+            icon="share-outline"
+            label={m.common.share}
+            onPress={() => {
+              // Share the website's page: it opens for anyone, app or not.
+              const origin = config.apiBaseUrl || window.location.origin;
+              void Share.share({
+                message: `${item.title} — ${origin}/${locale}/listings/${item.id}`,
+              });
+            }}
+          />
+        </View>
       </View>
 
       {canContact ? (
@@ -414,6 +442,7 @@ const styles = StyleSheet.create({
   sellerName: { fontFamily: fonts.semibold, fontSize: 16 },
   grow: { flex: 1 },
   bottomBar: { position: 'absolute', left: space.lg, right: space.lg },
+  topActions: { flexDirection: 'row', gap: space.sm },
   bottomBarGlass: { borderRadius: radius.xl - 2, padding: space.sm + 2 },
   compose: { gap: space.sm + 2 },
   composeActions: { flexDirection: 'row', gap: space.sm },

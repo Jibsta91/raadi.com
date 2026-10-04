@@ -13,7 +13,14 @@ import { Badge, Glass } from './ui';
 // On the web, expo-image and a Pressable inside `Link asChild` hand styles to the DOM: always pass
 // one style object there, never an array (an array arrives as {0: …} and React DOM throws).
 
-function Photo({ hit, style }: { hit: SearchHit; style: object }) {
+/** What a tile shows: a search hit, or a favourite (which may be sold). */
+export type TileListing = Pick<SearchHit, 'id' | 'title' | 'priceNok' | 'category' | 'image'> & {
+  location: { name: string };
+  promoted?: boolean;
+  sold?: boolean;
+};
+
+function Photo({ hit, style }: { hit: TileListing; style: object }) {
   const theme = useTheme();
   return hit.image ? (
     <Image
@@ -29,7 +36,7 @@ function Photo({ hit, style }: { hit: SearchHit; style: object }) {
 }
 
 /** Square tile for two-column grids: photo with a glass price chip, title below. */
-export function ListingTile({ hit }: { hit: SearchHit }) {
+export function ListingTile({ hit }: { hit: TileListing }) {
   const { m, locale } = useI18n();
   const theme = useTheme();
   return (
@@ -37,7 +44,11 @@ export function ListingTile({ hit }: { hit: SearchHit }) {
       <Pressable testID="listing-card" style={styles.tile}>
         <View style={styles.tilePhoto}>
           <Photo hit={hit} style={styles.fill} />
-          {hit.promoted ? (
+          {hit.sold ? (
+            <View style={styles.badgeSpot}>
+              <Badge label={m.listing.sold} tone="neutral" testID="sold" />
+            </View>
+          ) : hit.promoted ? (
             <View style={styles.badgeSpot}>
               <Badge label={m.listing.promoted} testID="promoted" />
             </View>

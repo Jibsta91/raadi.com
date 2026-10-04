@@ -421,6 +421,60 @@ req DELETE "$PUBLIC/api/v1/notifications/devices/$(jq -rn --arg t "$push_token" 
 expect_status 204 "signing out in the app removes its push token"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
+section "Favourites and saved searches (ADR-0026)"
+: > "$JAR"
+req GET "$PUBLIC/api/v1/saved/favourites"
+expect_status 401 "anonymous users have no favourites"
+OLA="ola.nordmann@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}"
+word="smokefav$(date +%s%N | tail -c 8)"
+login_as "$OLA" || fail "login as ola"
+saved_search() { jq -nc --arg q "$word" '{name: ("Søk: " + $q), params: {q: $q, category: "torget", sort: "newest"}}'; }
+req POST "$PUBLIC/api/v1/saved/searches" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(saved_search)"
+[[ "$status" == "201" && "$(json '.params.sort // "none"')" == "none" ]] \
+  && ok "a search is saved without its sorting" || fail "save search" "HTTP $status $(head -c 300 "$BODY")"
+search_id="$(json '.id')"
+req POST "$PUBLIC/api/v1/saved/searches" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(saved_search)"
+[[ "$status" == "200" && "$(json '.id')" == "$search_id" ]] && ok "saving the same search again returns it" || fail "save search twice" "HTTP $status"
+req POST "$PUBLIC/api/v1/saved/searches" -H 'content-type: application/json' -H "origin: $ORIGIN" \
+  --data '{"name":"x","params":{"category":"boats"}}'
+expect_status 400 "saved searches are validated like the search API"
+
+login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
+req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" \
+  --data "$(jq -nc --arg t "$word racersykkel" '{category: "torget", subcategory: "sport", title: $t,
+    description: "Created by the smoke test.", priceNok: 2000, attributes: {condition: "good"},
+    placeId: "tromso", imageIds: []}')"
+expect_status 201 "the seller publishes a listing that matches the saved search"
+fav_listing="$(json '.id')"
+
+login_as "$OLA" || fail "login as ola"
+req PUT "$PUBLIC/api/v1/saved/favourites/$fav_listing" -H "origin: $ORIGIN"
+expect_status 204 "a buyer adds the listing to favourites"
+req GET "$PUBLIC/api/v1/saved/favourites/ids"
+json '.ids' | grep -q "$fav_listing" && ok "the favourite shows up in the heart ids" || fail "favourite ids"
+matched() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" "$PUBLIC/api/v1/saved/searches" \
+  | jq -e --arg id "$search_id" '.items[] | select(.id == $id and .newCount > 0)'; }
+eventually "the saved search finds the new listing (matcher -> search)" 150 matched
+notice() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" "$PUBLIC/api/v1/notifications" \
+  | jq -e --arg k "$1" --arg r "$2" '.items[] | select(.kind == $k and (.link | contains($r)))'; }
+eventually "the buyer is told about new matches (alert event -> notifications)" 90 notice saved_search_match "$search_id"
+
+login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
+req PATCH "$PUBLIC/api/v1/listings/$fav_listing" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"priceNok": 1500}'
+expect_status 200 "the seller lowers the price"
+
+login_as "$OLA" || fail "login as ola"
+eventually "the buyer is told the favourite got cheaper" 90 notice favourite_price_drop "$fav_listing"
+req GET "$PUBLIC/api/v1/saved/favourites"
+[[ "$(jq -r --arg id "$fav_listing" '.items[] | select(.listingId == $id) | .listing.priceNok' "$BODY")" == "1500" ]] \
+  && ok "the favourites list shows the new price" || fail "favourite price" "$(head -c 300 "$BODY")"
+req DELETE "$PUBLIC/api/v1/saved/favourites/$fav_listing" -H "origin: $ORIGIN"
+expect_status 204 "a favourite can be removed"
+req DELETE "$PUBLIC/api/v1/saved/searches/$search_id" -H "origin: $ORIGIN"
+expect_status 204 "a saved search can be deleted"
+login_as "$USER_EMAIL" && req DELETE "$PUBLIC/api/v1/listings/$fav_listing" -H "origin: $ORIGIN"
+req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
+
 section "Reviews and trust (eligibility, BankID mock)"
 : > "$JAR"
 req GET "$PUBLIC/api/v1/trust/me"

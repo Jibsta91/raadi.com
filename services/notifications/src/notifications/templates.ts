@@ -105,6 +105,35 @@ const COPY: Record<EmailKind, Record<Locale, Copy>> = {
       action: 'Arag xayeysiiska',
     },
   },
+  saved_search_match: {
+    nb: {
+      subject: 'Nye treff på et lagret søk',
+      body: [
+        'Hei!',
+        '{count} nye annonser passer et av de lagrede søkene dine på Raadiso.',
+        'Du får høyst én slik e-post om dagen per søk. Varslene kan skrus av for hvert søk.',
+      ],
+      action: 'Se treffene',
+    },
+    en: {
+      subject: 'New matches for a saved search',
+      body: [
+        'Hi!',
+        '{count} new listings match one of your saved searches on Raadiso.',
+        'You get at most one such e-mail a day per search. Alerts can be switched off for each search.',
+      ],
+      action: 'See the matches',
+    },
+    so: {
+      subject: 'Natiijooyin cusub oo raadin la keydiyay',
+      body: [
+        'Salaan!',
+        '{count} xayeysiis oo cusub ayaa ku habboon mid ka mid ah raadintaada la keydiyay ee Raadiso.',
+        'Ugu badnaan hal iimayl oo noocan ah ayaad maalintii heleysaa raadin kasta. Ogeysiisyada waa la damin karaa.',
+      ],
+      action: 'Arag natiijooyinka',
+    },
+  },
 };
 
 const PRODUCT_NAMES: Record<Locale, (days: string) => string> = {

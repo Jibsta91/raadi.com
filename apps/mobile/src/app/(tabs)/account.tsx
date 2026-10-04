@@ -156,6 +156,18 @@ export default function Account() {
             onPress={() => router.push('/my-listings')}
           />
           <Button
+            testID="favourites"
+            variant="secondary"
+            label={m.favourites.title}
+            onPress={() => router.push('/favourites')}
+          />
+          <Button
+            testID="saved-searches"
+            variant="secondary"
+            label={m.savedSearches.title}
+            onPress={() => router.push('/saved-searches')}
+          />
+          <Button
             testID="logout"
             variant="secondary"
             label={m.auth.logout}

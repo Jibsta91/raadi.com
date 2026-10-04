@@ -169,7 +169,7 @@ export interface components {
              * @description The client renders the localized text from the kind and params.
              * @enum {string}
              */
-            kind: "listing_removed" | "review_received" | "listing_promoted";
+            kind: "listing_removed" | "review_received" | "listing_promoted" | "favourite_price_drop" | "favourite_sold" | "saved_search_match";
             /** @description Values for the text, e.g. {"title":"…"} for listing_removed, {"rating":"5"} for review_received. */
             params: {
                 [key: string]: string;

@@ -6,6 +6,14 @@ Each release also has generated notes on GitHub.
 
 ## [Unreleased]
 
+### Added
+
+- Favourites and saved searches (ADR-0026): a heart on every listing, a Favourites page and app screen, and
+  "Save search" on the results. You hear about it (in the app, as a push, and for saved searches at most one
+  e-mail a day) when a favourite gets cheaper or is sold, or a saved search has new matches. New service:
+  `saved`.
+- Search accepts `publishedAfter` and `publishedBefore`.
+
 ## [0.3.0] — 2026-10-04
 
 Phase 3 is done: messaging, notifications (e-mail, push, in-app), reviews and BankID verification, payments
