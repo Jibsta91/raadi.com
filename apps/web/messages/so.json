@@ -21,7 +21,8 @@
     "accountMenu": "Liiska akoonka",
     "categories": "Qaybaha",
     "favourites": "Kuwa aan jeclahay",
-    "savedSearches": "Raadinta la keydiyay"
+    "savedSearches": "Raadinta la keydiyay",
+    "moderation": "Maamul"
   },
   "home": {
     "heroTitle": "<brand>Raadiso.</brand> Hel. Iibi.",
@@ -455,7 +456,12 @@
       "listing_unavailable": "Xayeysiiskan hadda lama heli karo.",
       "rate_limited": "Aad ayaad u degdegaysaa. Wax yar sug oo isku day mar kale.",
       "generic": "Fariinta lama diri karin. Fadlan isku day mar kale."
-    }
+    },
+    "block": "Xannib {name}",
+    "blockConfirm": "Ma xannibtaa {name}? Midkiinna midna ma u diri karo fariimo kan kale.",
+    "blockedByMe": "Waad xannibtay {name}. Midkiinna midna ma diri karo fariimo kale.",
+    "closed": "Mar dambe fariimo ma diri kartid wadahadalkan.",
+    "unblock": "Ka qaad xannibaadda"
   },
   "notifications": {
     "title": "Ogeysiisyo",
@@ -675,5 +681,37 @@
     "near": "U dhow {place} ({km} km)",
     "untitled": "Raadin la keydiyay",
     "unavailable": "Raadinta la keydiyay hadda lama heli karo. Fadlan dib isku day dhowaan."
+  },
+  "report": {
+    "open": "Soo sheeg xayeysiiskan",
+    "title": "Maxaa khaldan xayeysiiskan?",
+    "reasons": {
+      "fraud": "Khiyaano ama isku day khiyaano",
+      "prohibited": "Alaab sharci darro ah ama mamnuuc ah",
+      "offensive": "Waxyaabo xun",
+      "wrong_category": "Qayb khaldan",
+      "other": "Wax kale"
+    },
+    "comment": "Faallo (ikhtiyaari)",
+    "send": "U dir maamulayaasha",
+    "cancel": "Jooji",
+    "thanks": "Mahadsanid! Maamulayaashu way eegi doonaan xayeysiiska.",
+    "error": "Lama diri karo. Fadlan isku day mar kale."
+  },
+  "moderation": {
+    "title": "Maamul",
+    "intro": "Xayeysiisyada dadku soo sheegeen, kuwa ugu badan marka hore.",
+    "empty": "Ma jiraan warbixino furan.",
+    "count": "{count, plural, one {# warbixin} other {# warbixinood}}",
+    "since": "tan iyo {date}",
+    "remove": "Ka saar xayeysiiska",
+    "dismiss": "Diid warbixinada",
+    "confirmRemove": "Ma ka saartaa xayeysiiska? Milkiilaha waa la ogeysiin doonaa.",
+    "status": {
+      "sold": "la iibiyay",
+      "deleted": "la saaray",
+      "active": "firfircoon"
+    },
+    "unavailable": "Maamulku hadda ma shaqeynayo."
   }
 }

@@ -42,6 +42,9 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [live, setLive] = useState(false);
+  // Either side blocked the other (ADR-0027): no composer, and the blocked side is not told why.
+  const [closed, setClosed] = useState(!initial.canMessage);
+  const [blocking, setBlocking] = useState(false);
   const list = useRef<HTMLDivElement>(null);
   const id = initial.id;
 
@@ -112,6 +115,10 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
         body: JSON.stringify({ body }),
       });
       if (!res.ok) {
+        const problem = (await res.json().catch(() => ({}))) as {
+          errors?: Array<{ code?: string }>;
+        };
+        if (problem.errors?.[0]?.code === 'conversation_closed') return setClosed(true);
         setError(t(res.status === 429 ? 'errors.rate_limited' : 'errors.generic'));
         return;
       }
@@ -123,6 +130,19 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
       setError(t('errors.generic'));
     } finally {
       setSending(false);
+    }
+  }
+
+  async function setBlocked(block: boolean) {
+    if (block && !window.confirm(t('blockConfirm', { name: initial.counterpart.name }))) return;
+    setBlocking(true);
+    const res = await fetch(`/api/v1/messaging/conversations/${id}/block`, {
+      method: block ? 'PUT' : 'DELETE',
+    }).catch(() => null);
+    setBlocking(false);
+    if (res?.ok) {
+      setClosed(block);
+      router.refresh();
     }
   }
 
@@ -178,34 +198,69 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
           ))}
         </ol>
       </div>
-      <form
-        onSubmit={send}
-        className="flex items-end gap-2 rounded-[1.75rem] border bg-card p-2 shadow-float focus-within:border-primary"
-      >
-        <label className="sr-only" htmlFor="compose">
-          {t('compose')}
-        </label>
-        <textarea
-          id="compose"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={onKeyDown}
-          maxLength={2000}
-          rows={1}
-          placeholder={t('compose')}
-          data-testid="compose-input"
-          className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 focus:outline-none"
-        />
-        <Button
-          type="submit"
-          disabled={sending || draft.trim() === ''}
-          data-testid="compose-send"
-          className="max-sm:size-11 max-sm:px-0"
+      {closed ? (
+        <div
+          className="flex flex-wrap items-center justify-between gap-3 rounded-[1.75rem] border bg-card p-4 text-sm"
+          data-testid="thread-closed"
         >
-          <Send aria-hidden />
-          <span className="sr-only sm:not-sr-only">{t('send')}</span>
-        </Button>
-      </form>
+          <span>
+            {initial.blockedByMe
+              ? t('blockedByMe', { name: initial.counterpart.name })
+              : t('closed')}
+          </span>
+          {initial.blockedByMe ? (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={blocking}
+              onClick={() => void setBlocked(false)}
+              data-testid="thread-unblock"
+            >
+              {t('unblock')}
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        <form
+          onSubmit={send}
+          className="flex items-end gap-2 rounded-[1.75rem] border bg-card p-2 shadow-float focus-within:border-primary"
+        >
+          <label className="sr-only" htmlFor="compose">
+            {t('compose')}
+          </label>
+          <textarea
+            id="compose"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={onKeyDown}
+            maxLength={2000}
+            rows={1}
+            placeholder={t('compose')}
+            data-testid="compose-input"
+            className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 focus:outline-none"
+          />
+          <Button
+            type="submit"
+            disabled={sending || draft.trim() === ''}
+            data-testid="compose-send"
+            className="max-sm:size-11 max-sm:px-0"
+          >
+            <Send aria-hidden />
+            <span className="sr-only sm:not-sr-only">{t('send')}</span>
+          </Button>
+        </form>
+      )}
+      {closed ? null : (
+        <button
+          type="button"
+          onClick={() => void setBlocked(true)}
+          disabled={blocking}
+          data-testid="thread-block"
+          className="self-end text-xs text-muted-foreground hover:text-destructive hover:underline"
+        >
+          {t('block', { name: initial.counterpart.name })}
+        </button>
+      )}
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}

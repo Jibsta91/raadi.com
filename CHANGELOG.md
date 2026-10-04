@@ -16,6 +16,14 @@ Each release also has generated notes on GitHub.
 - Sell from the app: category and subcategory tiles, then the same fields as the website, with photos from
   the camera or the photo library (`expo-image-picker`). The form fields per category now live in
   `@raadi/catalog/attributes`, shared by the website and the app.
+- Report a listing (reason and comment) on the website and in the app; moderators work a queue at
+  `/moderation`, where removing a listing resolves its reports (ADR-0027).
+- Block someone from a conversation: no more messages either way, in any conversation; the blocked person only
+  sees that the conversation is closed. Unblock at any time (ADR-0027).
+
+### Changed
+
+- The e2e suite signs each demo user in once per run and reuses the sessions.
 
 ## [0.3.0] — 2026-10-04
 

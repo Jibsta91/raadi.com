@@ -170,7 +170,10 @@ export class ListingsService {
     if (!current || current.status === 'deleted') throw new NotFoundException('Listing not found');
     if (!(await this.can(principal, 'can_delete', id)))
       throw new ForbiddenException('You cannot delete this listing');
-    await this.repo.softDelete(id, current.owner_id === principal.sub ? 'owner' : 'moderation');
+    const byOwner = current.owner_id === principal.sub;
+    await this.repo.softDelete(id, byOwner ? 'owner' : 'moderation');
+    // A moderator's removal settles the listing's open reports (ADR-0027).
+    if (!byOwner) await this.repo.resolveReports(id, principal.sub);
     listingsWritten.add(1, { action: 'delete', category: current.category });
   }
 

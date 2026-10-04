@@ -20,4 +20,6 @@ export const inboxRow: InboxRow = {
   last_sender_id: buyer,
   last_sent_at: new Date('2026-10-01T10:05:00Z'),
   unread: '2',
+  blocked_by_me: false,
+  blocked_by_them: false,
 };

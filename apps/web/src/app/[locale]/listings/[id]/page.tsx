@@ -7,6 +7,7 @@ import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/serve
 import { ImageGallery } from '@/components/listings/image-gallery';
 import { ListingActions } from '@/components/listings/listing-actions';
 import { ContactSeller } from '@/components/messaging/contact-seller';
+import { ReportListing } from '@/components/moderation/report-listing';
 import { FavouriteButton } from '@/components/saved/favourite-button';
 import { SellerTrust } from '@/components/trust/seller-trust';
 import { Link } from '@/i18n/navigation';
@@ -179,6 +180,9 @@ export default async function ListingPage({
             >
               {t('messages.contact.login')}
             </a>
+          ) : null}
+          {listing.status !== 'deleted' && !listing.viewer?.isOwner ? (
+            <ReportListing listingId={listing.id} />
           ) : null}
         </aside>
       </div>

@@ -21,7 +21,8 @@
     "accountMenu": "Account menu",
     "categories": "Categories",
     "favourites": "Favourites",
-    "savedSearches": "Saved searches"
+    "savedSearches": "Saved searches",
+    "moderation": "Moderation"
   },
   "home": {
     "heroTitle": "Find it. Sell it. <brand>Raadiso.</brand>",
@@ -455,7 +456,12 @@
       "listing_unavailable": "This listing is no longer available.",
       "rate_limited": "You are sending too fast. Wait a moment and try again.",
       "generic": "The message could not be sent. Please try again."
-    }
+    },
+    "block": "Block {name}",
+    "blockConfirm": "Block {name}? Neither of you can send messages to the other any more.",
+    "blockedByMe": "You blocked {name}. Neither of you can send more messages.",
+    "closed": "You can no longer send messages in this conversation.",
+    "unblock": "Unblock"
   },
   "notifications": {
     "title": "Notifications",
@@ -675,5 +681,37 @@
     "near": "Near {place} ({km} km)",
     "untitled": "Saved search",
     "unavailable": "Saved searches are temporarily unavailable. Please try again shortly."
+  },
+  "report": {
+    "open": "Report this listing",
+    "title": "What is wrong with this listing?",
+    "reasons": {
+      "fraud": "Fraud or a scam attempt",
+      "prohibited": "Illegal or prohibited item",
+      "offensive": "Offensive content",
+      "wrong_category": "Wrong category",
+      "other": "Something else"
+    },
+    "comment": "Comment (optional)",
+    "send": "Send to the moderators",
+    "cancel": "Cancel",
+    "thanks": "Thank you! The moderators will look at the listing.",
+    "error": "Could not send. Please try again."
+  },
+  "moderation": {
+    "title": "Moderation",
+    "intro": "Listings people reported, most reported first.",
+    "empty": "No open reports. Nice!",
+    "count": "{count, plural, one {# report} other {# reports}}",
+    "since": "since {date}",
+    "remove": "Remove listing",
+    "dismiss": "Dismiss reports",
+    "confirmRemove": "Remove the listing? The owner will be told.",
+    "status": {
+      "sold": "sold",
+      "deleted": "removed",
+      "active": "active"
+    },
+    "unavailable": "Moderation is temporarily unavailable."
   }
 }
