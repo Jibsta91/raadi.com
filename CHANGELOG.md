@@ -6,6 +6,12 @@ Each release also has generated notes on GitHub.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-10-04
+
+Phase 3 is done: messaging, notifications (e-mail, push, in-app), reviews and BankID verification, payments
+for promoted listings, and the Raadiso app (Expo) with push notifications, tested on an iPhone. This entry
+lists the changes since 0.3.0-alpha.2; the alpha entries below cover the rest of the phase.
+
 ### Added
 
 - Push notifications in the app: new messages, removed listings, reviews and promotions, sent through Expo's
@@ -102,7 +108,8 @@ Phase 1: the foundation. A one-command compose stack, Keycloak, OpenBao, the Tra
 identity-bff token handler, observability (OpenTelemetry, Prometheus, Loki, Tempo, Grafana), the web shell
 in three languages, the toolbox, smoke and e2e tests, and CI.
 
-[Unreleased]: https://github.com/Jibsta91/raadi.com/compare/v0.3.0-alpha.2...HEAD
+[Unreleased]: https://github.com/Jibsta91/raadi.com/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Jibsta91/raadi.com/compare/v0.3.0-alpha.2...v0.3.0
 [0.3.0-alpha.2]: https://github.com/Jibsta91/raadi.com/compare/v0.3.0-alpha.1...v0.3.0-alpha.2
 [0.3.0-alpha.1]: https://github.com/Jibsta91/raadi.com/compare/v0.2.0...v0.3.0-alpha.1
 [0.2.0]: https://github.com/Jibsta91/raadi.com/compare/v0.1.0...v0.2.0
