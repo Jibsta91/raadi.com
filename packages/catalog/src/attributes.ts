@@ -89,7 +89,6 @@ export function attributePayload(
 
 /** Jobs have no asking price; every other category requires one (NOK, whole kroner). */
 export const priceRequired = (category: Category): boolean => category !== 'jobb';
-
 /** Attribute keys exposed as search facets, per category. */
 export const FACET_ATTRIBUTES = {
   torget: ['condition'],
